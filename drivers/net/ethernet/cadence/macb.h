@@ -441,6 +441,23 @@ struct macb_dma_desc {
 #define MACB_TX_USED_SIZE			1
 
 /**
+ * struct macb_rx_page - data associated with a page used as RX buffers
+ * @page: Physical page used as storage for the buffers
+ * @phys: DMA address of the page
+ *
+ * Each page is used to provide %MACB_RX_BUFFERS_PER_PAGE RX buffers.
+ * The page gets an initial reference when it is inserted into the
+ * ring, and an additional reference each time it is passed up the
+ * stack as a fragment. When all the buffers have been used, we drop
+ * the initial reference and allocate a new page. Any additional
+ * references are dropped when the higher layers free the skb.
+ */
+struct macb_rx_page {
+	struct page		*page;
+	dma_addr_t		phys;
+};
+
+/**
  * struct macb_tx_skb - data about an skb which is being transmitted
  * @skb: skb currently being transmitted
  * @mapping: DMA address of the skb's data buffer
@@ -531,7 +548,7 @@ struct macb {
 
 	unsigned int		rx_tail;
 	struct macb_dma_desc	*rx_ring;
-	void			*rx_buffers;
+	struct macb_rx_page	*rx_page;
 
 	unsigned int		tx_head, tx_tail;
 	struct macb_dma_desc	*tx_ring;
@@ -552,7 +569,6 @@ struct macb {
 
 	dma_addr_t		rx_ring_dma;
 	dma_addr_t		tx_ring_dma;
-	dma_addr_t		rx_buffers_dma;
 
 	struct mii_bus		*mii_bus;
 	struct phy_device	*phy_dev;
