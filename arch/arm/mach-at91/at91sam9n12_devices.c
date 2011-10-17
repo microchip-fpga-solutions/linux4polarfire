@@ -406,7 +406,6 @@ void __init at91_add_device_nand(struct atmel_nand_data *data) {}
  * (gets overruns and underruns under load) and can only issue
  * repeated STARTs in one scenario (the driver doesn't yet handle them).
  */
-/* eric REVISIT Pin definitions */
 #if defined(CONFIG_I2C_GPIO) || defined(CONFIG_I2C_GPIO_MODULE)
 static struct i2c_gpio_platform_data pdata_i2c0 = {
 	.sda_pin		= AT91_PIN_PA30,
@@ -936,7 +935,7 @@ static struct platform_device at91sam9n12_ssc_device = {
 	.resource	= ssc_resources,
 	.num_resources	= ARRAY_SIZE(ssc_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_ssc_pins(unsigned pins)
 {
 	if (pins & ATMEL_SSC_TF)
@@ -978,8 +977,10 @@ void __init at91_add_device_ssc(unsigned id, unsigned pins)
 		atslave->reg_width = AT_DMA_SLAVE_WIDTH_16BIT;
 		atslave->cfg = ATC_FIFOCFG_HALFFIFO
 				| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW
-				| ATC_SRC_PER(AT_DMA_ID_SSC_RX)
-				| ATC_DST_PER(AT_DMA_ID_SSC_TX);
+				| ATC_SRC_PER(AT_DMA_ID_SSC_RX & 0xf)
+				| (((AT_DMA_ID_SSC_RX & 0x30) >> 4) << 10)
+				| ATC_DST_PER(AT_DMA_ID_SSC_TX & 0xf)
+				| (((AT_DMA_ID_SSC_TX & 0x30) >> 4) << 14);
 #endif
 
 		pdev = &at91sam9n12_ssc_device;
