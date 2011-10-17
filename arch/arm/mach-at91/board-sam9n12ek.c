@@ -436,6 +436,12 @@ static struct gpio_led ek_pwm_led[] = {
 #endif
 };
 
+static struct i2c_board_info __initdata ek_i2c_devices[] = {
+	{
+		I2C_BOARD_INFO("wm8904", 0x1a)
+	}
+};
+
 static void __init ek_board_init(void)
 {
 	/* Serial */
@@ -451,7 +457,7 @@ static void __init ek_board_init(void)
 	/* NAND */
 	ek_add_device_nand();
 	/* I2C */
-	at91_add_device_i2c(0, NULL, 0);
+	at91_add_device_i2c(0, ek_i2c_devices, ARRAY_SIZE(ek_i2c_devices));
 	/* KS8851 ethernet */
 	ek_add_device_ks8851();
 	/* LCD Controller */
@@ -464,6 +470,9 @@ static void __init ek_board_init(void)
 	/* LEDs */
 	at91_gpio_leds(ek_leds, ARRAY_SIZE(ek_leds));
 	at91_pwm_leds(ek_pwm_led, ARRAY_SIZE(ek_pwm_led));
+
+	at91_add_device_ssc(AT91SAM9N12_ID_SSC, ATMEL_SSC_TX | ATMEL_SSC_RX);
+	at91_set_B_periph(AT91_PIN_PB10, 1);
 }
 
 MACHINE_START(AT91SAM9N12EK, "Atmel AT91SAM9N12-EK")
