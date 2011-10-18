@@ -29,14 +29,13 @@
 #include "../codecs/wm8904.h"
 #include "atmel_ssc_dai.h"
 
-#if 0
-#define MCLK_RATE 12000000
-#endif
-#if 1
-#define MCLK_RATE 32768
-#endif
+#define SAM9N12_WM8904_USE_FLL
 
-static struct clk *mclk;
+#ifdef SAM9N12_WM8904_USE_FLL
+#define MCLK_RATE 32768
+#else
+#define MCLK_RATE 16000000
+#endif
 
 static int at91sam9n12_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
@@ -60,6 +59,7 @@ static int at91sam9n12_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 	}
 
+#ifdef SAM9N12_WM8904_USE_FLL
 	ret = snd_soc_dai_set_pll(codec_dai, WM8904_FLL_MCLK, WM8904_FLL_MCLK,
 		32768, params_rate(params) * 256);
 	if (ret < 0) {
@@ -74,6 +74,8 @@ static int at91sam9n12_hw_params(struct snd_pcm_substream *substream,
 		pr_err("%s - Failed to set WM8904 SYSCLK\n", __func__);
 		return ret;
 	}
+#else
+#endif
 
 	return 0;
 }
@@ -147,7 +149,7 @@ static struct platform_device *at91sam9n12_snd_device;
 static int __init at91sam9n12_init(void)
 {
 	int ret;
-	struct clk *plla;
+	struct clk *plla, *mclk;
 
 	if (!cpu_is_at91sam9n12())
 		return -ENODEV;
@@ -163,8 +165,11 @@ static int __init at91sam9n12_init(void)
 		pr_err("ASoC: Failed to get pck0\n");
 		return -ENODEV;
 	}
-	//plla = clk_get(NULL, "plla");
+#ifdef SAM9N12_WM8904_USE_FLL
 	plla = clk_get(NULL, "clk32k");
+#else
+	plla = clk_get(NULL, "plla");
+#endif
 	if (IS_ERR(plla)) {
 		pr_err("ASoC: Failed to get pck0\n");
 		return -ENODEV;
@@ -179,7 +184,7 @@ static int __init at91sam9n12_init(void)
 	pr_info("ASoC: Setting pck0 to %dHz\n", MCLK_RATE);
 
 	//clk_set_rate(mclk, MCLK_RATE);
-	clk_set_rate(mclk, 32768);
+	clk_set_rate(mclk, MCLK_RATE);
 	clk_enable(mclk);
 
 	at91sam9n12_snd_device = platform_device_alloc("soc-audio", -1);
