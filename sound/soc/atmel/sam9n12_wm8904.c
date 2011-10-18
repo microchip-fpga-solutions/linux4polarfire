@@ -104,28 +104,24 @@ static int at91sam9n12_wm8904_init(struct snd_soc_pcm_runtime *rtd)
 	pr_debug("ASoC: at91sam9n12_wm8904_init() called\n");
 
 	snd_soc_dapm_nc_pin(dapm, "IN1R");
+	snd_soc_dapm_nc_pin(dapm, "IN2R");
+	snd_soc_dapm_nc_pin(dapm, "IN2R");
 	snd_soc_dapm_nc_pin(dapm, "IN3L");
 	snd_soc_dapm_nc_pin(dapm, "IN3R");
 	
 	snd_soc_dapm_nc_pin(dapm, "LINEOUTL");
 	snd_soc_dapm_nc_pin(dapm, "LINEOUTR");
+	snd_soc_dapm_nc_pin(dapm, "LINEOUTFB");
+
+	snd_soc_dapm_enable_pin(dapm, "Headphone Jack");
+	snd_soc_dapm_enable_pin(dapm, "Mic Jack");
 
 	snd_soc_dapm_new_controls(dapm, at91sam9n12_dapm_widgets,
 				  ARRAY_SIZE(at91sam9n12_dapm_widgets));
-	/* set up specific audio path interconnects */
 	snd_soc_dapm_add_routes(dapm, intercon, ARRAY_SIZE(intercon));
 
-	/* always connected */
-	snd_soc_dapm_enable_pin(dapm, "Headphone Jack");
-
-	snd_soc_dapm_enable_pin(dapm, "HPOUTL");
-	snd_soc_dapm_enable_pin(dapm, "HPOUTR");
-	
-	snd_soc_dapm_enable_pin(dapm, "Mic Jack");
-	//snd_soc_dapm_enable_pin(dapm, "Line In Jack");
-
-	/* signal a DAPM event */
 	snd_soc_dapm_sync(dapm);
+
 	return 0;
 }
 
@@ -141,7 +137,7 @@ static struct snd_soc_dai_link at91sam9n12_dai = {
 };
 
 static struct snd_soc_card snd_soc_at91sam9n12 = {
-	.name = "AT91SAM9N12-EK",
+	.name = "WM8904 @ AT91SAM9N12",
 	.dai_link = &at91sam9n12_dai,
 	.num_links = 1,
 };
@@ -153,7 +149,7 @@ static int __init at91sam9n12_init(void)
 	int ret;
 	struct clk *plla;
 
-	if (!machine_is_at91sam9n12ek())
+	if (!cpu_is_at91sam9n12())
 		return -ENODEV;
 
 	ret = atmel_ssc_set_audio(0);
