@@ -321,48 +321,10 @@ static struct at91_tsadcc_data ek_tsadcc_data = {
 static struct gpio_keys_button ek_buttons[] = {
 	{	/* BP1, "leftclic" */
 		.code		= BTN_LEFT,
-		.gpio		= AT91_PIN_PB6,
+		.gpio		= AT91_PIN_PB3,
 		.active_low	= 1,
 		.desc		= "left_click",
 		.wakeup		= 1,
-	},
-	{	/* BP2, "rightclic" */
-		.code		= BTN_RIGHT,
-		.gpio		= AT91_PIN_PB7,
-		.active_low	= 1,
-		.desc		= "right_click",
-		.wakeup		= 1,
-	},
-		/* BP3, "joystick" */
-	{
-		.code		= KEY_LEFT,
-		.gpio		= AT91_PIN_PB14,
-		.active_low	= 1,
-		.desc		= "Joystick Left",
-	},
-	{
-		.code		= KEY_RIGHT,
-		.gpio		= AT91_PIN_PB15,
-		.active_low	= 1,
-		.desc		= "Joystick Right",
-	},
-	{
-		.code		= KEY_UP,
-		.gpio		= AT91_PIN_PB16,
-		.active_low	= 1,
-		.desc		= "Joystick Up",
-	},
-	{
-		.code		= KEY_DOWN,
-		.gpio		= AT91_PIN_PB17,
-		.active_low	= 1,
-		.desc		= "Joystick Down",
-	},
-	{
-		.code		= KEY_ENTER,
-		.gpio		= AT91_PIN_PB18,
-		.active_low	= 1,
-		.desc		= "Joystick Press",
 	},
 };
 
