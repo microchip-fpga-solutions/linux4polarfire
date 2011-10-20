@@ -87,6 +87,7 @@ static struct snd_soc_ops at91sam9n12_soc_ops = {
 static const struct snd_soc_dapm_widget at91sam9n12_dapm_widgets[] = {
 	SND_SOC_DAPM_HP("Headphone Jack", NULL),
 	SND_SOC_DAPM_MIC("Mic Jack", NULL),
+	SND_SOC_DAPM_LINE("LineIn Jack", NULL),
 };
 
 static const struct snd_soc_dapm_route intercon[] = {
@@ -95,7 +96,9 @@ static const struct snd_soc_dapm_route intercon[] = {
 	{"Headphone Jack", NULL, "HPOUTR"},
 
 	/* MICIN -> Mic Jack */
-	{"Mic Jack", NULL, "IN1L"},
+	{"IN1L", NULL, "Mic Jack"},
+	{"IN2R", NULL, "LineIn Jack"},
+	{"IN2L", NULL, "LineIn Jack"},
 };
 
 static int at91sam9n12_wm8904_init(struct snd_soc_pcm_runtime *rtd)
@@ -113,14 +116,14 @@ static int at91sam9n12_wm8904_init(struct snd_soc_pcm_runtime *rtd)
 	
 	snd_soc_dapm_nc_pin(dapm, "LINEOUTL");
 	snd_soc_dapm_nc_pin(dapm, "LINEOUTR");
-	snd_soc_dapm_nc_pin(dapm, "LINEOUTFB");
-
-	snd_soc_dapm_enable_pin(dapm, "Headphone Jack");
-	snd_soc_dapm_enable_pin(dapm, "Mic Jack");
 
 	snd_soc_dapm_new_controls(dapm, at91sam9n12_dapm_widgets,
 				  ARRAY_SIZE(at91sam9n12_dapm_widgets));
 	snd_soc_dapm_add_routes(dapm, intercon, ARRAY_SIZE(intercon));
+
+	snd_soc_dapm_enable_pin(dapm, "Headphone Jack");
+	snd_soc_dapm_enable_pin(dapm, "Mic Jack");
+	snd_soc_dapm_enable_pin(dapm, "LineIn Jack");
 
 	snd_soc_dapm_sync(dapm);
 
