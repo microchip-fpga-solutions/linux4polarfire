@@ -384,11 +384,26 @@ static struct gpio_led ek_pwm_led[] = {
 #endif
 };
 
+#if defined(CONFIG_I2C_GPIO) || defined(CONFIG_I2C_GPIO_MODULE) \
+	|| defined(CONFIG_I2C_AT91) || defined(CONFIG_I2C_AT91_MODULE)
 static struct i2c_board_info __initdata ek_i2c_devices[] = {
 	{
 		I2C_BOARD_INFO("wm8904", 0x1a)
+	},
+	{
+		I2C_BOARD_INFO("qt1070", 0x1b),
+		.irq = AT91_PIN_PA2
 	}
 };
+
+static void __init ek_add_device_i2c(void)
+{
+	at91_add_device_i2c(0, ek_i2c_devices, ARRAY_SIZE(ek_i2c_devices));
+	at91_set_gpio_input(ek_i2c_devices[1].irq, 1);
+}
+#else
+static void __init ek_add_device_i2c(void) {}
+#endif
 
 static void __init ek_board_init(void)
 {
@@ -405,7 +420,7 @@ static void __init ek_board_init(void)
 	/* NAND */
 	ek_add_device_nand();
 	/* I2C */
-	at91_add_device_i2c(0, ek_i2c_devices, ARRAY_SIZE(ek_i2c_devices));
+	ek_add_device_i2c();
 	/* KS8851 ethernet */
 	ek_add_device_ks8851();
 	/* LCD Controller */
