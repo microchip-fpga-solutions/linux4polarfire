@@ -21,7 +21,7 @@ static struct nand_ecclayout pmecc_oobinfo_2048 = {
 
 static int cpu_has_pmecc(void)
 {
-	return cpu_is_at91sam9x5();
+	return cpu_is_at91sam9x5() || cpu_is_at91sam9n12();
 }
 
 static int16_t *pmecc_get_alpha_to(struct atmel_nand_host *host)

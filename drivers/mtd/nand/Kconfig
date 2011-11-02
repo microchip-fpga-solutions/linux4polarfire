@@ -373,7 +373,7 @@ config MTD_NAND_ATMEL_ECC_HW
 
 config MTD_NAND_ATMEL_PMECC_HW
 	bool "Programmable Hardware ECC (BCH code)"
-	depends on ARCH_AT91SAM9X5
+	depends on ARCH_AT91SAM9X5 || ARCH_AT91SAM9N12
 	help
 	  Use Programmable Hardware ECC controller.
 
