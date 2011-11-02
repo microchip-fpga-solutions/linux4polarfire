@@ -68,7 +68,6 @@
 #define AT91_SDRAMC0	(0xffffea00 - AT91_BASE_SYS)
 #define AT91_SMC	(0xffffec00 - AT91_BASE_SYS)
 #define AT91_MATRIX	(0xffffee00 - AT91_BASE_SYS)
-#define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)
 #define AT91_DBGU	(0xfffff200 - AT91_BASE_SYS)
 #define AT91_PIOA	(0xfffff400 - AT91_BASE_SYS)
 #define AT91_PIOB	(0xfffff600 - AT91_BASE_SYS)

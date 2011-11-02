@@ -79,7 +79,6 @@
 /*
  * System Peripherals (offset from AT91_BASE_SYS)
  */
-#define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)	/* Advanced Interrupt Controller */
 #define AT91_DBGU	(0xfffff200 - AT91_BASE_SYS)	/* Debug Unit */
 #define AT91_PIOA	(0xfffff400 - AT91_BASE_SYS)	/* PIO Controller A */
 #define AT91_PIOB	(0xfffff600 - AT91_BASE_SYS)	/* PIO Controller B */
