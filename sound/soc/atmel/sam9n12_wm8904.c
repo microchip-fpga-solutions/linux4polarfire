@@ -34,8 +34,10 @@
 #ifdef SAM9N12_WM8904_USE_FLL
 #define MCLK_RATE 32768
 #else
-#define MCLK_RATE 16000000
+#define MCLK_RATE 12500000
 #endif
+
+static struct clk *mclk;
 
 static int at91sam9n12_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
@@ -75,6 +77,12 @@ static int at91sam9n12_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 	}
 #else
+	ret = snd_soc_dai_set_sysclk(codec_dai, WM8904_CLK_MCLK,
+		MCLK_RATE, SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		pr_err("%s - Failed to set WM8904 SYSCLK\n", __func__);
+		return ret;
+	}
 #endif
 
 	return 0;
@@ -82,23 +90,6 @@ static int at91sam9n12_hw_params(struct snd_pcm_substream *substream,
 
 static struct snd_soc_ops at91sam9n12_soc_ops = {
 	.hw_params = at91sam9n12_hw_params,
-};
-
-static const struct snd_soc_dapm_widget at91sam9n12_dapm_widgets[] = {
-	SND_SOC_DAPM_HP("Headphone Jack", NULL),
-	SND_SOC_DAPM_MIC("Mic Jack", NULL),
-	SND_SOC_DAPM_LINE("LineIn Jack", NULL),
-};
-
-static const struct snd_soc_dapm_route intercon[] = {
-	/* headphone jack connected to HPOUT */
-	{"Headphone Jack", NULL, "HPOUTL"},
-	{"Headphone Jack", NULL, "HPOUTR"},
-
-	/* MICIN -> Mic Jack */
-	{"IN1L", NULL, "Mic Jack"},
-	{"IN2R", NULL, "LineIn Jack"},
-	{"IN2L", NULL, "LineIn Jack"},
 };
 
 static int at91sam9n12_wm8904_init(struct snd_soc_pcm_runtime *rtd)
@@ -117,16 +108,26 @@ static int at91sam9n12_wm8904_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_nc_pin(dapm, "LINEOUTL");
 	snd_soc_dapm_nc_pin(dapm, "LINEOUTR");
 
-	snd_soc_dapm_new_controls(dapm, at91sam9n12_dapm_widgets,
-				  ARRAY_SIZE(at91sam9n12_dapm_widgets));
-	snd_soc_dapm_add_routes(dapm, intercon, ARRAY_SIZE(intercon));
-
-	snd_soc_dapm_enable_pin(dapm, "Headphone Jack");
-	snd_soc_dapm_enable_pin(dapm, "Mic Jack");
-	snd_soc_dapm_enable_pin(dapm, "LineIn Jack");
+	snd_soc_dapm_enable_pin(dapm, "HPOUTL");
+	snd_soc_dapm_enable_pin(dapm, "HPOUTR");
+	snd_soc_dapm_enable_pin(dapm, "IN1L");
+	snd_soc_dapm_enable_pin(dapm, "IN2L");
+	snd_soc_dapm_enable_pin(dapm, "IN2R");
 
 	snd_soc_dapm_sync(dapm);
 
+	return 0;
+}
+
+int at91sam9n12_snd_suspend_pre(struct snd_soc_card *card)
+{
+	clk_disable(mclk);
+	return 0;
+}
+
+int at91sam9n12_snd_resume_pre(struct snd_soc_card *card)
+{
+	clk_enable(mclk);
 	return 0;
 }
 
@@ -145,6 +146,8 @@ static struct snd_soc_card snd_soc_at91sam9n12 = {
 	.name = "WM8904 @ AT91SAM9N12",
 	.dai_link = &at91sam9n12_dai,
 	.num_links = 1,
+	.suspend_pre = at91sam9n12_snd_suspend_pre,
+	.resume_pre = at91sam9n12_snd_resume_pre,
 };
 
 static struct platform_device *at91sam9n12_snd_device;
@@ -152,7 +155,7 @@ static struct platform_device *at91sam9n12_snd_device;
 static int __init at91sam9n12_init(void)
 {
 	int ret;
-	struct clk *plla, *mclk;
+	struct clk *clk_src;
 
 	if (!cpu_is_at91sam9n12())
 		return -ENODEV;
@@ -169,16 +172,16 @@ static int __init at91sam9n12_init(void)
 		return -ENODEV;
 	}
 #ifdef SAM9N12_WM8904_USE_FLL
-	plla = clk_get(NULL, "clk32k");
+	clk_src = clk_get(NULL, "clk32k");
 #else
-	plla = clk_get(NULL, "plla");
+	clk_src = clk_get(NULL, "plla");
 #endif
-	if (IS_ERR(plla)) {
+	if (IS_ERR(clk_src)) {
 		pr_err("ASoC: Failed to get pck0\n");
 		return -ENODEV;
 	}
-	ret = clk_set_parent(mclk, plla);
-	clk_put(plla);
+	ret = clk_set_parent(mclk, clk_src);
+	clk_put(clk_src);
 	if (ret != 0) {
 		pr_err("ASoC: Failed to set MCLK parent\n");
 		return -ENODEV;
@@ -186,7 +189,6 @@ static int __init at91sam9n12_init(void)
 	
 	pr_info("ASoC: Setting pck0 to %dHz\n", MCLK_RATE);
 
-	//clk_set_rate(mclk, MCLK_RATE);
 	clk_set_rate(mclk, MCLK_RATE);
 	clk_enable(mclk);
 
