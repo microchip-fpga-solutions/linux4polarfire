@@ -48,7 +48,6 @@
 static void __init ek_map_io(void)
 {
 	/* Initialize processor: 16.000 MHz crystal */
-	/* eric REVISIT: EK may use 12MHz crystal */
 	at91sam9n12_initialize(16000000);
 
 	/* DGBU on ttyS0. (Rx & Tx only) */
@@ -136,21 +135,19 @@ static void __init ek_add_device_ks8851(void) {}
  */
 static struct at91_usbh_data __initdata ek_usbh_fs_data = {
 	.ports		= 1,
-	.vbus_pin   = { AT91_PIN_PB7 },
+	.vbus_pin	= { AT91_PIN_PB7 },
 };
 
 /*
  * USB FS Device port
  */
 static struct at91_udc_data __initdata ek_udc_data = {
-	.vbus_pin   = AT91_PIN_PB16,
+	.vbus_pin	= AT91_PIN_PB16,
 };
-
 
 /*
  * SPI devices.
  */
-/* eric REVISIT: Pin definitions */
 static struct spi_board_info ek_spi_devices[] = {
 	{	/* DataFlash chip */
 		.modalias	= "mtd_dataflash",
@@ -159,7 +156,6 @@ static struct spi_board_info ek_spi_devices[] = {
 		.bus_num	= 0,
 	},
 };
-
 
 /*
  * MCI (SD/MMC)
@@ -174,7 +170,6 @@ static struct mci_platform_data __initdata mci_data = {
 /*
  * NAND flash
  */
-/* eric REVISIT: Change this accordingly */
 static struct mtd_partition __initdata ek_nand_partition[] = {
 	{
 		.name	= "Partition 1",
@@ -310,7 +305,6 @@ static struct at91_tsadcc_data ek_tsadcc_data = {
 /*
  * GPIO Buttons
  */
-/* eric REVISIT: Pin definitions */
 #if defined(CONFIG_KEYBOARD_GPIO) || defined(CONFIG_KEYBOARD_GPIO_MODULE)
 static struct gpio_keys_button ek_buttons[] = {
 	{	/* BP1, "leftclic" */
@@ -354,7 +348,6 @@ static void __init ek_add_device_buttons(void) {}
 /*
  * LEDs ... these could all be PWM-driven, for variable brightness
  */
-/* eric REVISIT: Pin definitions */
 static struct gpio_led ek_leds[] = {
 	{
 		.name			= "d8",
@@ -372,7 +365,6 @@ static struct gpio_led ek_leds[] = {
 /*
  * PWM Leds
  */
-/* eric REVISIT: Pin definitions */
 static struct gpio_led ek_pwm_led[] = {
 #if defined(CONFIG_LEDS_ATMEL_PWM) || defined(CONFIG_LEDS_ATMEL_PWM_MODULE)
 	{	/* "right" led, green, userled1, pwm1 */
