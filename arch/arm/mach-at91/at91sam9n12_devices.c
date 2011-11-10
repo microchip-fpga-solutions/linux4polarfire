@@ -182,12 +182,6 @@ void __init at91_add_device_udc(struct at91_udc_data *data) {}
 #endif
 
 /* --------------------------------------------------------------------
- *  Ethernet
- * -------------------------------------------------------------------- */
-
-/* eric REVISIT: add Mac+Phy chip */
-
-/* --------------------------------------------------------------------
  *  MMC / SD
  * -------------------------------------------------------------------- */
 
@@ -220,7 +214,7 @@ static struct platform_device at91sam9n12_mmc_device = {
 	.num_resources	= ARRAY_SIZE(mmc_resources),
 };
 
-/* Consider only one slot : slot 0 */ /* eric REVISIT: come from 9X5, why only one slot? and Pin definitions */
+/* Consider only one slot : slot 0 */
 void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
 {
 
@@ -479,7 +473,6 @@ void __init at91_add_device_i2c(short i2c_id, struct i2c_board_info *devices, in
 /* --------------------------------------------------------------------
  *  SPI
  * -------------------------------------------------------------------- */
-/* eric REVISIT: Pin definitions */
 #if defined(CONFIG_SPI_ATMEL) || defined(CONFIG_SPI_ATMEL_MODULE)
 static u64 spi_dmamask = DMA_BIT_MASK(32);
 static struct at_dma_slave spi0_sdata, spi1_sdata;
@@ -755,7 +748,7 @@ static void __init at91_add_device_tc(void)
 	/* this chip has one clock and irq for all six TC channels */
 	at91_clock_associate("tcb0_clk", &at91sam9n12_tcb0_device.dev, "t0_clk");
 	platform_device_register(&at91sam9n12_tcb0_device);
-	at91_clock_associate("tcb1_clk", &at91sam9n12_tcb1_device.dev, "t0_clk");  /* eric REVISIT: from 9X5, still t0_clk?? */
+	at91_clock_associate("tcb1_clk", &at91sam9n12_tcb1_device.dev, "t0_clk");
 	platform_device_register(&at91sam9n12_tcb1_device);
 }
 #else
@@ -879,7 +872,6 @@ static struct platform_device at91sam9n12_pwm_device = {
 	.num_resources	= ARRAY_SIZE(pwm_resources),
 };
 
-/* eric REVISIT: Pin definitions */
 void __init at91_add_device_pwm(u32 mask)
 {
 	if (mask & (1 << AT91_PWM0))
@@ -1035,11 +1027,11 @@ static struct platform_device at91sam9n12_dbgu_device = {
 	.resource	= dbgu_resources,
 	.num_resources	= ARRAY_SIZE(dbgu_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_dbgu_pins(void)
 {
-	at91_set_A_periph(AT91_PIN_PA9, 0);		/* DRXD */
 	at91_set_A_periph(AT91_PIN_PA10, 1);		/* DTXD */
+	at91_set_A_periph(AT91_PIN_PA9, 0);		/* DRXD */
 }
 
 static struct resource usart0_resources[] = {
@@ -1073,7 +1065,7 @@ static struct platform_device at91sam9n12_usart0_device = {
 	.resource	= usart0_resources,
 	.num_resources	= ARRAY_SIZE(usart0_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_usart0_pins(unsigned pins)
 {
 	at91_set_A_periph(AT91_PIN_PA0, 1);		/* TXD0 */
@@ -1084,7 +1076,6 @@ static inline void configure_usart0_pins(unsigned pins)
 	if (pins & ATMEL_UART_CTS)
 		at91_set_A_periph(AT91_PIN_PA3, 0);	/* CTS0 */
 }
-
 
 static struct resource usart1_resources[] = {
 	[0] = {
@@ -1117,7 +1108,7 @@ static struct platform_device at91sam9n12_usart1_device = {
 	.resource	= usart1_resources,
 	.num_resources	= ARRAY_SIZE(usart1_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_usart1_pins(unsigned pins)
 {
 	at91_set_A_periph(AT91_PIN_PA5, 1);		/* TXD1 */
@@ -1160,7 +1151,7 @@ static struct platform_device at91sam9n12_usart2_device = {
 	.resource	= usart2_resources,
 	.num_resources	= ARRAY_SIZE(usart2_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_usart2_pins(unsigned pins)
 {
 	at91_set_A_periph(AT91_PIN_PA7, 1);		/* TXD2 */
@@ -1203,7 +1194,7 @@ static struct platform_device at91sam9n12_usart3_device = {
 	.resource	= usart3_resources,
 	.num_resources	= ARRAY_SIZE(usart3_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_usart3_pins(unsigned pins)
 {
 	at91_set_B_periph(AT91_PIN_PC22, 1);		/* TXD3 */
@@ -1246,7 +1237,7 @@ static struct platform_device at91sam9n12_uart0_device = {
 	.resource	= uart0_resources,
 	.num_resources	= ARRAY_SIZE(uart0_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_uart0_pins(unsigned pins)
 {
 	at91_set_C_periph(AT91_PIN_PC8, 1);		/* UTXD0 */
@@ -1284,7 +1275,7 @@ static struct platform_device at91sam9n12_uart1_device = {
 	.resource	= uart1_resources,
 	.num_resources	= ARRAY_SIZE(uart1_resources),
 };
-/* eric REVISIT: Pin definitions */
+
 static inline void configure_uart1_pins(unsigned pins)
 {
 	at91_set_C_periph(AT91_PIN_PC16, 1);		/* UTXD1 */
@@ -1364,7 +1355,6 @@ void __init at91_add_device_serial(void)
 				atslave = kzalloc(sizeof(struct at_dma_slave), GFP_KERNEL);
 
 				/* DMA slave channel configuration */
-				/* eric REVISIT: Use "case..switch"? */
 				/*
 				if (peripheral_id == AT91SAM9N12_ID_USART0
 				    || peripheral_id == AT91SAM9N12_ID_USART1
