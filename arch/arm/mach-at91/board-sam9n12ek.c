@@ -150,7 +150,7 @@ static struct at91_udc_data __initdata ek_udc_data = {
  */
 static struct spi_board_info ek_spi_devices[] = {
 	{	/* DataFlash chip */
-		.modalias	= "mtd_dataflash",
+		.modalias	= "m25p80",
 		.chip_select	= 0,
 		.max_speed_hz	= 15 * 1000 * 1000,
 		.bus_num	= 0,

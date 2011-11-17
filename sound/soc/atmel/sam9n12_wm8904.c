@@ -100,8 +100,6 @@ static int at91sam9n12_wm8904_init(struct snd_soc_pcm_runtime *rtd)
 	pr_debug("ASoC: at91sam9n12_wm8904_init() called\n");
 
 	snd_soc_dapm_nc_pin(dapm, "IN1R");
-	snd_soc_dapm_nc_pin(dapm, "IN2R");
-	snd_soc_dapm_nc_pin(dapm, "IN2R");
 	snd_soc_dapm_nc_pin(dapm, "IN3L");
 	snd_soc_dapm_nc_pin(dapm, "IN3R");
 	
