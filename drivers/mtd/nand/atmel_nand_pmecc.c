@@ -28,7 +28,7 @@ static int16_t *pmecc_get_alpha_to(struct atmel_nand_host *host)
 {
 	int16_t *p;
 
-	if (cpu_is_at91sam9x5()) {
+	if (cpu_is_at91sam9x5() || cpu_is_at91sam9n12()) {
 		if (host->sector_size == 512) {
 			p = (int16_t *)((u32)host->rom_base +
 				PMECC_LOOKUP_TABLE_OFFSET_512);
@@ -47,7 +47,7 @@ static int16_t *pmecc_get_index_of(struct atmel_nand_host *host)
 {
 	int16_t *p = (int16_t *)host->rom_base;
 
-	if (cpu_is_at91sam9x5()) {
+	if (cpu_is_at91sam9x5() || cpu_is_at91sam9n12()) {
 		if (host->sector_size == 512)
 			p = (int16_t *)((u32)host->rom_base +
 				PMECC_LOOKUP_TABLE_OFFSET_512);
