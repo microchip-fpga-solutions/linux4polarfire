@@ -103,13 +103,13 @@ static struct sam9_smc_config __initdata ks8851_smc_config = {
 	.ncs_write_setup	= 0,
 	.nwe_setup		= 2,
 
-	.ncs_read_pulse		= 6,
-	.nrd_pulse		= 6,
-	.ncs_write_pulse	= 6,
-	.nwe_pulse		= 6,
+	.ncs_read_pulse		= 7,
+	.nrd_pulse		= 7,
+	.ncs_write_pulse	= 7,
+	.nwe_pulse		= 7,
 
-	.read_cycle		= 8,
-	.write_cycle		= 8,
+	.read_cycle		= 9,
+	.write_cycle		= 9,
 
 	.mode			= AT91_SMC_READMODE | AT91_SMC_WRITEMODE | AT91_SMC_EXNWMODE_DISABLE | AT91_SMC_BAT_WRITE | AT91_SMC_DBW_16,
 	.tdf_cycles		= 1,

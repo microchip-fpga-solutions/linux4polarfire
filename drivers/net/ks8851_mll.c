@@ -1512,6 +1512,39 @@ static int ks_hw_init(struct ks_net *ks)
 }
 
 
+#ifdef CONFIG_PM
+static int ks8851_suspend(struct device *dev)
+{
+	struct platform_device *pdev = to_platform_device(dev);
+	struct net_device *ndev = platform_get_drvdata(pdev);
+
+	if (netif_running(ndev)) {
+		netif_device_detach(ndev);
+		ks_net_stop(ndev);
+	}
+
+	return 0;
+}
+
+static int ks8851_resume(struct device *dev)
+{
+	struct platform_device *pdev = to_platform_device(dev);
+	struct net_device *ndev = platform_get_drvdata(pdev);
+
+	if (netif_running(ndev)) {
+		ks_net_open(ndev);
+		netif_device_attach(ndev);
+	}
+
+	return 0;
+}
+
+static const struct dev_pm_ops ks8851_drv_pm_ops = {
+	.suspend	= ks8851_suspend,
+	.resume		= ks8851_resume,
+};
+#endif
+
 static int __devinit ks8851_probe(struct platform_device *pdev)
 {
 	int err = -ENOMEM;
@@ -1654,6 +1687,9 @@ static struct platform_driver ks8851_platform_driver = {
 	.driver = {
 		.name = DRV_NAME,
 		.owner = THIS_MODULE,
+#ifdef CONFIG_PM
+		.pm = &ks8851_drv_pm_ops,
+#endif
 	},
 	.probe = ks8851_probe,
 	.remove = __devexit_p(ks8851_remove),
