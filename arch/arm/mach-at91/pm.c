@@ -200,7 +200,37 @@ static void (*slow_clock)(void);
 #ifdef CONFIG_AT91_SLOW_CLOCK
 extern void at91_slow_clock(void);
 extern u32 at91_slow_clock_sz;
+
 #endif
+
+static inline void my_arch_idle(void)
+{
+	/*
+	 * Disable the processor clock.  The processor will be automatically
+	 * re-enabled by an interrupt or by a reset.
+	 */
+#ifdef AT91_PS
+	at91_sys_write(AT91_PS_CR, AT91_PS_CR_CPU);
+#else
+	at91_sys_write(AT91_PMC_SCDR, AT91_PMC_PCK);
+#endif
+#ifndef CONFIG_CPU_ARM920T
+	/*
+	 * Set the processor (CP15) into 'Wait for Interrupt' mode.
+	 * Post-RM9200 processors need this in conjunction with the above
+	 * to save power when idle.
+	 */
+	cpu_do_idle();
+#endif
+}
+
+static void my_sleep(int delay) 
+{
+	volatile int  i;
+
+	for (i = 0; i < delay; i++){
+	}
+}
 
 
 static int at91_pm_enter(suspend_state_t state)
@@ -261,6 +291,12 @@ static int at91_pm_enter(suspend_state_t state)
 			 * For ARM 926 based chips, this requirement is weaker
 			 * as at91sam9 can access a RAM in self-refresh mode.
 			 */
+			at91_sys_write(AT91_PMC_PCDR, 1 << AT91SAM9N12_ID_ADC);
+			at91_sys_write(AT91_PMC_PCDR, 1 << AT91SAM9N12_ID_SSC);
+			at91_sys_write(AT91_PMC_PCDR, 1 << AT91SAM9N12_ID_UHPFS);
+			at91_sys_write(AT91_PMC_PCDR, 1 << AT91SAM9N12_ID_TCB);
+
+			at91_sys_write(AT91_PMC_SCDR, AT91SAM926x_PMC_UHP);
 			asm volatile (	"mov r0, #0\n\t"
 					"b 1f\n\t"
 					".align 5\n\t"
@@ -269,8 +305,18 @@ static int at91_pm_enter(suspend_state_t state)
 					: /* no input */
 					: "r0");
 			saved_lpr = sdram_selfrefresh_enable();
-			wait_for_interrupt_enable();
+		//	wait_for_interrupt_enable();
+			my_arch_idle();
 			sdram_selfrefresh_disable(saved_lpr);
+
+			at91_sys_write(AT91_PMC_SCER, AT91SAM926x_PMC_UHP);
+
+			at91_sys_write(AT91_PMC_PCER, 1 << AT91SAM9N12_ID_ADC);
+			at91_sys_write(AT91_PMC_PCER, 1 << AT91SAM9N12_ID_SSC);
+			at91_sys_write(AT91_PMC_PCER, 1 << AT91SAM9N12_ID_UHPFS);
+			at91_sys_write(AT91_PMC_PCER, 1 << AT91SAM9N12_ID_TCB);
+			
+			my_sleep(10000);
 			break;
 
 		case PM_SUSPEND_ON:
