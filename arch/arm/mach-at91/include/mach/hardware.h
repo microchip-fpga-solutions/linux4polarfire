@@ -32,6 +32,8 @@
 #include <mach/at91cap9.h>
 #elif defined(CONFIG_ARCH_AT91X40)
 #include <mach/at91x40.h>
+#elif defined(CONFIG_ARCH_SAMA5D3)
+#include <mach/sama5d3.h>
 #else
 #error "Unsupported AT91 processor"
 #endif
