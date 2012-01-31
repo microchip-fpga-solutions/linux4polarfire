@@ -25,6 +25,7 @@
 #define		AT91RM9200_PMC_MCKUDP	(1 <<  2)		/* USB Device Port Master Clock Automatic Disable on Suspend [AT91RM9200 only] */
 #define		AT91CAP9_PMC_DDR	(1 <<  2)		/* DDR Clock [CAP9 revC & some SAM9 only] */
 #define		AT91RM9200_PMC_UHP	(1 <<  4)		/* USB Host Port Clock [AT91RM9200 only] */
+#define		SAMA5D3_PMC_SMDCK	(1 <<  4)		/* Soft Modem Clock [SAMA5 only] */
 #define		AT91SAM926x_PMC_UHP	(1 <<  6)		/* USB Host Port Clock [AT91SAM926x only] */
 #define		AT91CAP9_PMC_UHP	(1 <<  6)		/* USB Host Port Clock [AT91CAP9 only] */
 #define		AT91SAM926x_PMC_UDP	(1 <<  7)		/* USB Device Port Clock [AT91SAM926x only] */
@@ -64,7 +65,9 @@
 #define		AT91_PMC_DIV		(0xff  <<  0)		/* Divider */
 #define		AT91_PMC_PLLCOUNT	(0x3f  <<  8)		/* PLL Counter */
 #define		AT91_PMC_OUT		(3     << 14)		/* PLL Clock Frequency Range */
+#define		AT91_PMC_ALT_OUT	(0xf   << 14)		/* PLL Clock Frequency Range [SAMA5D3 only] */
 #define		AT91_PMC_MUL		(0x7ff << 16)		/* PLL Multiplier */
+#define		AT91_PMC_ALT_MUL	(0x7ff << 18)		/* PLL Multiplier [SAMA5D3 only] */
 #define		AT91_PMC_USBDIV		(3     << 28)		/* USB Divisor (PLLB only) */
 #define			AT91_PMC_USBDIV_1		(0 << 28)
 #define			AT91_PMC_USBDIV_2		(1 << 28)
