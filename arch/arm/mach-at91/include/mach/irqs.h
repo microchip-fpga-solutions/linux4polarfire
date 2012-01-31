@@ -24,14 +24,14 @@
 #include <linux/io.h>
 #include <mach/at91_aic.h>
 
-#define NR_AIC_IRQS 32
+#define NR_AIC_IRQS 64
 
 
 /*
  * Acknowledge interrupt with AIC after interrupt has been handled.
  *   (by kernel/irq.c)
  */
-#define irq_finish(irq) do { at91_aic_write(AT91_AIC_EOICR, 0); } while (0)
+#define irq_finish(irq) do { at91_aic_write(AT91_AIC5_EOICR, 0); } while (0)
 
 
 /*
