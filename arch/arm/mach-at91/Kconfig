@@ -86,6 +86,12 @@ config ARCH_AT91X40
 	bool "AT91x40"
 	select ARCH_USES_GETTIMEOFFSET
 
+config ARCH_SAMA5D3
+	bool "SAMA5D3"
+	select CPU_V7
+	select CPU_CORTEXA5
+	select GENERIC_CLOCKVENTS
+
 endchoice
 
 config AT91_PMC_UNIT
@@ -444,6 +450,19 @@ config MACH_AT91EB01
 	  It is also a popular target for simulators such as GDB's
 	  ARM simulator (commonly known as the ARMulator) and the
 	  Skyeye simulator.
+
+endif
+
+# ----------------------------------------------------------
+
+if ARCH_SAMA5D3
+
+comment "SAMA5D3 Board Type"
+
+config MACH_SAMA5D3DB
+	bool "Atmel SAMA5D3-DB Debug Board"
+	help
+	  Select this if you are using Atmel's SAMA5D3 Debug Board.
 
 endif
 

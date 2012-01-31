@@ -20,6 +20,7 @@ obj-$(CONFIG_ARCH_AT91SAM9G20)	+= at91sam9260.o at91sam926x_time.o at91sam9260_d
 obj-$(CONFIG_ARCH_AT91SAM9G45)	+= at91sam9g45.o at91sam926x_time.o at91sam9g45_devices.o sam9_smc.o
 obj-$(CONFIG_ARCH_AT91CAP9)	+= at91cap9.o at91sam926x_time.o at91cap9_devices.o sam9_smc.o
 obj-$(CONFIG_ARCH_AT91X40)	+= at91x40.o at91x40_time.o
+obj-$(CONFIG_ARCH_SAMA5D3)	+= sama5d3.o at91sam926x_time.o sama5d3_devices.o
 
 # AT91RM9200 board-specific support
 obj-$(CONFIG_MACH_ONEARM)	+= board-1arm.o
@@ -84,6 +85,9 @@ obj-$(CONFIG_MACH_AT91CAP9ADK)	+= board-cap9adk.o
 
 # AT91X40 board-specific support
 obj-$(CONFIG_MACH_AT91EB01)	+= board-eb01.o
+
+# SAMA5D3 board-specific support
+obj-$(CONFIG_MACH_SAMA5D3DB)	+= board-sama5d3db.o
 
 # Drivers
 obj-y				+= leds.o
