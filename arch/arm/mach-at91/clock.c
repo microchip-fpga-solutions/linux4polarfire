@@ -50,11 +50,13 @@
 #define cpu_has_utmi()		(  cpu_is_at91cap9() \
 				|| cpu_is_at91sam9rl() \
 				|| cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_800M_plla()	(  cpu_is_at91sam9g20() \
 				|| cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_300M_plla()	(cpu_is_at91sam9g10())
 
@@ -63,7 +65,8 @@
 				|| cpu_is_at91sam9x5()))
 
 #define cpu_has_upll()		(cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 /* USB host HS & FS */
 #define cpu_has_uhp()		(!cpu_is_at91sam9rl())
@@ -71,15 +74,19 @@
 /* USB device FS only */
 #define cpu_has_udpfs()		(!(cpu_is_at91sam9rl() \
 				|| cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5()))
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3()))
 
 #define cpu_has_plladiv2()	(cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_mdiv3()		(cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
-#define cpu_has_alt_prescaler()	(cpu_is_at91sam9x5())
+#define cpu_has_alt_prescaler()	(cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 static LIST_HEAD(clocks);
 static DEFINE_SPINLOCK(clk_lock);
@@ -535,7 +542,7 @@ static u32 __init at91_pll_rate(struct clk *pll, u32 freq, u32 reg)
 	unsigned mul, div;
 
 	div = reg & 0xff;
-	mul = (reg >> 16) & 0x7ff;
+	mul = (reg >> 18) & 0x7ff;
 	if (div && mul) {
 		freq /= div;
 		freq *= mul + 1;
