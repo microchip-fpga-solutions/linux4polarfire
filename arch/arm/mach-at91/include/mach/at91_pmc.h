@@ -21,13 +21,13 @@
 
 #define	AT91_PMC_SCSR		(AT91_PMC + 0x08)	/* System Clock Status Register */
 #define		AT91_PMC_PCK		(1 <<  0)		/* Processor Clock */
-#define		AT91RM9200_PMC_UDP	(1 <<  1)		/* USB Devcice Port Clock [AT91RM9200 only] */
+#define		AT91RM9200_PMC_UDP	(1 <<  1)		/* USB Device Port Clock [AT91RM9200 only] */
 #define		AT91RM9200_PMC_MCKUDP	(1 <<  2)		/* USB Device Port Master Clock Automatic Disable on Suspend [AT91RM9200 only] */
 #define		AT91CAP9_PMC_DDR	(1 <<  2)		/* DDR Clock [CAP9 revC & some SAM9 only] */
 #define		AT91RM9200_PMC_UHP	(1 <<  4)		/* USB Host Port Clock [AT91RM9200 only] */
 #define		AT91SAM926x_PMC_UHP	(1 <<  6)		/* USB Host Port Clock [AT91SAM926x only] */
 #define		AT91CAP9_PMC_UHP	(1 <<  6)		/* USB Host Port Clock [AT91CAP9 only] */
-#define		AT91SAM926x_PMC_UDP	(1 <<  7)		/* USB Devcice Port Clock [AT91SAM926x only] */
+#define		AT91SAM926x_PMC_UDP	(1 <<  7)		/* USB Device Port Clock [AT91SAM926x only] */
 #define		AT91_PMC_PCK0		(1 <<  8)		/* Programmable Clock 0 */
 #define		AT91_PMC_PCK1		(1 <<  9)		/* Programmable Clock 1 */
 #define		AT91_PMC_PCK2		(1 << 10)		/* Programmable Clock 2 */
