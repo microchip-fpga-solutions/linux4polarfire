@@ -14,6 +14,7 @@
 #include <linux/kernel.h>
 #include <linux/clk.h>
 #include <linux/clockchips.h>
+#include <linux/clocksource.h>
 
 #include <asm/mach/time.h>
 
@@ -167,7 +168,7 @@ static void __init at91sam926x_pit_init(void)
 	clocksource_register_hz(&pit_clk, pit_rate);
 
 	/* Set up irq handler */
-	setup_irq(AT91_ID_SYS, &at91sam926x_pit_irq);
+	setup_irq(AT91_ID_PIT, &at91sam926x_pit_irq);
 
 	/* Set up and register clockevents */
 	pit_clkevt.mult = div_sc(pit_rate, NSEC_PER_SEC, pit_clkevt.shift);
