@@ -4,13 +4,13 @@
 #include <asm/irq.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
-
-#include <mach/cpu.h>
 #include <mach/sama5d3.h>
 #include <mach/at91_pmc.h>
 #include <mach/at91_rstc.h>
 #include <mach/at91_shdwc.h>
+#include <mach/cpu.h>
 
+#include "soc.h"
 #include "generic.h"
 #include "clock.h"
 
@@ -52,8 +52,8 @@ static struct clk pioE_clk = {
 };
 
 static struct clk mmc0_clk = {
-	.name           = "mci_clk",
-	.pmc_mask       = 1 << SAMA5D3_ID_MMCI,
+	.name           = "mci0_clk",
+	.pmc_mask       = 1 << SAMA5D3_ID_HSMCI0,
 	.type           = CLK_TYPE_PERIPHERAL,
 };
 
@@ -70,6 +70,10 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("mci_clk", "atmel_mci.0", &mmc0_clk),
 };
 
+static struct clk_lookup usart_clocks_lookups[] = {
+	CLKDEV_CON_DEV_ID("usart", "atmel_usart.0", &mck),
+};
+
 static void __init sama5d3_register_clocks(void)
 {
 	int i;
@@ -79,6 +83,20 @@ static void __init sama5d3_register_clocks(void)
 	
 	clkdev_add_table(periph_clocks_lookups,
 			 ARRAY_SIZE(periph_clocks_lookups));
+	clkdev_add_table(usart_clocks_lookups,
+			 ARRAY_SIZE(usart_clocks_lookups));
+}
+
+static struct clk_lookup console_clock_lookup;
+
+void __init sama5d3_set_console_clock(int id)
+{
+	if (id >= ARRAY_SIZE(usart_clocks_lookups))
+		return;
+
+	console_clock_lookup.con_id = "usart";
+	console_clock_lookup.clk = usart_clocks_lookups[id].clk;
+	clkdev_add(&console_clock_lookup);
 }
 
 /* --------------------------------------------------------------------
@@ -194,7 +212,22 @@ static unsigned int sama5d3_default_irq_priority[NR_AIC_IRQS] __initdata = {
 	0,	/* ARM */
 	0,	/* Advanced Interrupt Controller (IRQ0) */
 	0,	/* FUSE */
-	0	/* MPDDRC */
+	0,	/* MPDDRC */
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0
 };
 
 struct at91_init_soc __initdata sama5d3_soc = {

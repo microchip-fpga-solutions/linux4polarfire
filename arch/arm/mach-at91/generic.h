@@ -45,6 +45,7 @@ extern void __init at91sam9263_set_console_clock(int id);
 extern void __init at91sam9rl_set_console_clock(int id);
 extern void __init at91sam9g45_set_console_clock(int id);
 extern void __init at91cap9_set_console_clock(int id);
+extern void __init sama5d3_set_console_clock(int id);
 #ifdef CONFIG_AT91_PMC_UNIT
 extern int __init at91_clock_init(unsigned long main_clock);
 #else

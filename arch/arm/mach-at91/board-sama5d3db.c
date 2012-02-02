@@ -18,10 +18,10 @@
 #include "generic.h"
 
 
-static void __init ek_init_early(void)
+static void __init db_init_early(void)
 {
 	/* Initialiaze processor: 12.000 MHz crystal */
-	sama5d3_initialize(12000000);
+	at91_initialize(12000000);
 
 	/* DBGU on ttyS0 */
 	at91_register_uart(0, 0, 0);
@@ -41,11 +41,6 @@ static struct mci_platform_data __initdata mci0_data = {
 	},
 };
 
-static void __init sama5d3db_init_irq(void)
-{
-	sama5d3_init_interrupts(NULL);
-}
-
 static void __init db_board_init(void)
 {
 	/* Serial */
@@ -57,7 +52,7 @@ static void __init db_board_init(void)
 MACHINE_START(SAMA5D3DB, "Atmel SAMA5D3-DB")
 	.timer		= &at91sam926x_timer,
 	.map_io		= at91_map_io,
-	.init_early	= ek_init_early,
+	.init_early	= db_init_early,
 	.init_irq	= at91_init_irq_default,
 	.init_machine	= db_board_init
 MACHINE_END

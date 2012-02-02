@@ -1,16 +1,12 @@
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
-#include <asm/mach/irq.h>
 
 #include <linux/dma-mapping.h>
+#include <mach/gpio.h>
 #include <linux/platform_device.h>
-#include <linux/i2c-gpio.h>
 
 #include <mach/board.h>
-#include <mach/cpu.h>
-#include <mach/gpio.h>
 #include <mach/sama5d3.h>
-#include <mach/sama5d3_matrix.h>
 #include <mach/atmel-mci.h>
 
 #include "generic.h"
@@ -26,18 +22,18 @@ static struct mci_platform_data mmc0_data;
 
 static struct resource mmc0_resources[] = {
 	[0] = {
-		.start  = SAMA5D3_BASE_MMCI,
-		.end    = SAMA5D3_BASE_MMCI + SZ_16K - 1,
+		.start  = SAMA5D3_BASE_HSMCI0,
+		.end    = SAMA5D3_BASE_HSMCI0 + SZ_16K - 1,
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start  = SAMA5D3_ID_MMCI,
-		.end    = SAMA5D3_ID_MMCI,
+		.start  = SAMA5D3_ID_HSMCI0,
+		.end    = SAMA5D3_ID_HSMCI0,
 		.flags  = IORESOURCE_IRQ,
 	},
 };
 
-static struct platform_device at91miura_mmc0_device = {
+static struct platform_device sama5d3_mmc0_device = {
 	.name           = "atmel_mci",
 	.id             = 0,
 	.dev            = {
@@ -71,7 +67,7 @@ void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
 		atslave->reg_width = AT_DMA_SLAVE_WIDTH_32BIT;
 		atslave->cfg = ATC_FIFOCFG_HALFFIFO
 			| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
-		atslave->ctrla = ATC_SCSIZE_8 | ATC_DCSIZE_8;
+		atslave->ctrla = ATC_SCSIZE_16 | ATC_DCSIZE_16;
 		if (mmc_id == 0) {	/* MCI0 */
 			atslave->cfg |= ATC_SRC_PER(AT_DMA_ID_MCI0)
 				| ATC_DST_PER(AT_DMA_ID_MCI0);
@@ -93,27 +89,29 @@ void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
 	}
 	if (data->slot[0].wp_pin)
 		at91_set_gpio_input(data->slot[0].wp_pin, 1);
-
-	/* CLK */
-	at91_set_A_periph(AT91_PIN_PD9, 0);
-	/* CMD */
-	at91_set_A_periph(AT91_PIN_PD0, 1);
-	/* DAT0, maybe DAT1..DAT3 and maybe DAT4..DAT7 */
-	at91_set_A_periph(AT91_PIN_PD1, 1);
-	if (data->slot[0].bus_width == 4) {
-		at91_set_A_periph(AT91_PIN_PD2, 1);
-		at91_set_A_periph(AT91_PIN_PD3, 1);
-		at91_set_A_periph(AT91_PIN_PD4, 1);
-		if (data->slot[0].bus_width == 8) {
-			at91_set_A_periph(AT91_PIN_PD5, 1);
-			at91_set_A_periph(AT91_PIN_PD6, 1);
-			at91_set_A_periph(AT91_PIN_PD7, 1);
-			at91_set_A_periph(AT91_PIN_PD8, 1);
+	
+	if (mmc_id == 0) {		/* MCI0 */
+		/* CLK */
+		at91_set_A_periph(AT91_PIN_PD9, 0);
+		/* CMD */
+		at91_set_A_periph(AT91_PIN_PD0, 1);
+		/* DAT0, maybe DAT1..DAT3 and maybe DAT4..DAT7 */
+		at91_set_A_periph(AT91_PIN_PD1, 1);
+		if (data->slot[0].bus_width == 4) {
+			at91_set_A_periph(AT91_PIN_PD2, 1);
+			at91_set_A_periph(AT91_PIN_PD3, 1);
+			at91_set_A_periph(AT91_PIN_PD4, 1);
+			if (data->slot[0].bus_width == 8) {
+				at91_set_A_periph(AT91_PIN_PD5, 1);
+				at91_set_A_periph(AT91_PIN_PD6, 1);
+				at91_set_A_periph(AT91_PIN_PD7, 1);
+				at91_set_A_periph(AT91_PIN_PD8, 1);
+			}
 		}
 	}
 
 	mmc0_data = *data;
-	platform_device_register(&at91miura_mmc0_device);
+	platform_device_register(&sama5d3_mmc0_device);
 }
 #else
 void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
@@ -122,11 +120,12 @@ void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
 /* --------------------------------------------------------------------
  *  UART
  * -------------------------------------------------------------------- */
+
 #if defined(CONFIG_SERIAL_ATMEL)
 static struct resource dbgu_resources[] = {
 	[0] = {
-		.start  = AT91_VA_BASE_SYS + AT91_DBGU,
-		.end    = AT91_VA_BASE_SYS + AT91_DBGU + SZ_512 - 1,
+		.start  = AT91_BASE_SYS + AT91_DBGU,
+		.end    = AT91_BASE_SYS + AT91_DBGU + SZ_512 - 1,
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
@@ -139,12 +138,11 @@ static struct resource dbgu_resources[] = {
 static struct atmel_uart_data dbgu_data = {
 	.use_dma_tx     = 0,
 	.use_dma_rx     = 0,
-	.regs           = (void __iomem *)(AT91_VA_BASE_SYS + AT91_DBGU),
 };
 
 static u64 dbgu_dmamask = DMA_BIT_MASK(32);
 
-static struct platform_device at91miura_dbgu_device = {
+static struct platform_device sama5d3_dbgu_device = {
 	.name           = "atmel_usart",
 	.id             = 0,
 	.dev            = {
@@ -172,15 +170,14 @@ void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins)
 
 	switch (id) {
 		case 0:         /* DBGU */
-			pdev = &at91miura_dbgu_device;
+			pdev = &sama5d3_dbgu_device;
 			configure_dbgu_pins();
-			at91_clock_associate("mck", &pdev->dev, "usart");
 			break;
 		default:
 			return;
 	}
 	pdata = pdev->dev.platform_data;
-	pdev->id = portnr;              /* update to mapped ID */
+	pdata->num = portnr;              /* update to mapped ID */
 
 	if (portnr < ATMEL_MAX_UART)
 		at91_uarts[portnr] = pdev;
@@ -188,8 +185,10 @@ void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins)
 
 void __init at91_set_serial_console(unsigned portnr)
 {
-	if (portnr < ATMEL_MAX_UART)
+	if (portnr < ATMEL_MAX_UART) {
 		atmel_default_console_device = at91_uarts[portnr];
+		sama5d3_set_console_clock(at91_uarts[portnr]->id);
+	}
 }
 
 void __init at91_add_device_serial(void)
@@ -210,10 +209,13 @@ void __init at91_set_serial_console(unsigned portnr) {}
 void __init at91_add_device_serial(void) {}
 #endif
 
+/* -------------------------------------------------------------------- */
+/*
+ * These devices are always present and don't need any board-specific
+ * setup.
+ */
 static int __init at91_add_standard_devices(void)
 {
-	printk(KERN_INFO "at91_add_standard_devices\n");
-	at91_add_device_hdmac();
 	return 0;
 }
 

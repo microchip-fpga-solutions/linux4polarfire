@@ -7,14 +7,14 @@
 #define AT91_ID_FIQ            	 0	/* Advanced Interrupt Controller (FIQ) */
 #define AT91_ID_SYS            	 1	/* System Peripherals */
 #define SAMA5D3_ID_DBGU       	 2	/* debug Unit (usually no special interrupt line) */
-#define SAMA5D3_ID_PIT		 3	/* PIT */
+#define AT91_ID_PIT		 3	/* PIT */
 #define SAMA5D3_ID_HSMC5	 5	/* Static Memory Controller */
 #define SAMA5D3_ID_PIOA		 6	/* PIOA */
 #define SAMA5D3_ID_PIOB		 7	/* PIOB */
 #define SAMA5D3_ID_PIOC		 8	/* PIOC */
 #define SAMA5D3_ID_PIOD		 9	/* PIOD */
 #define SAMA5D3_ID_PIOE		10	/* PIOE */
-#define SAMA5D3_ID_MMCI		21	/* MCI */
+#define SAMA5D3_ID_HSMCI0	21	/* MCI */
 #define SAMA5D3_ID_TC0        	26      /* Timer Counter 0 */
 #define SAMA5D3_ID_TC1        	27      /* Timer Counter 2 */
 #define SAMA5D3_ID_DMA0		30	/* DMA Controller 0 */
@@ -30,7 +30,7 @@
 #define SAMA5D3_BASE_TC0	0xf0010000 /* (TC0) Base Address */
 #define SAMA5D3_BASE_TC1	0xf0010040 /* (TC1) Base Address */
 #define SAMA5D3_BASE_HLCDC5	0xf0030000 /* (HLCDC5) Base Address */
-#define SAMA5D3_BASE_MMCI	0xf0000000 /* (MMCI) Base Address */
+#define SAMA5D3_BASE_HSMCI0	0xf0000000 /* (MMCI) Base Address */
 #define SAMA5D3_BASE_UDPHS	0xf8030000
 #define AT91_BASE_SYS		0xffffc000
 
