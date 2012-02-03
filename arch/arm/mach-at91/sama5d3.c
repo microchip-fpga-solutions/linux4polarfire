@@ -57,6 +57,12 @@ static struct clk mmc0_clk = {
 	.type           = CLK_TYPE_PERIPHERAL,
 };
 
+static struct clk dma0_clk = {
+	.name           = "dma_clk",
+	.pmc_mask       = 1 << SAMA5D3_ID_DMA0,
+	.type           = CLK_TYPE_PERIPHERAL,
+};
+
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
 	&pioB_clk,
@@ -64,6 +70,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&pioD_clk,
 	&pioE_clk,
 	&mmc0_clk,
+	&dma0_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {

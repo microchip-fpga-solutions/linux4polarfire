@@ -7,10 +7,59 @@
 
 #include <mach/board.h>
 #include <mach/sama5d3.h>
+#include <mach/at_hdmac.h>
 #include <mach/atmel-mci.h>
 
 #include "generic.h"
 
+
+/* --------------------------------------------------------------------
+ *  HDMAC - AHB DMA Controller
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_AT_HDMAC) || defined(CONFIG_AT_HDMAC_MODULE)
+static u64 hdmac0_dmamask = DMA_BIT_MASK(32);
+
+static struct at_dma_platform_data atdma0_pdata = {
+	.nr_channels	= 8,
+	.mem_if		= 0,
+	.per_if		= 2,
+};
+
+static struct resource hdmac0_resources[] = {
+	[0] = {
+		.start	= AT91_BASE_SYS + AT91_DMA0,
+		.end	= AT91_BASE_SYS + AT91_DMA0 + SZ_512 - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_ID_DMA0,
+		.end	= SAMA5D3_ID_DMA0,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at_hdmac0_device = {
+	.name		= "at_hdmac",
+	.id		= 0,
+	.dev		= {
+				.dma_mask		= &hdmac0_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &atdma0_pdata,
+	},
+	.resource	= hdmac0_resources,
+	.num_resources	= ARRAY_SIZE(hdmac0_resources),
+};
+
+void __init at91_add_device_hdmac(void)
+{
+	dma_cap_set(DMA_MEMCPY, atdma0_pdata.cap_mask);
+	dma_cap_set(DMA_SLAVE, atdma0_pdata.cap_mask);
+	platform_device_register(&at_hdmac0_device);
+}
+#else
+void __init at91_add_device_hdmac(void) {}
+#endif
 
 /* --------------------------------------------------------------------
  *  MMC / SD
@@ -216,6 +265,7 @@ void __init at91_add_device_serial(void) {}
  */
 static int __init at91_add_standard_devices(void)
 {
+	at91_add_device_hdmac();
 	return 0;
 }
 
