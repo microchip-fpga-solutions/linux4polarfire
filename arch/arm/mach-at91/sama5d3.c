@@ -63,6 +63,18 @@ static struct clk dma0_clk = {
 	.type           = CLK_TYPE_PERIPHERAL,
 };
 
+static struct clk uhphs_clk = {
+	.name		= "uhphs_clk",
+	.pmc_mask	= 1 << SAMA5D3_ID_UHPHS,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
+static struct clk udphs_clk = {
+	.name		= "udphs_clk",
+	.pmc_mask	= 1 << SAMA5D3_ID_UDPHS,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
 	&pioB_clk,
@@ -71,10 +83,19 @@ static struct clk *periph_clocks[] __initdata = {
 	&pioE_clk,
 	&mmc0_clk,
 	&dma0_clk,
+	&uhphs_clk,
+	&udphs_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
+	/* One additional fake clock for ohci */
+	CLKDEV_CON_ID("ohci_clk", &uhphs_clk),
+	CLKDEV_CON_DEV_ID("ehci_clk", "atmel-ehci", &uhphs_clk),
+	CLKDEV_CON_DEV_ID("hclk", "atmel_usba_udc", &utmi_clk),
+	CLKDEV_CON_DEV_ID("pclk", "atmel_usba_udc", &udphs_clk),
 	CLKDEV_CON_DEV_ID("mci_clk", "atmel_mci.0", &mmc0_clk),
+	/* fake hclk clock */
+	CLKDEV_CON_DEV_ID("hclk", "at91_ohci", &uhphs_clk),
 };
 
 static struct clk_lookup usart_clocks_lookups[] = {

@@ -31,6 +31,22 @@ static void __init db_init_early(void)
 }
 
 /*
+ * USB HS Host port (common to OHCI & EHCI)
+ */
+static struct at91_usbh_data __initdata ek_usbh_hs_data = {
+	.ports		= 2,
+	.vbus_pin	= {AT91_PIN_PD26, AT91_PIN_PD27},
+};
+
+
+/*
+ * USB HS Device port
+ */
+static struct usba_platform_data __initdata ek_usba_udc_data = {
+	.vbus_pin	= AT91_PIN_PD29,
+};
+
+/*
  * MCI (SD/MMC)
  *
  */
@@ -45,6 +61,11 @@ static void __init db_board_init(void)
 {
 	/* Serial */
 	at91_add_device_serial();
+	/* USB HS Host */
+	at91_add_device_usbh_ohci(&ek_usbh_hs_data);
+	at91_add_device_usbh_ehci(&ek_usbh_hs_data);
+	/* USB HS Device */
+	at91_add_device_usba(&ek_usba_udc_data);
 	/* MMC0 */
 	at91_add_device_mci(0, &mci0_data);
 }

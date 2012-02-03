@@ -61,6 +61,216 @@ void __init at91_add_device_hdmac(void)
 void __init at91_add_device_hdmac(void) {}
 #endif
 
+
+/* --------------------------------------------------------------------
+ *  USB Host (OHCI)
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_USB_OHCI_HCD) || defined(CONFIG_USB_OHCI_HCD_MODULE)
+static u64 ohci_dmamask = DMA_BIT_MASK(32);
+static struct at91_usbh_data usbh_ohci_data;
+
+static struct resource usbh_ohci_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_OHCI_BASE,
+		.end	= SAMA5D3_OHCI_BASE + SZ_1M - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_ID_UHPHS,
+		.end	= SAMA5D3_ID_UHPHS,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at91_usbh_ohci_device = {
+	.name		= "at91_ohci",
+	.id		= -1,
+	.dev		= {
+				.dma_mask		= &ohci_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &usbh_ohci_data,
+	},
+	.resource	= usbh_ohci_resources,
+	.num_resources	= ARRAY_SIZE(usbh_ohci_resources),
+};
+
+void __init at91_add_device_usbh_ohci(struct at91_usbh_data *data)
+{
+	int i;
+
+	if (!data)
+		return;
+
+	/* Enable VBus control for UHP ports */
+	for (i = 0; i < data->ports; i++) {
+		if (data->vbus_pin[i])
+			at91_set_gpio_output(data->vbus_pin[i], 0);
+	}
+
+	/* Enable overcurrent notification */
+	for (i = 0; i < data->ports; i++) {
+		if (data->overcurrent_pin[i])
+			at91_set_gpio_input(data->overcurrent_pin[i], 1);
+	}
+
+	usbh_ohci_data = *data;
+	platform_device_register(&at91_usbh_ohci_device);
+}
+#else
+void __init at91_add_device_usbh_ohci(struct at91_usbh_data *data) {}
+#endif
+
+
+/* --------------------------------------------------------------------
+ *  USB Host HS (EHCI)
+ *  Needs an OHCI host for low and full speed management
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_USB_EHCI_HCD) || defined(CONFIG_USB_EHCI_HCD_MODULE)
+static u64 ehci_dmamask = DMA_BIT_MASK(32);
+static struct at91_usbh_data usbh_ehci_data;
+
+static struct resource usbh_ehci_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_EHCI_BASE,
+		.end	= SAMA5D3_EHCI_BASE + SZ_1M - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_ID_UHPHS,
+		.end	= SAMA5D3_ID_UHPHS,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at91_usbh_ehci_device = {
+	.name		= "atmel-ehci",
+	.id		= -1,
+	.dev		= {
+				.dma_mask		= &ehci_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &usbh_ehci_data,
+	},
+	.resource	= usbh_ehci_resources,
+	.num_resources	= ARRAY_SIZE(usbh_ehci_resources),
+};
+
+void __init at91_add_device_usbh_ehci(struct at91_usbh_data *data)
+{
+	int i;
+
+	if (!data)
+		return;
+
+	/* Enable VBus control for UHP ports */
+	for (i = 0; i < data->ports; i++) {
+		if (data->vbus_pin[i])
+			at91_set_gpio_output(data->vbus_pin[i], 0);
+	}
+
+	usbh_ehci_data = *data;
+	platform_device_register(&at91_usbh_ehci_device);
+}
+#else
+void __init at91_add_device_usbh_ehci(struct at91_usbh_data *data) {}
+#endif
+
+
+/* --------------------------------------------------------------------
+ *  USB HS Device (Gadget)
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_USB_ATMEL_USBA) || defined(CONFIG_USB_ATMEL_USBA_MODULE)
+static struct resource usba_udc_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_UDPHS_FIFO,
+		.end	= SAMA5D3_UDPHS_FIFO + SZ_512K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_BASE_UDPHS,
+		.end	= SAMA5D3_BASE_UDPHS + SZ_1K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[2] = {
+		.start	= SAMA5D3_ID_UDPHS,
+		.end	= SAMA5D3_ID_UDPHS,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+#define EP(nam, idx, maxpkt, maxbk, dma, isoc)			\
+	[idx] = {						\
+		.name		= nam,				\
+		.index		= idx,				\
+		.fifo_size	= maxpkt,			\
+		.nr_banks	= maxbk,			\
+		.can_dma	= dma,				\
+		.can_isoc	= isoc,				\
+	}
+
+static struct usba_ep_data usba_udc_ep[] __initdata = {
+	EP( "ep0",  0,   64, 1, 0, 0),
+	EP( "ep1",  1, 1024, 3, 1, 1),
+	EP( "ep2",  2, 1024, 3, 1, 1),
+	EP( "ep3",  3, 1024, 2, 1, 1),
+	EP( "ep4",  4, 1024, 2, 1, 1),
+	EP( "ep5",  5, 1024, 2, 1, 1),
+	EP( "ep6",  6, 1024, 2, 1, 1),
+	EP( "ep7",  7, 1024, 2, 1, 1),
+	EP( "ep8",  8, 1024, 2, 0, 1),
+	EP( "ep9",  9, 1024, 2, 0, 1),
+	EP("ep10", 10, 1024, 2, 0, 1),
+	EP("ep11", 11, 1024, 2, 0, 1),
+	EP("ep12", 12, 1024, 2, 0, 1),
+	EP("ep13", 13, 1024, 2, 0, 1),
+	EP("ep14", 14, 1024, 2, 0, 1),
+	EP("ep15", 15, 1024, 2, 0, 1),
+};
+
+#undef EP
+
+/*
+ * pdata doesn't have room for any endpoints, so we need to
+ * append room for the ones we need right after it.
+ */
+static struct {
+	struct usba_platform_data pdata;
+	struct usba_ep_data ep[16];
+} usba_udc_data;
+
+static struct platform_device at91_usba_udc_device = {
+	.name		= "atmel_usba_udc",
+	.id		= -1,
+	.dev		= {
+				.platform_data	= &usba_udc_data.pdata,
+	},
+	.resource	= usba_udc_resources,
+	.num_resources	= ARRAY_SIZE(usba_udc_resources),
+};
+
+void __init at91_add_device_usba(struct usba_platform_data *data)
+{
+	usba_udc_data.pdata.vbus_pin = -EINVAL;
+	usba_udc_data.pdata.num_ep = ARRAY_SIZE(usba_udc_ep);
+	memcpy(usba_udc_data.ep, usba_udc_ep, sizeof(usba_udc_ep));
+
+	if (data && data->vbus_pin > 0) {
+		at91_set_gpio_input(data->vbus_pin, 0);
+		at91_set_deglitch(data->vbus_pin, 1);
+		usba_udc_data.pdata.vbus_pin = data->vbus_pin;
+	}
+
+	/* Pullup pin is handled internally by USB device peripheral */
+
+	platform_device_register(&at91_usba_udc_device);
+}
+#else
+void __init at91_add_device_usba(struct usba_platform_data *data) {}
+#endif
+
+
 /* --------------------------------------------------------------------
  *  MMC / SD
  * -------------------------------------------------------------------- */
