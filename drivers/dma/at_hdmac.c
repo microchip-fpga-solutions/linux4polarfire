@@ -37,8 +37,6 @@
 
 #define	ATC_DEFAULT_CFG		(ATC_FIFOCFG_HALFFIFO)
 #define	ATC_DEFAULT_CTRLA	(0)
-#define	ATC_DEFAULT_CTRLB	(ATC_SIF(AT_DMA_MEM_IF) \
-				|ATC_DIF(AT_DMA_MEM_IF))
 
 /*
  * Initial number of descriptors to allocate for each channel. This could
@@ -576,6 +574,7 @@ atc_prep_dma_memcpy(struct dma_chan *chan, dma_addr_t dest, dma_addr_t src,
 		size_t len, unsigned long flags)
 {
 	struct at_dma_chan	*atchan = to_at_dma_chan(chan);
+	struct at_dma		*atdma = to_at_dma(chan->device);
 	struct at_desc		*desc = NULL;
 	struct at_desc		*first = NULL;
 	struct at_desc		*prev = NULL;
@@ -595,7 +594,9 @@ atc_prep_dma_memcpy(struct dma_chan *chan, dma_addr_t dest, dma_addr_t src,
 	}
 
 	ctrla =   ATC_DEFAULT_CTRLA;
-	ctrlb =   ATC_DEFAULT_CTRLB | ATC_IEN
+	ctrlb =   ATC_SIF(atdma->mem_if)
+		| ATC_DIF(atdma->mem_if)
+		| ATC_IEN
 		| ATC_SRC_ADDR_MODE_INCR
 		| ATC_DST_ADDR_MODE_INCR
 		| ATC_FC_MEM2MEM;
@@ -664,6 +665,7 @@ atc_prep_slave_sg(struct dma_chan *chan, struct scatterlist *sgl,
 		unsigned long flags)
 {
 	struct at_dma_chan	*atchan = to_at_dma_chan(chan);
+	struct at_dma		*atdma = to_at_dma(chan->device);
 	struct at_dma_slave	*atslave = chan->private;
 	struct at_desc		*first = NULL;
 	struct at_desc		*prev = NULL;
@@ -697,7 +699,7 @@ atc_prep_slave_sg(struct dma_chan *chan, struct scatterlist *sgl,
 		ctrlb |=  ATC_DST_ADDR_MODE_FIXED
 			| ATC_SRC_ADDR_MODE_INCR
 			| ATC_FC_MEM2PER
-			| ATC_SIF(AT_DMA_MEM_IF) | ATC_DIF(AT_DMA_PER_IF);
+			| ATC_SIF(atdma->mem_if) | ATC_DIF(atdma->per_if);
 		reg = atslave->tx_reg;
 		for_each_sg(sgl, sg, sg_len, i) {
 			struct at_desc	*desc;
@@ -730,7 +732,7 @@ atc_prep_slave_sg(struct dma_chan *chan, struct scatterlist *sgl,
 		ctrlb |=  ATC_DST_ADDR_MODE_INCR
 			| ATC_SRC_ADDR_MODE_FIXED
 			| ATC_FC_PER2MEM
-			| ATC_SIF(AT_DMA_PER_IF) | ATC_DIF(AT_DMA_MEM_IF);
+			| ATC_SIF(atdma->per_if) | ATC_DIF(atdma->mem_if);
 
 		reg = atslave->rx_reg;
 		for_each_sg(sgl, sg, sg_len, i) {
@@ -808,9 +810,10 @@ err_out:
  * atc_dma_cyclic_fill_desc - Fill one period decriptor
  */
 static int
-atc_dma_cyclic_fill_desc(struct at_dma_slave *atslave, struct at_desc *desc,
-		unsigned int period_index, dma_addr_t buf_addr,
-		size_t period_len, enum dma_data_direction direction)
+atc_dma_cyclic_fill_desc(struct at_dma *atdma, struct at_dma_slave *atslave,
+		struct at_desc *desc, unsigned int period_index,
+		dma_addr_t buf_addr, size_t period_len,
+		enum dma_data_direction direction)
 {
 	u32		ctrla;
 	unsigned int	reg_width = atslave->reg_width;
@@ -829,8 +832,8 @@ atc_dma_cyclic_fill_desc(struct at_dma_slave *atslave, struct at_desc *desc,
 		desc->lli.ctrlb = ATC_DST_ADDR_MODE_FIXED
 				| ATC_SRC_ADDR_MODE_INCR
 				| ATC_FC_MEM2PER
-				| ATC_SIF(AT_DMA_MEM_IF)
-				| ATC_DIF(AT_DMA_PER_IF);
+				| ATC_SIF(atdma->mem_if)
+				| ATC_DIF(atdma->per_if);
 		break;
 
 	case DMA_FROM_DEVICE:
@@ -840,8 +843,8 @@ atc_dma_cyclic_fill_desc(struct at_dma_slave *atslave, struct at_desc *desc,
 		desc->lli.ctrlb = ATC_DST_ADDR_MODE_INCR
 				| ATC_SRC_ADDR_MODE_FIXED
 				| ATC_FC_PER2MEM
-				| ATC_SIF(AT_DMA_PER_IF)
-				| ATC_DIF(AT_DMA_MEM_IF);
+				| ATC_SIF(atdma->per_if)
+				| ATC_DIF(atdma->mem_if);
 		break;
 
 	default:
@@ -864,6 +867,7 @@ atc_prep_dma_cyclic(struct dma_chan *chan, dma_addr_t buf_addr, size_t buf_len,
 		size_t period_len, enum dma_data_direction direction)
 {
 	struct at_dma_chan	*atchan = to_at_dma_chan(chan);
+	struct at_dma		*atdma = to_at_dma(chan->device);
 	struct at_dma_slave	*atslave = chan->private;
 	struct at_desc		*first = NULL;
 	struct at_desc		*prev = NULL;
@@ -900,8 +904,8 @@ atc_prep_dma_cyclic(struct dma_chan *chan, dma_addr_t buf_addr, size_t buf_len,
 		if (!desc)
 			goto err_desc_get;
 
-		if (atc_dma_cyclic_fill_desc(atslave, desc, i, buf_addr,
-						period_len, direction))
+		if (atc_dma_cyclic_fill_desc(atdma, atslave, desc, i,
+		                             buf_addr, period_len, direction))
 			goto err_desc_get;
 
 		atc_desc_chain(&first, &prev, desc);
@@ -1223,6 +1227,10 @@ static int __init at_dma_probe(struct platform_device *pdev)
 	/* discover transaction capabilites from the platform data */
 	atdma->dma_common.cap_mask = pdata->cap_mask;
 	atdma->all_chan_mask = (1 << pdata->nr_channels) - 1;
+
+	/* set memory and peripheral interfaces from the platform data */
+	atdma->mem_if = pdata->mem_if;
+	atdma->per_if = pdata->per_if;
 
 	size = resource_size(io);
 	if (!request_mem_region(io->start, size, pdev->dev.driver->name)) {

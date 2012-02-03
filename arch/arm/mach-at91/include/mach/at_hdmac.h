@@ -17,10 +17,14 @@
  * struct at_dma_platform_data - Controller configuration parameters
  * @nr_channels: Number of channels supported by hardware (max 8)
  * @cap_mask: dma_capability flags supported by the platform
+ * @mem_if: dma memory interface number
+ * @per_if: dma peripheral interface number
  */
 struct at_dma_platform_data {
 	unsigned int	nr_channels;
 	dma_cap_mask_t  cap_mask;
+	unsigned int	mem_if;
+	unsigned int	per_if;
 };
 
 /**

@@ -103,9 +103,6 @@
 /* Bitfields in CTRLB */
 #define	ATC_SIF(i)		(0x3 & (i))	/* Src tx done via AHB-Lite Interface i */
 #define	ATC_DIF(i)		((0x3 & (i)) <<  4)	/* Dst tx done via AHB-Lite Interface i */
-				  /* Specify AHB interfaces */
-#define AT_DMA_MEM_IF		0 /* interface 0 as memory interface */
-#define AT_DMA_PER_IF		1 /* interface 1 as peripheral interface */
 
 #define	ATC_SRC_PIP		(0x1 <<  8)	/* Source Picture-in-Picture enabled */
 #define	ATC_DST_PIP		(0x1 << 12)	/* Destination Picture-in-Picture enabled */
@@ -255,6 +252,8 @@ static inline struct at_dma_chan *to_at_dma_chan(struct dma_chan *dchan)
  * @clk: dma controller clock
  * @save_imr: interrupt mask register that is saved on suspend/resume cycle
  * @all_chan_mask: all channels availlable in a mask
+ * @mem_if: dma controller memory interface
+ * @per_if: dma controller peripheral interface
  * @dma_desc_pool: base of DMA descriptor region (DMA address)
  * @chan: channels table to store at_dma_chan structures
  */
@@ -265,6 +264,9 @@ struct at_dma {
 	u32			save_imr;
 
 	u8			all_chan_mask;
+
+	u8 			mem_if;
+	u8 			per_if;
 
 	struct dma_pool		*dma_desc_pool;
 	/* AT THE END channels table */
