@@ -272,6 +272,87 @@ void __init at91_add_device_usba(struct usba_platform_data *data) {}
 
 
 /* --------------------------------------------------------------------
+ *  Ethernet Gigabit
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_MACB) || defined(CONFIG_MACB_MODULE)
+static u64 eth_giga_dmamask = DMA_BIT_MASK(32);
+static struct macb_platform_data eth_giga_data;
+
+static struct resource eth_giga_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_BASE_GMAC,
+		.end	= SAMA5D3_BASE_GMAC + SZ_16K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_ID_GMAC,
+		.end	= SAMA5D3_ID_GMAC,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device sama5d3_eth_giga_device = {
+	.name		= "macb",
+	.id		= -1,
+	.dev		= {
+				.dma_mask		= &eth_giga_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &eth_giga_data,
+	},
+	.resource	= eth_giga_resources,
+	.num_resources	= ARRAY_SIZE(eth_giga_resources),
+};
+
+void __init at91_add_device_eth_giga(struct macb_platform_data *data)
+{
+	if (!data)
+		return;
+
+	if (data->phy_irq_pin) {
+		at91_set_gpio_input(data->phy_irq_pin, 0);
+		at91_set_deglitch(data->phy_irq_pin, 1);
+	}
+
+	/* Pins used for RGMII */
+	at91_set_A_periph(AT91_PIN_PB0,  0);	/* GTX0 */
+	at91_set_A_periph(AT91_PIN_PB1,  0);	/* GTX1 */
+	at91_set_A_periph(AT91_PIN_PB2,  0);	/* GTX2 */
+	at91_set_A_periph(AT91_PIN_PB3,  0);	/* GTX3 */
+	at91_set_A_periph(AT91_PIN_PB4,  0);	/* GRX0 */
+	at91_set_A_periph(AT91_PIN_PB5,  0);	/* GRX1 */
+	at91_set_A_periph(AT91_PIN_PB6,  0);	/* GRX2 */
+	at91_set_A_periph(AT91_PIN_PB7,  0);	/* GRX3 */
+	at91_set_A_periph(AT91_PIN_PB8,  0);	/* GTXCK */
+	at91_set_A_periph(AT91_PIN_PB9,  0);	/* GTXEN */
+	at91_set_A_periph(AT91_PIN_PB10, 0);	/* GTXER */
+	at91_set_A_periph(AT91_PIN_PB11, 0);	/* GRXCK */
+	at91_set_A_periph(AT91_PIN_PB12, 0);	/* GRXDV */
+	at91_set_A_periph(AT91_PIN_PB13, 0);	/* GRXER */
+	at91_set_A_periph(AT91_PIN_PB14, 0);	/* GCRS */
+	at91_set_A_periph(AT91_PIN_PB15, 0);	/* GCOL */
+	at91_set_A_periph(AT91_PIN_PB16, 0);	/* GMDC */
+	at91_set_A_periph(AT91_PIN_PB17, 0);	/* GMDIO */
+	at91_set_A_periph(AT91_PIN_PB18, 0);	/* G125CK */
+	//at91_set_B_periph(AT91_PIN_PB19, 0);	/* GTX4 */
+	//at91_set_B_periph(AT91_PIN_PB20, 0);	/* GTX5 */
+	//at91_set_B_periph(AT91_PIN_PB21, 0);	/* GTX6 */
+	//at91_set_B_periph(AT91_PIN_PB22, 0);	/* GTX7 */
+	//at91_set_B_periph(AT91_PIN_PB23, 0);	/* GRX4 */
+	//at91_set_B_periph(AT91_PIN_PB24, 0);	/* GRX5 */
+	//at91_set_B_periph(AT91_PIN_PB25, 0);	/* GRX6 */
+	//at91_set_B_periph(AT91_PIN_PB26, 0);	/* GRX7 */
+	//at91_set_B_periph(AT91_PIN_PB27, 0);	/* G125CKO */
+
+	eth_giga_data = *data;
+	platform_device_register(&sama5d3_eth_giga_device);
+}
+#else
+void __init at91_add_device_eth_giga(struct macb_platform_data *data) {}
+#endif
+
+
+/* --------------------------------------------------------------------
  *  MMC / SD
  * -------------------------------------------------------------------- */
 

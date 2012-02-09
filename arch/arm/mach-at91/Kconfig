@@ -91,6 +91,7 @@ config ARCH_SAMA5D3
 	select CPU_V7
 	select CPU_CORTEXA5
 	select GENERIC_CLOCKVENTS
+	select HAVE_NET_MACB
 
 endchoice
 
