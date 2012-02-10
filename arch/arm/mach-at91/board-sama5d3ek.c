@@ -86,7 +86,7 @@ static void __init db_board_init(void)
 	at91_add_device_mci(0, &mci0_data);
 	/* Ethernet */
 	at91_add_device_eth(&ek_macb_data);
-	//at91_add_device_eth_giga(&ek_gmacb_data);
+	at91_add_device_eth_giga(&ek_gmacb_data);
 }
 
 MACHINE_START(SAMA5D3DB, "Atmel SAMA5D3-DB")
