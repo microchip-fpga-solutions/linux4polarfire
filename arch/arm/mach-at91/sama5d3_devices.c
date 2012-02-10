@@ -271,6 +271,69 @@ void __init at91_add_device_usba(struct usba_platform_data *data) {}
 #endif
 
 
+ /* --------------------------------------------------------------------
+ *  Ethernet
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_MACB) || defined(CONFIG_MACB_MODULE)
+static u64 eth_dmamask = DMA_BIT_MASK(32);
+static struct macb_platform_data eth_data;
+
+static struct resource eth_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_BASE_EMAC,
+		.end	= SAMA5D3_BASE_EMAC + SZ_16K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_ID_EMAC,
+		.end	= SAMA5D3_ID_EMAC,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device sama5d3_eth_device = {
+	.name		= "macb",
+	.id		= -1,
+	.dev		= {
+		.dma_mask               = &eth_dmamask,
+		.coherent_dma_mask      = DMA_BIT_MASK(32),
+		.platform_data          = &eth_data,
+	},
+	.resource	= eth_resources,
+	.num_resources	= ARRAY_SIZE(eth_resources),
+};
+
+void __init at91_add_device_eth(struct macb_platform_data *data)
+{
+	if (!data)
+		return;
+
+	if (data->phy_irq_pin) {
+		at91_set_gpio_input(data->phy_irq_pin, 0);
+		at91_set_deglitch(data->phy_irq_pin, 1);
+	}
+
+	/* Pins used for RMII */
+	at91_set_A_periph(AT91_PIN_PC0, 0);     /* ETX0 */
+	at91_set_A_periph(AT91_PIN_PC1, 0);     /* ETX1 */
+	at91_set_A_periph(AT91_PIN_PC2, 0);     /* ERX0 */
+	at91_set_A_periph(AT91_PIN_PC3, 0);     /* ERX1 */
+	at91_set_A_periph(AT91_PIN_PC4, 0);     /* ETXEN */
+	at91_set_A_periph(AT91_PIN_PC5, 0);     /* ECRSDV */
+	at91_set_A_periph(AT91_PIN_PC6, 0);     /* ERXER */
+	at91_set_A_periph(AT91_PIN_PC7, 0);     /* EREFCK */
+	at91_set_A_periph(AT91_PIN_PC8, 0);     /* EMDC */
+	at91_set_A_periph(AT91_PIN_PC9, 0);     /* EMDIO */
+
+	eth_data = *data;
+	platform_device_register(&sama5d3_eth_device);
+}
+#else
+void __init at91_add_device_eth(struct macb_platform_data *data) {}
+#endif
+
+
 /* --------------------------------------------------------------------
  *  Ethernet Gigabit
  * -------------------------------------------------------------------- */

@@ -77,7 +77,7 @@ static struct clk udphs_clk = {
 
 static struct clk macb_clk = {
 	.name		= "pclk",
-	.pmc_mask	= 1 << SAMA5D3_ID_GMAC,
+	.pmc_mask	= 1 << SAMA5D3_ID_EMAC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 
