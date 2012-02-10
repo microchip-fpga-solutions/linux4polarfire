@@ -81,6 +81,12 @@ static struct clk macb_clk = {
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 
+static struct clk gmacb_clk = {
+	.name		= "pclk",
+	.pmc_mask	= 1 << SAMA5D3_ID_GMAC,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
 	&pioB_clk,
@@ -92,11 +98,13 @@ static struct clk *periph_clocks[] __initdata = {
 	&uhphs_clk,
 	&udphs_clk,
 	&macb_clk,
+	&gmacb_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
 	/* One additional fake clock for macb_hclk */
 	CLKDEV_CON_ID("hclk", &macb_clk),
+	CLKDEV_CON_ID("hclk", &gmacb_clk),
 	/* One additional fake clock for ohci */
 	CLKDEV_CON_ID("ohci_clk", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ehci_clk", "atmel-ehci", &uhphs_clk),
