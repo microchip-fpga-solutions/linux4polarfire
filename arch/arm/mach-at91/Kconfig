@@ -465,6 +465,11 @@ config MACH_SAMA5D3DB
 	help
 	  Select this if you are using Atmel's SAMA5D3 Debug Board.
 
+config MACH_SAMA5D3EK
+	bool "Atmel SAMA5D3-EK Evaluation Kit"
+	help
+	  Select this if you are using Atmel's SAMA5D3 Evaluation Kit.
+
 endif
 
 # ----------------------------------------------------------

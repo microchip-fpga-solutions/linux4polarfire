@@ -88,6 +88,7 @@ obj-$(CONFIG_MACH_AT91EB01)	+= board-eb01.o
 
 # SAMA5D3 board-specific support
 obj-$(CONFIG_MACH_SAMA5D3DB)	+= board-sama5d3db.o
+obj-$(CONFIG_MACH_SAMA5D3EK)	+= board-sama5d3ek.o
 
 # Drivers
 obj-y				+= leds.o
