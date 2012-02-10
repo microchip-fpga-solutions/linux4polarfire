@@ -356,7 +356,7 @@ static struct resource eth_giga_resources[] = {
 };
 
 static struct platform_device sama5d3_eth_giga_device = {
-	.name		= "macb",
+	.name		= "gmacb",
 	.id		= -1,
 	.dev		= {
 				.dma_mask		= &eth_giga_dmamask,
