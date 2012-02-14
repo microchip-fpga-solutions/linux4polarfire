@@ -294,7 +294,7 @@ static struct resource eth_resources[] = {
 
 static struct platform_device sama5d3_eth_device = {
 	.name		= "macb",
-	.id		= -1,
+	.id		= 0,
 	.dev		= {
 		.dma_mask               = &eth_dmamask,
 		.coherent_dma_mask      = DMA_BIT_MASK(32),
@@ -356,8 +356,8 @@ static struct resource eth_giga_resources[] = {
 };
 
 static struct platform_device sama5d3_eth_giga_device = {
-	.name		= "gmacb",
-	.id		= -1,
+	.name		= "macb",
+	.id		= 1,
 	.dev		= {
 				.dma_mask		= &eth_giga_dmamask,
 				.coherent_dma_mask	= DMA_BIT_MASK(32),
