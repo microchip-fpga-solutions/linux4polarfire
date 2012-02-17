@@ -5,7 +5,10 @@
 #include <mach/gpio.h>
 #include <linux/platform_device.h>
 
+#include <video/atmel_lcdfb.h>
+
 #include <mach/board.h>
+#include <mach/atmel_hlcdc.h>
 #include <mach/sama5d3.h>
 #include <mach/at_hdmac.h>
 #include <mach/atmel-mci.h>
@@ -611,6 +614,120 @@ void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins) {}
 void __init at91_set_serial_console(unsigned portnr) {}
 void __init at91_add_device_serial(void) {}
 #endif
+
+
+/* --------------------------------------------------------------------
+ *  LCD Controller
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_FB_ATMEL_HLCD) || defined(CONFIG_FB_ATMEL_HLCD_MODULE)
+static u64 lcdc_dmamask = DMA_BIT_MASK(32);
+static struct atmel_lcdfb_info lcdc_data;
+
+static struct resource lcdc_base_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_BASE_LCDC,
+		.end	= SAMA5D3_BASE_LCDC + 0xff,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_BASE_LCDC + ATMEL_LCDC2_BASECLUT,
+		.end	= SAMA5D3_BASE_LCDC + ATMEL_LCDC2_BASECLUT + SZ_1K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[2] = {
+		.start	= SAMA5D3_ID_LCDC,
+		.end	= SAMA5D3_ID_LCDC,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at91_lcdc_base_device = {
+	.name		= "atmel_hlcdfb_base",
+	.id		= 0,
+	.dev		= {
+		.dma_mask		= &lcdc_dmamask,
+		.coherent_dma_mask	= DMA_BIT_MASK(32),
+		.platform_data		= &lcdc_data,
+	},
+	.resource	= lcdc_base_resources,
+	.num_resources	= ARRAY_SIZE(lcdc_base_resources),
+};
+
+static struct resource lcdc_ovl1_resources[] = {
+	[0] = {
+		.start	= SAMA5D3_BASE_LCDC + 0x140,
+		.end	= SAMA5D3_BASE_LCDC + 0x23f,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= SAMA5D3_BASE_LCDC + ATMEL_LCDC2_OVR1CLUT,
+		.end	= SAMA5D3_BASE_LCDC + ATMEL_LCDC2_OVR1CLUT + SZ_1K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+};
+
+static struct platform_device at91_lcdc_ovl_device = {
+	.name		= "atmel_hlcdfb_ovl",
+	.id		= 0,
+	.dev		= {
+		.dma_mask		= &lcdc_dmamask,
+		.coherent_dma_mask	= DMA_BIT_MASK(32),
+		.platform_data		= &lcdc_data,
+	},
+	.resource	= lcdc_ovl1_resources,
+	.num_resources	= ARRAY_SIZE(lcdc_ovl1_resources),
+};
+
+void __init at91_add_device_lcdc(struct atmel_lcdfb_info *data)
+{
+	if (!data)
+		return;
+
+	printk(KERN_ERR "=== add device lcdc ===\n");
+
+	at91_set_A_periph(AT91_PIN_PA24, 0);	/* LCDPWM */
+
+	at91_set_A_periph(AT91_PIN_PA26, 0);	/* LCDVSYNC */
+	at91_set_A_periph(AT91_PIN_PA27, 0);	/* LCDHSYNC */
+
+	at91_set_A_periph(AT91_PIN_PA25, 0);	/* LCDDISP */
+	at91_set_A_periph(AT91_PIN_PA29, 0);	/* LCDDEN */
+	at91_set_A_periph(AT91_PIN_PA28, 0);	/* LCDPCK */
+
+	at91_set_A_periph(AT91_PIN_PA0, 0);	/* LCDD0 */
+	at91_set_A_periph(AT91_PIN_PA1, 0);	/* LCDD1 */
+	at91_set_A_periph(AT91_PIN_PA2, 0);	/* LCDD2 */
+	at91_set_A_periph(AT91_PIN_PA3, 0);	/* LCDD3 */
+	at91_set_A_periph(AT91_PIN_PA4, 0);	/* LCDD4 */
+	at91_set_A_periph(AT91_PIN_PA5, 0);	/* LCDD5 */
+	at91_set_A_periph(AT91_PIN_PA6, 0);	/* LCDD6 */
+	at91_set_A_periph(AT91_PIN_PA7, 0);	/* LCDD7 */
+	at91_set_A_periph(AT91_PIN_PA8, 0);	/* LCDD8 */
+	at91_set_A_periph(AT91_PIN_PA9, 0);	/* LCDD9 */
+	at91_set_A_periph(AT91_PIN_PA10, 0);	/* LCDD10 */
+	at91_set_A_periph(AT91_PIN_PA11, 0);	/* LCDD11 */
+	at91_set_A_periph(AT91_PIN_PA12, 0);	/* LCDD12 */
+	at91_set_A_periph(AT91_PIN_PA13, 0);	/* LCDD13 */
+	at91_set_A_periph(AT91_PIN_PA14, 0);	/* LCDD14 */
+	at91_set_A_periph(AT91_PIN_PA15, 0);	/* LCDD15 */
+	at91_set_C_periph(AT91_PIN_PC14, 0);	/* LCDD16 */
+	at91_set_C_periph(AT91_PIN_PC13, 0);	/* LCDD17 */
+	at91_set_C_periph(AT91_PIN_PC12, 0);	/* LCDD18 */
+	at91_set_C_periph(AT91_PIN_PC11, 0);	/* LCDD19 */
+	at91_set_C_periph(AT91_PIN_PC10, 0);	/* LCDD20 */
+	at91_set_C_periph(AT91_PIN_PC15, 0);	/* LCDD21 */
+	at91_set_C_periph(AT91_PIN_PE27, 0);	/* LCDD22 */
+	at91_set_C_periph(AT91_PIN_PE28, 0);	/* LCDD23 */
+
+	lcdc_data = *data;
+	platform_device_register(&at91_lcdc_base_device);
+	platform_device_register(&at91_lcdc_ovl_device);
+}
+#else
+void __init at91_add_device_lcdc(struct atmel_lcdfb_info *data) {}
+#endif
+
 
 /* -------------------------------------------------------------------- */
 /*

@@ -1,8 +1,11 @@
 #include <linux/types.h>
+#include <linux/fb.h>
 #include <linux/init.h>
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+
+#include <video/atmel_lcdfb.h>
 
 #include <mach/hardware.h>
 #include <asm/setup.h>
@@ -13,6 +16,7 @@
 
 #include <mach/board.h>
 #include <mach/gpio.h>
+#include <mach/atmel_hlcdc.h>
 #include <mach/sama5d3_matrix.h>
 
 #include "generic.h"
@@ -73,6 +77,59 @@ static struct macb_platform_data __initdata ek_gmacb_data = {
 	.is_rmii	= 1,
 };
 
+/*
+ * LCD Controller
+ */
+#if defined(CONFIG_FB_ATMEL_HLCD) || defined(CONFIG_FB_ATMEL_HLCD_MODULE)
+static struct fb_videomode at91_tft_vga_modes[] = {
+	{
+		.name           = "LG",
+		.refresh	= 60,
+		.xres		= 800,		.yres		= 480,
+		.pixclock	= KHZ2PICOS(33260),
+
+		.left_margin	= 88,		.right_margin	= 168,
+		.upper_margin	= 8,		.lower_margin	= 37,
+		.hsync_len	= 128,		.vsync_len	= 2,
+
+		.sync		= 0,
+		.vmode		= FB_VMODE_NONINTERLACED,
+	},
+};
+
+static struct fb_monspecs at91fb_default_monspecs = {
+	.manufacturer	= "LG",
+	.monitor        = "LB043WQ1",
+
+	.modedb		= at91_tft_vga_modes,
+	.modedb_len	= ARRAY_SIZE(at91_tft_vga_modes),
+	.hfmin		= 15000,
+	.hfmax		= 17640,
+	.vfmin		= 57,
+	.vfmax		= 67,
+};
+
+/* Default output mode is TFT 24 bit */
+#define SAMA5D3_DEFAULT_LCDCFG5	(LCDC_LCDCFG5_MODE_OUTPUT_24BPP)
+
+/* Driver datas */
+static struct atmel_lcdfb_info __initdata ek_lcdc_data = {
+	.lcdcon_is_backlight		= true,
+	.alpha_enabled			= false,
+	.default_bpp			= 16,
+	/* Reserve enough memory for 32bpp */
+	.smem_len			= 800 * 480 * 4,
+	/* In sama5 default_lcdcon2 is used for LCDCFG5 */
+	.default_lcdcon2		= SAMA5D3_DEFAULT_LCDCFG5,
+	.default_monspecs		= &at91fb_default_monspecs,
+	.guard_time			= 9,
+	.lcd_wiring_mode		= ATMEL_LCDC_WIRING_RGB,
+};
+
+#else
+static struct atmel_lcdfb_info __initdata ek_lcdc_data;
+#endif
+
 static void __init db_board_init(void)
 {
 	/* Serial */
@@ -87,6 +144,8 @@ static void __init db_board_init(void)
 	/* Ethernet */
 	at91_add_device_eth(&ek_macb_data);
 	at91_add_device_eth_giga(&ek_gmacb_data);
+	/* LCD Controller */
+	at91_add_device_lcdc(&ek_lcdc_data);
 }
 
 MACHINE_START(SAMA5D3DB, "Atmel SAMA5D3-DB")

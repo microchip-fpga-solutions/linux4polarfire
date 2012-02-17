@@ -23,7 +23,7 @@
 #define SAMA5D3_ID_UDPHS	33	/* USB Device High Speed */
 #define SAMA5D3_ID_GMAC		34	/* Gigabit Ethernet MAC */
 #define SAMA5D3_ID_EMAC		35	/* Ethernet MAC */
-#define SAMA5D3_ID_HLCDC5     	36      /* LCD Controller */
+#define SAMA5D3_ID_LCDC     	36      /* LCD Controller */
 #define SAMA5D3_ID_IRQ0		41	/* Advanced Interrupt Controller (IRQ0) */ 
 
 /*
@@ -32,7 +32,7 @@
 #define SAMA5D3_BASE_TC0	0xf0010000 /* (TC0) Base Address */
 #define SAMA5D3_BASE_TC1	0xf0010040 /* (TC1) Base Address */
 #define SAMA5D3_BASE_GMAC	0xf0028000 /* (GMAC) Base Address */
-#define SAMA5D3_BASE_HLCDC5	0xf0030000 /* (HLCDC5) Base Address */
+#define SAMA5D3_BASE_LCDC	0xf0030000 /* (HLCDC5) Base Address */
 #define SAMA5D3_BASE_HSMCI0	0xf0000000 /* (MMCI) Base Address */
 #define SAMA5D3_BASE_EMAC	0xf802c000 /* (EMAC) Base Address */
 #define SAMA5D3_BASE_UDPHS	0xf8030000

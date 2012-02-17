@@ -1,5 +1,6 @@
 #include <linux/module.h>
 #include <linux/pm.h>
+#include <linux/dma-mapping.h>
 
 #include <asm/irq.h>
 #include <asm/mach/arch.h>
@@ -63,6 +64,12 @@ static struct clk dma0_clk = {
 	.type           = CLK_TYPE_PERIPHERAL,
 };
 
+static struct clk lcdc_clk = {
+	.name		= "lcdc_clk",
+	.pmc_mask	= 1 << SAMA5D3_ID_LCDC,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
 static struct clk uhphs_clk = {
 	.name		= "uhphs_clk",
 	.pmc_mask	= 1 << SAMA5D3_ID_UHPHS,
@@ -95,6 +102,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&pioE_clk,
 	&mmc0_clk,
 	&dma0_clk,
+	&lcdc_clk,
 	&uhphs_clk,
 	&udphs_clk,
 	&macb_clk,
@@ -189,6 +197,7 @@ static void sama5d3_poweroff(void)
 void __init sama5d3_map_io(void)
 {
 	at91_init_sram(0, SAMA5D3_SRAM_BASE, SAMA5D3_SRAM_SIZE);
+	init_consistent_dma_size(14 * SZ_1M);
 }
 
 void __init sama5d3_initialize(unsigned long main_clock)
