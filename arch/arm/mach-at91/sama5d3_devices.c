@@ -712,8 +712,6 @@ void __init at91_add_device_lcdc(struct atmel_lcdfb_info *data)
 	if (!data)
 		return;
 
-	printk(KERN_ERR "=== add device lcdc ===\n");
-
 	at91_set_A_periph(AT91_PIN_PA24, 0);	/* LCDPWM */
 
 	at91_set_A_periph(AT91_PIN_PA26, 0);	/* LCDVSYNC */
