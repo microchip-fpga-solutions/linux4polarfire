@@ -142,7 +142,7 @@ static void __init db_board_init(void)
 	/* MMC0 */
 	at91_add_device_mci(0, &mci0_data);
 	/* Ethernet */
-	at91_add_device_eth(&ek_macb_data);
+	//at91_add_device_eth(&ek_macb_data);
 	at91_add_device_eth_giga(&ek_gmacb_data);
 	/* LCD Controller */
 	at91_add_device_lcdc(&ek_lcdc_data);
