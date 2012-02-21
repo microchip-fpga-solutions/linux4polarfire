@@ -4,6 +4,8 @@
 #include <linux/dma-mapping.h>
 #include <mach/gpio.h>
 #include <linux/platform_device.h>
+#include <linux/phy.h>
+#include <linux/micrel_phy.h>
 
 #include <video/atmel_lcdfb.h>
 
@@ -370,6 +372,28 @@ static struct platform_device sama5d3_eth_giga_device = {
 	.num_resources	= ARRAY_SIZE(eth_giga_resources),
 };
 
+static int sama5d3_phy_fixup(struct phy_device *phy)
+{
+	int value;
+
+	#define GMII_RCCPSR     260
+	#define GMII_RRDPSR     261
+	#define GMII_ERCR       11
+	#define GMII_ERDWR      12
+
+	/* Set delay values */
+	value = GMII_RCCPSR | 0x8000;
+	phy_write(phy, GMII_ERCR, value);
+	value = 0xF2F4;
+	phy_write(phy, GMII_ERDWR, value);
+	value = GMII_RRDPSR | 0x8000;
+	phy_write(phy, GMII_ERCR, value);
+	value = 0x2222;
+	phy_write(phy, GMII_ERDWR, value);
+
+	return 0;
+}
+
 void __init at91_add_device_eth_giga(struct macb_platform_data *data)
 {
 	if (!data)
@@ -409,6 +433,10 @@ void __init at91_add_device_eth_giga(struct macb_platform_data *data)
 	//at91_set_B_periph(AT91_PIN_PB25, 0);	/* GRX6 */
 	//at91_set_B_periph(AT91_PIN_PB26, 0);	/* GRX7 */
 	//at91_set_B_periph(AT91_PIN_PB27, 0);	/* G125CKO */
+
+	phy_register_fixup_for_uid(PHY_ID_KSZ9021,
+	                           MICREL_PHY_ID_MASK,
+	                           sama5d3_phy_fixup);
 
 	eth_giga_data = *data;
 	platform_device_register(&sama5d3_eth_giga_device);
