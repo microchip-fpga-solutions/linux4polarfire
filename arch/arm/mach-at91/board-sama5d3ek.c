@@ -153,7 +153,7 @@ static void __init db_board_init(void)
 		at91_add_device_lcdc(&ek_lcdc_data);
 }
 
-MACHINE_START(SAMA5D3DB, "Atmel SAMA5D3-DB")
+MACHINE_START(SAMA5D3EK, "Atmel SAMA5D3-EK")
 	.timer		= &at91sam926x_timer,
 	.map_io		= at91_map_io,
 	.init_early	= db_init_early,
