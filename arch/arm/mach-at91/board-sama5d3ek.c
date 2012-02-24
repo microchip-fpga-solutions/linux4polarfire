@@ -14,6 +14,7 @@
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
 
+#include <mach/cpu.h>
 #include <mach/board.h>
 #include <mach/gpio.h>
 #include <mach/atmel_hlcdc.h>
@@ -140,12 +141,16 @@ static void __init db_board_init(void)
 	/* USB HS Device */
 	at91_add_device_usba(&ek_usba_udc_data);
 	/* MMC0 */
-	at91_add_device_mci(0, &mci0_data);
+	if (!cpu_is_sama5d33())
+		at91_add_device_mci(0, &mci0_data);
 	/* Ethernet */
-	//at91_add_device_eth(&ek_macb_data);
-	at91_add_device_eth_giga(&ek_gmacb_data);
+	if (cpu_is_sama5d31() || cpu_is_sama5d35())
+		at91_add_device_eth(&ek_macb_data);
+	if (!cpu_is_sama5d31())
+		at91_add_device_eth_giga(&ek_gmacb_data);
 	/* LCD Controller */
-	at91_add_device_lcdc(&ek_lcdc_data);
+	if (!cpu_is_sama5d35())
+		at91_add_device_lcdc(&ek_lcdc_data);
 }
 
 MACHINE_START(SAMA5D3DB, "Atmel SAMA5D3-DB")

@@ -76,9 +76,11 @@ static void __init db_board_init(void)
 	/* USB HS Device */
 	at91_add_device_usba(&ek_usba_udc_data);
 	/* MMC0 */
-	at91_add_device_mci(0, &mci0_data);
+	if (!cpu_is_sama5d33())
+		at91_add_device_mci(0, &mci0_data);
 	/* Ethernet */
-	at91_add_device_eth_giga(&ek_gmacb_data);
+	if (!cpu_is_sama5d31())
+		at91_add_device_eth_giga(&ek_gmacb_data);
 }
 
 MACHINE_START(SAMA5D3DB, "Atmel SAMA5D3-DB")
