@@ -217,6 +217,23 @@ static void __init soc_detect(u32 dbgu_base)
 			break;
 		}
 	}
+
+	if (at91_soc_initdata.type == AT91_SOC_SAMA5D3) {
+		switch (at91_soc_initdata.exid) {
+		case ARCH_EXID_SAMA5D31:
+			at91_soc_initdata.subtype = AT91_SOC_SAMA5D31;
+			break;
+		case ARCH_EXID_SAMA5D33:
+			at91_soc_initdata.subtype = AT91_SOC_SAMA5D33;
+			break;
+		case ARCH_EXID_SAMA5D34:
+			at91_soc_initdata.subtype = AT91_SOC_SAMA5D34;
+			break;
+		case ARCH_EXID_SAMA5D35:
+			at91_soc_initdata.subtype = AT91_SOC_SAMA5D35;
+			break;
+		}
+	}
 }
 
 static const char *soc_name[] = {
@@ -255,6 +272,10 @@ static const char *soc_subtype_name[] = {
 	[AT91_SOC_SAM9X35]	= "at91sam9x35",
 	[AT91_SOC_SAM9G25]	= "at91sam9g25",
 	[AT91_SOC_SAM9X25]	= "at91sam9x25",
+	[AT91_SOC_SAMA5D31]	= "sama5d31",
+	[AT91_SOC_SAMA5D33]	= "sama5d33",
+	[AT91_SOC_SAMA5D34]	= "sama5d34",
+	[AT91_SOC_SAMA5D35]	= "sama5d35",
 	[AT91_SOC_SUBTYPE_NONE]	= "Unknown"
 };
 
