@@ -220,8 +220,16 @@ static inline int at91_soc_is_detected(void)
 
 #ifdef CONFIG_ARCH_SAMA5D3
 #define cpu_is_sama5d3()	(at91_soc_initdata.type == AT91_SOC_SAMA5D3)
+#define cpu_is_sama5d31()	(at91_soc_initdata.subtype == AT91_SOC_SAMA5D31)
+#define cpu_is_sama5d33()	(at91_soc_initdata.subtype == AT91_SOC_SAMA5D33)
+#define cpu_is_sama5d34()	(at91_soc_initdata.subtype == AT91_SOC_SAMA5D34)
+#define cpu_is_sama5d35()	(at91_soc_initdata.subtype == AT91_SOC_SAMA5D35)
 #else
 #define cpu_is_sama5d3()	(0)
+#define cpu_is_sama5d31()	(0)
+#define cpu_is_sama5d32()	(0)
+#define cpu_is_sama5d34()	(0)
+#define cpu_is_sama5d35()	(0)
 #endif
 
 /*
