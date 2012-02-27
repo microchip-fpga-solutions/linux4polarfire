@@ -88,12 +88,12 @@ extern void __init at91_add_device_eth_giga(struct macb_platform_data *data);
  /* USB Host */
 struct at91_usbh_data {
 	u8		ports;		/* number of ports on root hub */
-	u8		vbus_pin[2];	/* port power-control pin */
+	u8		vbus_pin[3];	/* port power-control pin */
 	u8              vbus_pin_inverted;
 	u8              overcurrent_supported;
-	u8              overcurrent_pin[2];
-	u8              overcurrent_status[2];
-	u8              overcurrent_changed[2];
+	u8              overcurrent_pin[3];
+	u8              overcurrent_status[3];
+	u8              overcurrent_changed[3];
 };
 extern void __init at91_add_device_usbh(struct at91_usbh_data *data);
 extern void __init at91_add_device_usbh_ohci(struct at91_usbh_data *data);

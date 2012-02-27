@@ -34,8 +34,8 @@ static void __init db_init_early(void)
  * USB HS Host port (common to OHCI & EHCI)
  */
 static struct at91_usbh_data __initdata ek_usbh_hs_data = {
-	.ports		= 2,
-	.vbus_pin	= {AT91_PIN_PD26, AT91_PIN_PD27},
+	.ports		= 3,
+	.vbus_pin	= {AT91_PIN_PD25, AT91_PIN_PD26, AT91_PIN_PD27},
 };
 
 
