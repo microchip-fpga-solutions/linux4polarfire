@@ -480,7 +480,7 @@ err:
 static inline unsigned int atmci_ns_to_clocks(struct atmel_mci *host,
 					unsigned int ns)
 {
-	return (ns * (host->bus_hz / 1000000) + 999) / 1000;
+	return (ns * ((host->bus_hz/2) / 1000000) + 999) / 1000;
 }
 
 static void atmci_set_timeout(struct atmel_mci *host,
