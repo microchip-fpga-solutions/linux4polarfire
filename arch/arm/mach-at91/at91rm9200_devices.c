@@ -374,6 +374,105 @@ void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data) {}
 
 
 /* --------------------------------------------------------------------
+ *  MMC / SD
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static u64 mmc_dmamask = DMA_BIT_MASK(32);
+static struct mci_platform_data mmc_data;
+
+static struct resource mmc_resources[] = {
+	[0] = {
+		.start	= AT91RM9200_BASE_MCI,
+		.end	= AT91RM9200_BASE_MCI + SZ_16K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= AT91RM9200_ID_MCI,
+		.end	= AT91RM9200_ID_MCI,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at91rm9200_mmc_device = {
+	.name		= "atmel_mci",
+	.id		= -1,
+	.dev		= {
+				.dma_mask		= &mmc_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &mmc_data,
+	},
+	.resource	= mmc_resources,
+	.num_resources	= ARRAY_SIZE(mmc_resources),
+};
+
+void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
+{
+	unsigned int i;
+	unsigned int slot_count = 0;
+
+	if (!data)
+		return;
+
+	for (i = 0; i < ATMCI_MAX_NR_SLOTS; i++) {
+
+		if (!data->slot[i].bus_width)
+			continue;
+
+		/* input/irq */
+		if (gpio_is_valid(data->slot[i].detect_pin)) {
+			at91_set_gpio_input(data->slot[i].detect_pin, 1);
+			at91_set_deglitch(data->slot[i].detect_pin, 1);
+		}
+		if (gpio_is_valid(data->slot[i].wp_pin))
+			at91_set_gpio_input(data->slot[i].wp_pin, 1);
+
+		switch (i) {
+		case 0:                                 /* slot A */
+			/* CMD */
+			at91_set_A_periph(AT91_PIN_PA28, 1);
+			/* DAT0, maybe DAT1..DAT3 */
+			at91_set_A_periph(AT91_PIN_PA29, 1);
+			if (data->slot[i].bus_width == 4) {
+				at91_set_B_periph(AT91_PIN_PB3, 1);
+				at91_set_B_periph(AT91_PIN_PB4, 1);
+				at91_set_B_periph(AT91_PIN_PB5, 1);
+			}
+			slot_count++;
+			break;
+		case 1:					/* slot B */
+			/* CMD */
+			at91_set_B_periph(AT91_PIN_PA8, 1);
+			/* DAT0, maybe DAT1..DAT3 */
+			at91_set_B_periph(AT91_PIN_PA9, 1);
+			if (data->slot[i].bus_width == 4) {
+				at91_set_B_periph(AT91_PIN_PA10, 1);
+				at91_set_B_periph(AT91_PIN_PA11, 1);
+				at91_set_B_periph(AT91_PIN_PA12, 1);
+			}
+			slot_count++;
+			break;
+		default:
+			printk(KERN_ERR
+			       "AT91: SD/MMC slot %d not available\n", i);
+			break;
+		}
+		if (slot_count) {
+			/* CLK */
+			at91_set_A_periph(AT91_PIN_PA27, 0);
+
+			mmc_data = *data;
+			platform_device_register(&at91rm9200_mmc_device);
+		}
+	}
+
+}
+#else
+void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
+#endif
+
+
+/* --------------------------------------------------------------------
  *  NAND / SmartMedia
  * -------------------------------------------------------------------- */
 
