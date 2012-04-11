@@ -68,6 +68,15 @@ static struct at91_udc_data __initdata kb9202_udc_data = {
 	.pullup_pin	= AT91_PIN_PB22,
 };
 
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata kb9202_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PB2,
+		.wp_pin		= -EINVAL,
+	},
+};
+#else
 static struct at91_mmc_data __initdata kb9202_mmc_data = {
 	.det_pin	= AT91_PIN_PB2,
 	.slot_b		= 0,
@@ -75,6 +84,7 @@ static struct at91_mmc_data __initdata kb9202_mmc_data = {
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 static struct mtd_partition __initdata kb9202_nand_partition[] = {
 	{
@@ -120,7 +130,11 @@ static void __init kb9202_board_init(void)
 	/* USB Device */
 	at91_add_device_udc(&kb9202_udc_data);
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &kb9202_mci0_data);
+#else
 	at91_add_device_mmc(0, &kb9202_mmc_data);
+#endif
 	/* I2C */
 	at91_add_device_i2c(NULL, 0);
 	/* SPI */

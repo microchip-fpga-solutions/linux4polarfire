@@ -354,6 +354,170 @@ void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data) {}
 #endif
 
 /* --------------------------------------------------------------------
+ *  MMC / SD
+ * -------------------------------------------------------------------- */
+
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static u64 mmc_dmamask = DMA_BIT_MASK(32);
+static struct mci_platform_data mmc0_data, mmc1_data;
+
+static struct resource mmc0_resources[] = {
+	[0] = {
+		.start	= AT91SAM9263_BASE_MCI0,
+		.end	= AT91SAM9263_BASE_MCI0 + SZ_16K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= AT91SAM9263_ID_MCI0,
+		.end	= AT91SAM9263_ID_MCI0,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at91sam9263_mmc0_device = {
+	.name		= "atmel_mci",
+	.id		= 0,
+	.dev		= {
+				.dma_mask		= &mmc_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &mmc0_data,
+	},
+	.resource	= mmc0_resources,
+	.num_resources	= ARRAY_SIZE(mmc0_resources),
+};
+
+static struct resource mmc1_resources[] = {
+	[0] = {
+		.start	= AT91SAM9263_BASE_MCI1,
+		.end	= AT91SAM9263_BASE_MCI1 + SZ_16K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= AT91SAM9263_ID_MCI1,
+		.end	= AT91SAM9263_ID_MCI1,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device at91sam9263_mmc1_device = {
+	.name		= "atmel_mci",
+	.id		= 1,
+	.dev		= {
+				.dma_mask		= &mmc_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &mmc1_data,
+	},
+	.resource	= mmc1_resources,
+	.num_resources	= ARRAY_SIZE(mmc1_resources),
+};
+
+void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
+{
+	unsigned int i;
+	unsigned int slot_count = 0;
+
+	if (!data)
+		return;
+
+	for (i = 0; i < ATMCI_MAX_NR_SLOTS; i++) {
+
+		if (!data->slot[i].bus_width)
+			continue;
+
+		/* input/irq */
+		if (gpio_is_valid(data->slot[i].detect_pin)) {
+			at91_set_gpio_input(data->slot[i].detect_pin,
+					1);
+			at91_set_deglitch(data->slot[i].detect_pin,
+					1);
+		}
+		if (gpio_is_valid(data->slot[i].wp_pin))
+			at91_set_gpio_input(data->slot[i].wp_pin, 1);
+
+		if (mmc_id == 0) {				/* MCI0 */
+			switch (i) {
+			case 0:					/* slot A */
+				/* CMD */
+				at91_set_A_periph(AT91_PIN_PA1, 1);
+				/* DAT0, maybe DAT1..DAT3 */
+				at91_set_A_periph(AT91_PIN_PA0, 1);
+				if (data->slot[i].bus_width == 4) {
+					at91_set_A_periph(AT91_PIN_PA3, 1);
+					at91_set_A_periph(AT91_PIN_PA4, 1);
+					at91_set_A_periph(AT91_PIN_PA5, 1);
+				}
+				slot_count++;
+				break;
+			case 1:					/* slot B */
+				/* CMD */
+				at91_set_A_periph(AT91_PIN_PA16, 1);
+				/* DAT0, maybe DAT1..DAT3 */
+				at91_set_A_periph(AT91_PIN_PA17, 1);
+				if (data->slot[i].bus_width == 4) {
+					at91_set_A_periph(AT91_PIN_PA18, 1);
+					at91_set_A_periph(AT91_PIN_PA19, 1);
+					at91_set_A_periph(AT91_PIN_PA20, 1);
+				}
+				slot_count++;
+				break;
+			default:
+				printk(KERN_ERR
+				       "AT91: SD/MMC slot %d not available\n", i);
+				break;
+			}
+			if (slot_count) {
+				/* CLK */
+				at91_set_A_periph(AT91_PIN_PA12, 0);
+
+				mmc0_data = *data;
+				platform_device_register(&at91sam9263_mmc0_device);
+			}
+		} else if (mmc_id == 1) {			/* MCI1 */
+			switch (i) {
+			case 0:					/* slot A */
+				/* CMD */
+				at91_set_A_periph(AT91_PIN_PA7, 1);
+				/* DAT0, maybe DAT1..DAT3 */
+				at91_set_A_periph(AT91_PIN_PA8, 1);
+				if (data->slot[i].bus_width == 4) {
+					at91_set_A_periph(AT91_PIN_PA9, 1);
+					at91_set_A_periph(AT91_PIN_PA10, 1);
+					at91_set_A_periph(AT91_PIN_PA11, 1);
+				}
+				slot_count++;
+				break;
+			case 1:					/* slot B */
+				/* CMD */
+				at91_set_A_periph(AT91_PIN_PA21, 1);
+				/* DAT0, maybe DAT1..DAT3 */
+				at91_set_A_periph(AT91_PIN_PA22, 1);
+				if (data->slot[i].bus_width == 4) {
+					at91_set_A_periph(AT91_PIN_PA23, 1);
+					at91_set_A_periph(AT91_PIN_PA24, 1);
+					at91_set_A_periph(AT91_PIN_PA25, 1);
+				}
+				slot_count++;
+				break;
+			default:
+				printk(KERN_ERR
+				       "AT91: SD/MMC slot %d not available\n", i);
+				break;
+			}
+			if (slot_count) {
+				/* CLK */
+				at91_set_A_periph(AT91_PIN_PA6, 0);
+
+				mmc1_data = *data;
+				platform_device_register(&at91sam9263_mmc1_device);
+			}
+		}
+	}
+}
+#else
+void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
+#endif
+
+/* --------------------------------------------------------------------
  *  Compact Flash (PCMCIA or IDE)
  * -------------------------------------------------------------------- */
 

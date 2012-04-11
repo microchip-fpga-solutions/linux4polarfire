@@ -77,12 +77,22 @@ static struct at91_udc_data __initdata cpuat91_udc_data = {
 	.pullup_pin	= AT91_PIN_PC14,
 };
 
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata cpuat91_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PC2,
+		.wp_pin		= -EINVAL,
+	},
+};
+#else
 static struct at91_mmc_data __initdata cpuat91_mmc_data = {
 	.det_pin	= AT91_PIN_PC2,
 	.wire4		= 1,
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 static struct physmap_flash_data cpuat91_flash_data = {
 	.width		= 2,
@@ -167,7 +177,11 @@ static void __init cpuat91_board_init(void)
 	/* USB Device */
 	at91_add_device_udc(&cpuat91_udc_data);
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &cpuat91_mci0_data);
+#else
 	at91_add_device_mmc(0, &cpuat91_mmc_data);
+#endif
 	/* I2C */
 	at91_add_device_i2c(NULL, 0);
 	/* Platform devices */

@@ -72,7 +72,7 @@ static struct at91_udc_data __initdata ek_udc_data = {
  * SPI devices.
  */
 static struct spi_board_info ek_spi_devices[] = {
-#if !defined(CONFIG_MMC_AT91)
+#if !defined(CONFIG_MMC_AT91) && !defined(CONFIG_MMC_ATMELMCI)
 	{	/* DataFlash chip */
 		.modalias	= "mtd_dataflash",
 		.chip_select	= 1,
@@ -157,6 +157,15 @@ static void __init ek_add_device_nand(void)
 /*
  * MCI (SD/MMC)
  */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata ek_mci0_data = {
+	.slot[1] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PC8,
+		.wp_pin		= AT91_PIN_PC4,
+	},
+};
+#else
 static struct at91_mmc_data __initdata ek_mmc_data = {
 	.slot_b		= 1,
 	.wire4		= 1,
@@ -164,6 +173,7 @@ static struct at91_mmc_data __initdata ek_mmc_data = {
 	.wp_pin		= AT91_PIN_PC4,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 static void __init ek_board_init(void)
 {
@@ -193,7 +203,11 @@ static void __init ek_board_init(void)
 	/* Ethernet */
 	at91_add_device_eth(&ek_macb_data);
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &ek_mci0_data);
+#else
 	at91_add_device_mmc(0, &ek_mmc_data);
+#endif
 	/* I2C */
 	at91_add_device_i2c(NULL, 0);
 }
