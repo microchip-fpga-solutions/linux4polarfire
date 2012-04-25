@@ -1,96 +1,57 @@
-#ifndef SAMA5D3_H
-#define SAMA5D3_H
+#ifndef ISLERO_H
+#define ISLERO_H
 
 /*
- * Peripheral identifiers/interrupts.
+ * Peripheral identifiers/interrupts (Non Secure).
  */
-#define AT91_ID_FIQ            	 0	/* Advanced Interrupt Controller (FIQ) */
-#define AT91_ID_SYS            	 1	/* System Peripherals */
-#define SAMA5D3_ID_DBGU       	 2	/* debug Unit (usually no special interrupt line) */
-#define AT91_ID_PIT		 3	/* PIT */
-#define SAMA5D3_ID_HSMC5	 5	/* Static Memory Controller */
-#define SAMA5D3_ID_PIOA		 6	/* PIOA */
-#define SAMA5D3_ID_PIOB		 7	/* PIOB */
-#define SAMA5D3_ID_PIOC		 8	/* PIOC */
-#define SAMA5D3_ID_PIOD		 9	/* PIOD */
-#define SAMA5D3_ID_PIOE		10	/* PIOE */
-#define SAMA5D3_ID_HSMCI0	21	/* MCI */
-#define SAMA5D3_ID_TC0        	26      /* Timer Counter 0 */
-#define SAMA5D3_ID_TC1        	27      /* Timer Counter 2 */
-#define SAMA5D3_ID_DMA0		30	/* DMA Controller 0 */
-#define SAMA5D3_ID_DMA1		31	/* DMA Controller 1 */
-#define SAMA5D3_ID_UHPHS	32	/* USB Host High Speed */
-#define SAMA5D3_ID_UDPHS	33	/* USB Device High Speed */
-#define SAMA5D3_ID_GMAC		34	/* Gigabit Ethernet MAC */
-#define SAMA5D3_ID_EMAC		35	/* Ethernet MAC */
-#define SAMA5D3_ID_LCDC     	36      /* LCD Controller */
-#define SAMA5D3_ID_IRQ0		41	/* Advanced Interrupt Controller (IRQ0) */ 
+#define ISLERO_ID_ST1		1
+#define ISLERO_ID_ST2		2
+#define AT91_ID_ST	ISLERO_ID_ST2
+#define ISLERO_ID_DMA0_NS	3
+#define ISLERO_ID_HSMCI0	4
+#define ISLERO_ID_USART0	5
+#define ISLERO_ID_PMU		6
+#define ISLERO_ID_PIOA_NS	7
 
 /*
  * User Peripheral physical base addresses.
  */
-#define SAMA5D3_BASE_TC0	0xf0010000 /* (TC0) Base Address */
-#define SAMA5D3_BASE_TC1	0xf0010040 /* (TC1) Base Address */
-#define SAMA5D3_BASE_GMAC	0xf0028000 /* (GMAC) Base Address */
-#define SAMA5D3_BASE_LCDC	0xf0030000 /* (HLCDC5) Base Address */
-#define SAMA5D3_BASE_HSMCI0	0xf0000000 /* (MMCI) Base Address */
-#define SAMA5D3_BASE_EMAC	0xf802c000 /* (EMAC) Base Address */
-#define SAMA5D3_BASE_UDPHS	0xf8030000
-#define AT91_BASE_SYS		0xffffc000
+#define ISLERO_BASE_DMA0_NS	0xff011000
+#define ISLERO_BASE_SHA		0xff01a000
+#define ISLERO_BASE_AIC_S	0xff017000
+#define ISLERO_BASE_AIC_NS	0xff012000
+#define ISLERO_BASE_HMATRIX2	0xff015000
+#define ISLERO_BASE_ST1		0xff000000
+#define ISLERO_BASE_ST2		0xff004000
+#define ISLERO_BASE_USART0	0xff010000
+#define ISLERO_BASE_HSMCI0	0xff013000
+#define ISLERO_BASE_SPI0	0xff00c000
+#define ISLERO_BASE_TC0		0xff018000
+#define ISLERO_BASE_TC1		0xff018040
+#define ISLERO_BASE_TC2		0xff018080
+#define ISLERO_BASE_TCB0	0xff018000
+#define ISLERO_BASE_PIOA_NS	0xff01b000
 
-/*
- * System Peripherals (offset from AT91_BASE_SYS)
- */
-#define AT91_DMA0	(0xffffe600 - AT91_BASE_SYS)
-#define AT91_DMA1	(0xffffe800 - AT91_BASE_SYS)
-#define AT91_MATRIX	(0xffffec00 - AT91_BASE_SYS)
-#define AT91_DBGU       (0xffffee00 - AT91_BASE_SYS)
-#define AT91_PIOA	(0xfffff200 - AT91_BASE_SYS)
-#define AT91_PIOB	(0xfffff400 - AT91_BASE_SYS)
-#define AT91_PIOC	(0xfffff600 - AT91_BASE_SYS)
-#define AT91_PIOD	(0xfffff800 - AT91_BASE_SYS)
-#define AT91_PIOE	(0xfffffA00 - AT91_BASE_SYS)
-#define AT91_PMC        (0xfffffc00 - AT91_BASE_SYS)
-#define AT91_PIT        (0xfffffe30 - AT91_BASE_SYS)
-#define AT91_WDT        (0xfffffe40 - AT91_BASE_SYS)
-#define AT91_GPBR       (0xfffffe60 - AT91_BASE_SYS) // KO OAR_TEMP, NO GPBR, error while building in "drivers/rtc/rtc-at91sam9.c"
+#define AT91_PIOA_NS		(ISLERO_BASE_PIOA_NS - AT91_BASE_SYS)
+#define AT91_ST			(ISLERO_BASE_ST2 - AT91_BASE_SYS)
+#define AT91_DBGU		(ISLERO_BASE_USART0 - AT91_BASE_SYS)
 
 /*
  * Internal Memory.
  */
-#define SAMA5D3_SRAM_BASE     0x00000000      /* Internal SRAM base address */
-#define SAMA5D3_SRAM_SIZE     (128 * SZ_1K)   /* Internal SRAM size (128Kb) */
-
-#define SAMA5D3_UDPHS_FIFO	0x00500000
-#define SAMA5D3_OHCI_BASE	0x00600000	/* USB Host controller (OHCI) */
-#define SAMA5D3_EHCI_BASE	0x00700000	/* USB Host controller (EHCI) */
+#define ISLERO_SRAM0_BASE	0x00010000
+#define ISLERO_SRAM0_SIZE	(SZ_64K)
+#define ISLERO_SRAM1_BASE	0x00050000
+#define ISLERO_SRAM1_SIZE	(SZ_64K)
+#define ISLERO_SRAM2_BASE	0x0b000000
+#define ISLERO_SRAM2_SIZE	(SZ_32K)
 
 /*
  * DMA0 peripheral identifiers
  * for hardware handshaking interface
  */
-#define AT_DMA_ID_MCI0		 0
-#define AT_DMA_ID_SPI0_TX	 1
-#define AT_DMA_ID_SPI0_RX	 2
-#define AT_DMA_ID_USART0_TX	 3
-#define AT_DMA_ID_USART0_RX	 4
-#define AT_DMA_ID_USART1_TX	 5
-#define AT_DMA_ID_USART1_RX	 6
-#define AT_DMA_ID_TWI0_TX	 7
-#define AT_DMA_ID_TWI0_RX	 8
-#define AT_DMA_ID_TWI1_TX	 9
-#define AT_DMA_ID_TWI1_RX	10
-#define AT_DMA_ID_UART0_TX	11
-#define AT_DMA_ID_UART0_RX	12
-#define AT_DMA_ID_SSC0_TX	13
-#define AT_DMA_ID_SSC0_RX	14
-#define AT_DMA_ID_SMD_TX	15
-#define AT_DMA_ID_SMD_RX	16
-
-/*
- * DMA1 peripheral identifiers
- * for hardware handshaking interface
- */
-#define AT_DMA_ID_MCI1           0
+#define AT_DMA_ID_HSMCI0	1
+#define AT_DMA_ID_SPI0_TX	2
+#define AT_DMA_ID_SPI0_RX	3
 
 #endif

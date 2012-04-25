@@ -94,6 +94,12 @@ config ARCH_SAMA5D3
 	select HAVE_FB_ATMEL
 	select HAVE_NET_MACB
 
+config ARCH_ISLERO
+	bool "ISLERO"
+	select CPU_V7
+	select CPU_CORTEXA5
+	select GENERIC_CLOCKVENTS
+
 endchoice
 
 config AT91_PMC_UNIT
@@ -470,6 +476,19 @@ config MACH_SAMA5D3EK
 	bool "Atmel SAMA5D3-EK Evaluation Kit"
 	help
 	  Select this if you are using Atmel's SAMA5D3 Evaluation Kit.
+
+endif
+
+# ----------------------------------------------------------
+
+if ARCH_ISLERO
+
+comment "ISLERO Board Type"
+
+config MACH_ISLERO_FPGA
+	bool "Atmel ISLERO FPGA TZ2 Board"
+	help
+	  Select this if you are using Atmel's CS3_CA5_TZ_2 Board.
 
 endif
 

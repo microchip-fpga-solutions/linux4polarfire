@@ -693,6 +693,19 @@ int __init at91_clock_init(unsigned long main_clock)
 	}
 	main_clk.rate_hz = main_clock;
 
+	if (cpu_is_islero()) {
+		mck.parent = &main_clk;
+		freq = mck.parent->rate_hz;
+		mck.rate_hz = freq;	/* master clock = main clock */
+		freq *= 2; 		/* CPU clock = 2 * main clock */
+		at91_clk_add(standard_pmc_clocks[3]); /* add mck to clock list */
+		//list_add_tail(&main_clk.node, &clocks);
+		//list_add_tail(&mck.node, &clocks);
+		/* clk_enable */
+		clk_enable(&mck);
+		goto display_return;
+	}
+
 	/* report if PLLA is more than mildly overclocked */
 	plla.rate_hz = at91_pll_rate(&plla, main_clock, at91_sys_read(AT91_CKGR_PLLAR));
 	if (cpu_has_300M_plla()) {
@@ -792,6 +805,7 @@ int __init at91_clock_init(unsigned long main_clock)
 	/* MCK and CPU clock are "always on" */
 	clk_enable(&mck);
 
+display_return:
 	printk("Clocks: CPU %u MHz, master %u MHz, main %u.%03u MHz\n",
 		freq / 1000000, (unsigned) mck.rate_hz / 1000000,
 		(unsigned) main_clock / 1000000,

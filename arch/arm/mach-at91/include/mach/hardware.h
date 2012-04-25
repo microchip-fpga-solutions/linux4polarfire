@@ -34,9 +34,25 @@
 #include <mach/at91x40.h>
 #elif defined(CONFIG_ARCH_SAMA5D3)
 #include <mach/sama5d3.h>
+#elif defined(CONFIG_ARCH_ISLERO)
+#include <mach/islero.h>
 #else
 #error "Unsupported AT91 processor"
 #endif
+
+#if defined(CONFIG_ARCH_ISLERO)
+#define AT91_AIC	ISLERO_BASE_AIC_NS
+#define AT91_ID_FIQ	0		/* Fake: no FIQ on FPGA */
+#define AT91_PMC	0x0		/* Fake: no PMC on FPGA */
+#define AT91_BASE_SYS	0xff000000
+/*
+ * Remap the peripherals from address 0xFF000000 .. 0xFF02FFFF
+ * to 0xFE000000 .. 0xFE02FFFF.  (192Kb)
+ */
+#define AT91_IO_PHYS_BASE	0xFF000000
+#define AT91_IO_SIZE		(0xFF02FFFF - AT91_IO_PHYS_BASE + 1)
+#define AT91_IO_VIRT_BASE	(0xFE030000 - AT91_IO_SIZE)
+#else /* ISLERO */
 
 #if !defined(CONFIG_ARCH_AT91X40)
 /*
@@ -81,6 +97,7 @@
 #endif
 
 #define AT91_IO_SIZE		(0xFFFFFFFF - AT91_IO_PHYS_BASE + 1)
+#endif /* ISLERO */
 
  /* Convert a physical IO address to virtual IO address */
 #define AT91_IO_P2V(x)		((x) - AT91_IO_PHYS_BASE + AT91_IO_VIRT_BASE)

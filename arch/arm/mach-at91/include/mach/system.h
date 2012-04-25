@@ -28,6 +28,7 @@
 
 static inline void arch_idle(void)
 {
+#if !defined(CONFIG_ARCH_ISLERO)
 	/*
 	 * Disable the processor clock.  The processor will be automatically
 	 * re-enabled by an interrupt or by a reset.
@@ -36,6 +37,7 @@ static inline void arch_idle(void)
 	at91_sys_write(AT91_PS_CR, AT91_PS_CR_CPU);
 #else
 	at91_sys_write(AT91_PMC_SCDR, AT91_PMC_PCK);
+#endif
 #endif
 #ifndef CONFIG_CPU_ARM920T
 	/*

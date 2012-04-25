@@ -24,7 +24,7 @@
 #include <linux/io.h>
 #include <mach/at91_aic.h>
 
-#define NR_AIC_IRQS 64
+#define NR_AIC_IRQS 32
 
 
 /*

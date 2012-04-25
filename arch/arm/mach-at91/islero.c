@@ -5,10 +5,10 @@
 #include <asm/irq.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
-#include <mach/sama5d3.h>
-#include <mach/at91_pmc.h>
-#include <mach/at91_rstc.h>
-#include <mach/at91_shdwc.h>
+#include <mach/islero.h>
+//#include <mach/at91_pmc.h>
+//#include <mach/at91_rstc.h>
+//#include <mach/at91_shdwc.h>
 #include <mach/cpu.h>
 
 #include "soc.h"
@@ -24,92 +24,19 @@
  */
 static struct clk pioA_clk = {
 	.name		= "pioA_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOA,
+	.pmc_mask	= 1 << ISLERO_ID_PIOA_NS,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 
-static struct clk pioB_clk = {
-	.name		= "pioB_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOB,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk pioC_clk = {
-	.name		= "pioC_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOC,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk pioD_clk = {
-	.name		= "pioD_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOD,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk pioE_clk = {
-	.name		= "pioE_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOE,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk mmc0_clk = {
-	.name           = "mci0_clk",
-	.pmc_mask       = 1 << SAMA5D3_ID_HSMCI0,
-	.type           = CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk dma0_clk = {
-	.name           = "dma_clk",
-	.pmc_mask       = 1 << SAMA5D3_ID_DMA0,
-	.type           = CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk lcdc_clk = {
-	.name		= "lcdc_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_LCDC,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk uhphs_clk = {
-	.name		= "uhphs_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_UHPHS,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk udphs_clk = {
-	.name		= "udphs_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_UDPHS,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk macb_clk = {
-	.name		= "pclk",
-	.pmc_mask	= 1 << SAMA5D3_ID_EMAC,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
-
-static struct clk gmacb_clk = {
-	.name		= "pclk",
-	.pmc_mask	= 1 << SAMA5D3_ID_GMAC,
-	.type		= CLK_TYPE_PERIPHERAL,
-};
 
 static struct clk *periph_clocks[] __initdata = {
+#if 0
 	&pioA_clk,
-	&pioB_clk,
-	&pioC_clk,
-	&pioD_clk,
-	&pioE_clk,
-	&mmc0_clk,
-	&dma0_clk,
-	&lcdc_clk,
-	&uhphs_clk,
-	&udphs_clk,
-	&macb_clk,
-	&gmacb_clk,
+#endif
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
+#if 0
 	/* One additional fake clock for macb_hclk */
 	CLKDEV_CON_ID("hclk", &macb_clk),
 	CLKDEV_CON_ID("hclk", &gmacb_clk),
@@ -121,13 +48,14 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("mci_clk", "atmel_mci.0", &mmc0_clk),
 	/* fake hclk clock */
 	CLKDEV_CON_DEV_ID("hclk", "at91_ohci", &uhphs_clk),
+#endif
 };
 
 static struct clk_lookup usart_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("usart", "atmel_usart.0", &mck),
 };
 
-static void __init sama5d3_register_clocks(void)
+static void __init islero_register_clocks(void)
 {
 	int i;
 
@@ -142,7 +70,7 @@ static void __init sama5d3_register_clocks(void)
 
 static struct clk_lookup console_clock_lookup;
 
-void __init sama5d3_set_console_clock(int id)
+void __init islero_set_console_clock(int id)
 {
 	if (id >= ARRAY_SIZE(usart_clocks_lookups))
 		return;
@@ -156,58 +84,41 @@ void __init sama5d3_set_console_clock(int id)
  *  GPIO
  * -------------------------------------------------------------------- */
 
-static struct at91_gpio_bank sama5d3_gpio[] = {
+static struct at91_gpio_bank islero_gpio[] = {
 	{
-		.id	= SAMA5D3_ID_PIOA,
-		.offset = AT91_PIOA,
+		.id	= ISLERO_ID_PIOA_NS,
+		.offset = AT91_PIOA_NS,
 		.clock	= &pioA_clk,
-	}, {
-		.id	= SAMA5D3_ID_PIOB,
-		.offset	= AT91_PIOB,
-		.clock	= &pioB_clk,
-	}, {
-		.id	= SAMA5D3_ID_PIOC,
-		.offset	= AT91_PIOC,
-		.clock	= &pioC_clk,
-	}, {
-		.id	= SAMA5D3_ID_PIOD,
-		.offset	= AT91_PIOD,
-		.clock	= &pioD_clk,
-	}, {
-		.id	= SAMA5D3_ID_PIOE,
-		.offset	= AT91_PIOE,
-		.clock	= &pioE_clk,
 	}
 };
 
-static void sama5d3_reset(void)
+static void islero_reset(void)
 {
 }
 
-static void sama5d3_poweroff(void)
+static void islero_poweroff(void)
 {
 }
 
 
 
 /* --------------------------------------------------------------------
- *  SAMA5D3 processor initialization
+ *  ISLERO processor initialization
  * -------------------------------------------------------------------- */
 
-void __init sama5d3_map_io(void)
+void __init islero_map_io(void)
 {
-	at91_init_sram(0, SAMA5D3_SRAM_BASE, SAMA5D3_SRAM_SIZE);
+	at91_init_sram(0, ISLERO_SRAM0_BASE, ISLERO_SRAM0_SIZE); /*TODO: add all banks */
 	init_consistent_dma_size(14 * SZ_1M);
 }
 
-void __init sama5d3_initialize(unsigned long main_clock)
+void __init islero_initialize(void)
 {
-	at91_arch_reset = sama5d3_reset;
-	pm_power_off = sama5d3_poweroff;
-	at91_extern_irq = (1 << SAMA5D3_ID_IRQ0);
+	at91_arch_reset = islero_reset;
+	pm_power_off = islero_poweroff;
 
 	/* Register GPIO subsystem */
-	at91_gpio_init(sama5d3_gpio, 5);
+	at91_gpio_init(islero_gpio, 1);
 }
 
 /* --------------------------------------------------------------------
@@ -217,7 +128,7 @@ void __init sama5d3_initialize(unsigned long main_clock)
 /*
  * The default interrupt priority levels (0 = lowest, 7 = highest).
  */
-static unsigned int sama5d3_default_irq_priority[NR_AIC_IRQS] __initdata = {
+static unsigned int islero_default_irq_priority[NR_AIC_IRQS] __initdata = {
 	7,      /* Advanced Interrupt Controller (FIQ) */
 	7,      /* System Peripherals */
 	7,	/* DBGU */
@@ -250,43 +161,11 @@ static unsigned int sama5d3_default_irq_priority[NR_AIC_IRQS] __initdata = {
 	0,	/* DMA Controller 0 */
 	0,	/* DMA Controller 1 */
 	2,	/* USB Host High Speed Port*/
-	2,	/* USB Device High Speed Port */
-	3,	/* Gigabit MAC */
-	3,	/* Ethernet MAC */
-	3,	/* LCD Controller */
-	3,	/* Image Sensor Interface */
-	4,	/* Synchronous Serial Controller 0 */
-	4,	/* Synchronous Serial Controller 1 */
-	4,	/* CAN Controller 0 */
-	4,	/* CAN Controller 1 */
-	0,	/* SHA */
-	0,	/* AES */
-	0,	/* TDES */
-	0,	/* TRNG */
-	0,	/* ARM */
-	0,	/* Advanced Interrupt Controller (IRQ0) */
-	0,	/* FUSE */
-	0,	/* MPDDRC */
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0
 };
 
-struct at91_init_soc __initdata sama5d3_soc = {
-	.map_io = sama5d3_map_io,
-	.default_irq_priority = sama5d3_default_irq_priority,
-	.register_clocks = sama5d3_register_clocks,
-	.init = sama5d3_initialize,
+struct at91_init_soc __initdata islero_soc = {
+	.map_io = islero_map_io,
+	.default_irq_priority = islero_default_irq_priority,
+	.register_clocks = islero_register_clocks,
+	.init = islero_initialize,
 };

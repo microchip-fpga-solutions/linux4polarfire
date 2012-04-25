@@ -7,11 +7,11 @@
 #include <linux/phy.h>
 #include <linux/micrel_phy.h>
 
-#include <video/atmel_lcdfb.h>
+//#include <video/atmel_lcdfb.h>
 
 #include <mach/board.h>
 #include <mach/atmel_hlcdc.h>
-#include <mach/sama5d3.h>
+#include <mach/islero.h>
 #include <mach/at_hdmac.h>
 #include <mach/atmel-mci.h>
 
@@ -556,42 +556,42 @@ void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
  * -------------------------------------------------------------------- */
 
 #if defined(CONFIG_SERIAL_ATMEL)
-static struct resource dbgu_resources[] = {
+static struct resource usart0_resources[] = {
 	[0] = {
-		.start  = AT91_BASE_SYS + AT91_DBGU,
-		.end    = AT91_BASE_SYS + AT91_DBGU + SZ_512 - 1,
+		.start  = ISLERO_BASE_USART0,
+		.end    = ISLERO_BASE_USART0 + SZ_16K - 1,
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start  = SAMA5D3_ID_DBGU,
-		.end    = SAMA5D3_ID_DBGU,
+		.start  = ISLERO_ID_USART0,
+		.end    = ISLERO_ID_USART0,
 		.flags  = IORESOURCE_IRQ,
 	},
 };
 
-static struct atmel_uart_data dbgu_data = {
+static struct atmel_uart_data usart0_data = {
 	.use_dma_tx     = 0,
 	.use_dma_rx     = 0,
 };
 
-static u64 dbgu_dmamask = DMA_BIT_MASK(32);
+static u64 usart0_dmamask = DMA_BIT_MASK(32);
 
-static struct platform_device sama5d3_dbgu_device = {
+static struct platform_device islero_usart0_device = {
 	.name           = "atmel_usart",
 	.id             = 0,
 	.dev            = {
-		.dma_mask               = &dbgu_dmamask,
+		.dma_mask               = &usart0_dmamask,
 		.coherent_dma_mask      = DMA_BIT_MASK(32),
-		.platform_data          = &dbgu_data,
+		.platform_data          = &usart0_data,
 	},
-	.resource       = dbgu_resources,
-	.num_resources  = ARRAY_SIZE(dbgu_resources),
+	.resource       = usart0_resources,
+	.num_resources  = ARRAY_SIZE(usart0_resources),
 };
 
-static inline void configure_dbgu_pins(void)
+static inline void configure_usart0_pins(void)
 {
-	at91_set_A_periph(AT91_PIN_PB30, 0);            /* DRXD */
-	at91_set_A_periph(AT91_PIN_PB31, 1);            /* DTXD */
+	at91_set_B_periph(AT91_PIN_PA5, 0);            /* DRXD */
+	at91_set_B_periph(AT91_PIN_PA4, 1);            /* DTXD */
 }
 
 static struct platform_device *__initdata at91_uarts[ATMEL_MAX_UART];   /* the UARTs to use */
@@ -603,9 +603,9 @@ void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins)
 	struct atmel_uart_data *pdata;
 
 	switch (id) {
-		case 0:         /* DBGU */
-			pdev = &sama5d3_dbgu_device;
-			configure_dbgu_pins();
+		case 0:         /* usart0 */
+			pdev = &islero_usart0_device;
+			configure_usart0_pins();
 			break;
 		default:
 			return;
@@ -621,7 +621,7 @@ void __init at91_set_serial_console(unsigned portnr)
 {
 	if (portnr < ATMEL_MAX_UART) {
 		atmel_default_console_device = at91_uarts[portnr];
-		sama5d3_set_console_clock(at91_uarts[portnr]->id);
+		islero_set_console_clock(at91_uarts[portnr]->id);
 	}
 }
 
