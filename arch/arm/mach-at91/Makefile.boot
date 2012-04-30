@@ -11,6 +11,10 @@ else ifeq ($(CONFIG_ARCH_AT91SAM9G45),y)
    zreladdr-y	+= 0x70008000
 params_phys-y	:= 0x70000100
 initrd_phys-y	:= 0x70410000
+else ifeq ($(CONFIG_ARCH_ISLERO),y)
+   zreladdr-y	+= 0x30008000
+params_phys-y	:= 0x30000100
+initrd_phys-y	:= 0x30410000
 else
    zreladdr-y	+= 0x20008000
 params_phys-y	:= 0x20000100
