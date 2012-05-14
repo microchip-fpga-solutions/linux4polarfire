@@ -29,6 +29,7 @@
 #include <mach/at91_st.h>
 
 static unsigned long last_crtr;
+static u32 st_cycle;
 static u32 irqmask;
 static struct clock_event_device clkevt;
 
@@ -41,6 +42,14 @@ static inline unsigned long read_CRTR(void)
 {
 	unsigned long x1, x2;
 
+#if defined(CONFIG_ARCH_ISLERO)
+	do {
+		x1 = at91_sys_read(AT91_ST_CRTR);
+		x2 = at91_sys_read(AT91_ST_CRTR);
+		if (x1 == x2)
+			break;
+	} while (1);
+#else
 	x1 = at91_sys_read(AT91_ST_CRTR);
 	do {
 		x2 = at91_sys_read(AT91_ST_CRTR);
@@ -48,6 +57,7 @@ static inline unsigned long read_CRTR(void)
 			break;
 		x1 = x2;
 	} while (1);
+#endif
 	return x1;
 }
 
@@ -74,8 +84,8 @@ static irqreturn_t at91rm9200_timer_interrupt(int irq, void *dev_id)
 	if (sr & AT91_ST_PITS) {
 		u32	crtr = read_CRTR();
 
-		while (((crtr - last_crtr) & AT91_ST_CRTV) >= LATCH) {
-			last_crtr += LATCH;
+		while (((crtr - last_crtr) & AT91_ST_CRTV) >= st_cycle) {
+			last_crtr += st_cycle;
 			clkevt.event_handler(&clkevt);
 		}
 		return IRQ_HANDLED;
@@ -87,7 +97,8 @@ static irqreturn_t at91rm9200_timer_interrupt(int irq, void *dev_id)
 
 static struct irqaction at91rm9200_timer_irq = {
 	.name		= "at91_tick",
-	.flags		= IRQF_SHARED | IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,
+	/*.flags		= IRQF_SHARED | IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,*/
+	.flags		= IRQF_TIMER | IRQF_IRQPOLL,
 	.handler	= at91rm9200_timer_interrupt
 };
 
@@ -114,11 +125,13 @@ clkevt32k_mode(enum clock_event_mode mode, struct clock_event_device *dev)
 	last_crtr = read_CRTR();
 	switch (mode) {
 	case CLOCK_EVT_MODE_PERIODIC:
+		printk(KERN_CRIT "--- CLOCK_EVT_MODE_PERIODIC\n");
 		/* PIT for periodic irqs; fixed rate of 1/HZ */
 		irqmask = AT91_ST_PITS;
-		at91_sys_write(AT91_ST_PIMR, LATCH);
+		at91_sys_write(AT91_ST_PIMR, st_cycle);
 		break;
 	case CLOCK_EVT_MODE_ONESHOT:
+		printk(KERN_CRIT "--- CLOCK_EVT_MODE_ONESHOT\n");
 		/* ALM for oneshot irqs, set by next_event()
 		 * before 32 seconds have passed
 		 */
@@ -184,13 +197,16 @@ void __init at91rm9200_timer_init(void)
 	(void) at91_sys_read(AT91_ST_SR);
 
 	/* Make IRQs happen for the system timer */
-	setup_irq(AT91_ID_SYS, &at91rm9200_timer_irq);
+	setup_irq(AT91_ID_ST, &at91rm9200_timer_irq);
 
 	/* The 32KiHz "Slow Clock" (tick every 30517.58 nanoseconds) is used
 	 * directly for the clocksource and all clockevents, after adjusting
 	 * its prescaler from the 1 Hz default.
 	 */
 	at91_sys_write(AT91_ST_RTMR, 1);
+
+	/* Now compute the PIT cycle value */
+	st_cycle = LATCH;
 
 	/* Setup timer clockevent, with minimum of two ticks (important!!) */
 	clkevt.mult = div_sc(AT91_SLOW_CLOCK, NSEC_PER_SEC, clkevt.shift);
