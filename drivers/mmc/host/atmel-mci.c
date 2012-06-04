@@ -1136,6 +1136,7 @@ static void atmci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 				         clock_min, host->bus_hz / (511 + 2));
 				clkdiv = 511;
 			}
+			dev_vdbg(&mmc->class_dev, "--> clkdiv = %d, odd = %d\n", clkdiv >> 1, clkdiv & 1);
 			host->mode_reg = ATMCI_MR_CLKDIV(clkdiv >> 1)
 			                 | ATMCI_MR_CLKODD(clkdiv & 1);
 		} else {
@@ -1146,6 +1147,7 @@ static void atmci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 				         clock_min, host->bus_hz / (2 * 256));
 				clkdiv = 255;
 			}
+			dev_vdbg(&mmc->class_dev, "--> clkdiv = %d\n", clkdiv);
 			host->mode_reg = ATMCI_MR_CLKDIV(clkdiv);
 		}
 
@@ -2095,6 +2097,7 @@ static int __init atmci_probe(struct platform_device *pdev)
 	clk_enable(host->mck);
 	atmci_writel(host, ATMCI_CR, ATMCI_CR_SWRST);
 	host->bus_hz = clk_get_rate(host->mck);
+	dev_vdbg(&pdev->dev, "bus_hz = %ld Hz\n", host->bus_hz);
 	clk_disable(host->mck);
 
 	host->mapbase = regs->start;
