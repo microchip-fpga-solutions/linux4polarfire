@@ -46,6 +46,7 @@ static struct at91_usbh_data __initdata ek_usbh_hs_data = {
 static struct usba_platform_data __initdata ek_usba_udc_data = {
 	.vbus_pin	= AT91_PIN_PD29,
 };
+#endif
 
 /*
  * MCI (SD/MMC)
@@ -54,11 +55,11 @@ static struct usba_platform_data __initdata ek_usba_udc_data = {
 static struct mci_platform_data __initdata mci0_data = {
 	.slot[0] = {
 		.bus_width      = 4,
-		.detect_pin     = 0,
 	},
 };
 
 
+#if 0
 /*
  * GMACB Ethernet device
  */
@@ -73,15 +74,14 @@ static void __init board_init(void)
 {
 	/* Serial */
 	at91_add_device_serial();
+	/* MMC0 */
+	at91_add_device_mci(0, &mci0_data);
 #if 0
 	/* USB HS Host */
 	at91_add_device_usbh_ohci(&ek_usbh_hs_data);
 	at91_add_device_usbh_ehci(&ek_usbh_hs_data);
 	/* USB HS Device */
 	at91_add_device_usba(&ek_usba_udc_data);
-	/* MMC0 */
-	if (!cpu_is_sama5d33())
-		at91_add_device_mci(0, &mci0_data);
 	/* Ethernet */
 	if (!cpu_is_sama5d31())
 		at91_add_device_eth_giga(&ek_gmacb_data);

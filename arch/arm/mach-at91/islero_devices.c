@@ -456,18 +456,18 @@ static struct mci_platform_data mmc0_data;
 
 static struct resource mmc0_resources[] = {
 	[0] = {
-		.start  = SAMA5D3_BASE_HSMCI0,
-		.end    = SAMA5D3_BASE_HSMCI0 + SZ_16K - 1,
+		.start  = ISLERO_BASE_HSMCI0,
+		.end    = ISLERO_BASE_HSMCI0 + SZ_256 - 1,
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start  = SAMA5D3_ID_HSMCI0,
-		.end    = SAMA5D3_ID_HSMCI0,
+		.start  = ISLERO_ID_HSMCI0,
+		.end    = ISLERO_ID_HSMCI0,
 		.flags  = IORESOURCE_IRQ,
 	},
 };
 
-static struct platform_device sama5d3_mmc0_device = {
+static struct platform_device islero_mmc0_device = {
 	.name           = "atmel_mci",
 	.id             = 0,
 	.dev            = {
@@ -482,7 +482,7 @@ static struct platform_device sama5d3_mmc0_device = {
 /* Consider only one slot : slot 0 */
 void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
 {
-	if (!data)
+	if (!data || mmc_id != 0)
 		return;
 
 	/* Must have at least one usable slot */
@@ -524,28 +524,20 @@ void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data)
 	if (data->slot[0].wp_pin)
 		at91_set_gpio_input(data->slot[0].wp_pin, 1);
 	
-	if (mmc_id == 0) {		/* MCI0 */
-		/* CLK */
-		at91_set_A_periph(AT91_PIN_PD9, 0);
-		/* CMD */
-		at91_set_A_periph(AT91_PIN_PD0, 1);
-		/* DAT0, maybe DAT1..DAT3 and maybe DAT4..DAT7 */
-		at91_set_A_periph(AT91_PIN_PD1, 1);
-		if (data->slot[0].bus_width == 4) {
-			at91_set_A_periph(AT91_PIN_PD2, 1);
-			at91_set_A_periph(AT91_PIN_PD3, 1);
-			at91_set_A_periph(AT91_PIN_PD4, 1);
-			if (data->slot[0].bus_width == 8) {
-				at91_set_A_periph(AT91_PIN_PD5, 1);
-				at91_set_A_periph(AT91_PIN_PD6, 1);
-				at91_set_A_periph(AT91_PIN_PD7, 1);
-				at91_set_A_periph(AT91_PIN_PD8, 1);
-			}
-		}
+	/* CLK */
+	at91_set_C_periph(AT91_PIN_PA6, 0);
+	/* CMD */
+	at91_set_C_periph(AT91_PIN_PA7, 1);
+	/* DAT0, maybe DAT1..DAT3 and maybe DAT4..DAT7 */
+	at91_set_C_periph(AT91_PIN_PA8, 1);
+	if (data->slot[0].bus_width == 4) {
+		at91_set_C_periph(AT91_PIN_PA9, 1);
+		at91_set_C_periph(AT91_PIN_PA10, 1);
+		at91_set_C_periph(AT91_PIN_PA11, 1);
 	}
 
 	mmc0_data = *data;
-	platform_device_register(&sama5d3_mmc0_device);
+	platform_device_register(&islero_mmc0_device);
 }
 #else
 void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
