@@ -559,7 +559,7 @@ void __init at91_add_device_mci(short mmc_id, struct mci_platform_data *data) {}
 static struct resource usart0_resources[] = {
 	[0] = {
 		.start  = ISLERO_BASE_USART0,
-		.end    = ISLERO_BASE_USART0 + SZ_16K - 1,
+		.end    = ISLERO_BASE_USART0 + SZ_512 - 1,
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
