@@ -88,7 +88,7 @@ static void __init board_init(void)
 #endif
 }
 
-MACHINE_START(ISLERO_FPGA, "Atmel islero FPGA")
+MACHINE_START(ISLERO_FPGA, "Atmel islero FPGA P2")
 	.timer		= &at91rm9200_timer,
 	.map_io		= at91_map_io,
 	.init_early	= init_early,
