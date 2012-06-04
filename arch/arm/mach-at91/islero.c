@@ -108,7 +108,7 @@ static void islero_poweroff(void)
 
 void __init islero_map_io(void)
 {
-	at91_init_sram(0, ISLERO_SRAM0_BASE, ISLERO_SRAM0_SIZE); /*TODO: add all banks */
+	at91_init_sram(0, ISLERO_SRAM1_BASE, ISLERO_SRAM1_SIZE);
 	init_consistent_dma_size(14 * SZ_1M);
 }
 
