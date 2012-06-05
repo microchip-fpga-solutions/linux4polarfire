@@ -2032,6 +2032,7 @@ static void __init atmci_get_cap(struct atmel_mci *host)
 	case 0x300:
 	case 0x400:
 	case 0x500:
+	case 0x600:
 		if ((version & 0xf00) >= 0x500)
 			host->caps.has_odd_clk_div = 1;
 #ifdef CONFIG_AT_HDMAC
