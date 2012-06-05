@@ -76,6 +76,7 @@ struct atmel_mci_caps {
 	bool    has_cstor_reg;
 	bool    has_highspeed;
 	bool    has_rwproof;
+	bool	has_odd_clk_div;
 };
 
 struct atmel_mci_dma {
@@ -1127,15 +1128,26 @@ static void atmci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 		}
 
 		/* Calculate clock divider */
-		clkdiv = DIV_ROUND_UP(host->bus_hz, 2 * clock_min) - 1;
-		if (clkdiv > 255) {
-			dev_warn(&mmc->class_dev,
-				"clock %u too slow; using %lu\n",
-				clock_min, host->bus_hz / (2 * 256));
-			clkdiv = 255;
+		if (host->caps.has_odd_clk_div) {
+			clkdiv = DIV_ROUND_UP(host->bus_hz, clock_min) - 2;
+			if (clkdiv > 511) {
+				dev_warn(&mmc->class_dev,
+				         "clock %u too slow; using %lu\n",
+				         clock_min, host->bus_hz / (511 + 2));
+				clkdiv = 511;
+			}
+			host->mode_reg = ATMCI_MR_CLKDIV(clkdiv >> 1)
+			                 | ATMCI_MR_CLKODD(clkdiv & 1);
+		} else {
+			clkdiv = DIV_ROUND_UP(host->bus_hz, 2 * clock_min) - 1;
+			if (clkdiv > 255) {
+				dev_warn(&mmc->class_dev,
+				         "clock %u too slow; using %lu\n",
+				         clock_min, host->bus_hz / (2 * 256));
+				clkdiv = 255;
+			}
+			host->mode_reg = ATMCI_MR_CLKDIV(clkdiv);
 		}
-
-		host->mode_reg = ATMCI_MR_CLKDIV(clkdiv);
 
 		/*
 		 * WRPROOF and RDPROOF prevent overruns/underruns by
@@ -2008,6 +2020,7 @@ static void __init atmci_get_cap(struct atmel_mci *host)
 	host->caps.has_cstor_reg = 0;
 	host->caps.has_highspeed = 0;
 	host->caps.has_rwproof = 0;
+	host->caps.has_odd_clk_div = 0;
 
 	/* keep only major version number */
 	switch (version & 0xf00) {
@@ -2019,6 +2032,8 @@ static void __init atmci_get_cap(struct atmel_mci *host)
 	case 0x300:
 	case 0x400:
 	case 0x500:
+		if ((version & 0xf00) >= 0x500)
+			host->caps.has_odd_clk_div = 1;
 #ifdef CONFIG_AT_HDMAC
 		host->caps.has_dma = 1;
 #else
