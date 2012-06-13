@@ -584,6 +584,12 @@ static inline void configure_usart0_pins(void)
 {
 	at91_set_B_periph(AT91_PIN_PA5, 0);            /* DRXD */
 	at91_set_B_periph(AT91_PIN_PA4, 1);            /* DTXD */
+
+#if 0 /* For hardware debugging purpose */
+	/* Some more PIO configuration */
+	at91_set_GPIO_periph(AT91_PIN_PA16, 0);
+	at91_set_gpio_output(AT91_PIN_PA16, 0);
+#endif
 }
 
 static struct platform_device *__initdata at91_uarts[ATMEL_MAX_UART];   /* the UARTs to use */

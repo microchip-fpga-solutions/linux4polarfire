@@ -61,6 +61,21 @@ static inline unsigned long read_CRTR(void)
 	return x1;
 }
 
+#if 0 /* Debugging function to toggle a PIO on P2 */
+static void toggle_pio(void)
+{
+	static int	val = 0;
+#define TGL_PIO	(1 << 16)
+
+	if (val)
+		*(unsigned int *)0xfe01b030 = TGL_PIO;
+	else
+		*(unsigned int *)0xfe01b034 = TGL_PIO;
+
+	val = !val;
+}
+#endif
+
 /*
  * IRQ handler for the timer.
  */
@@ -82,10 +97,13 @@ static irqreturn_t at91rm9200_timer_interrupt(int irq, void *dev_id)
 
 	/* periodic mode should handle delayed ticks */
 	if (sr & AT91_ST_PITS) {
-		u32	crtr = read_CRTR();
+		u32 crtr;
+
+		crtr = read_CRTR();
 
 		while (((crtr - last_crtr) & AT91_ST_CRTV) >= st_cycle) {
 			last_crtr += st_cycle;
+			//toggle_pio();
 			clkevt.event_handler(&clkevt);
 		}
 		return IRQ_HANDLED;
@@ -98,7 +116,7 @@ static irqreturn_t at91rm9200_timer_interrupt(int irq, void *dev_id)
 static struct irqaction at91rm9200_timer_irq = {
 	.name		= "at91_tick",
 	/*.flags		= IRQF_SHARED | IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,*/
-	.flags		= IRQF_TIMER | IRQF_IRQPOLL,
+	.flags		= IRQF_TIMER,
 	.handler	= at91rm9200_timer_interrupt
 };
 
