@@ -210,6 +210,21 @@
 			};
 		};
 
+		nand0: nand@60000000 {
+			compatible = "atmel,at91rm9200-nand";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			reg = <	0x60000000 0x10000000	/* EBI CS3 */
+				0xffffc070 0x00000490	/* SMC PMECC regs */
+				0xffffc500 0x00000100	/* SMC PMECC Error Location regs */
+				0x00100000 0x00100000	/* ROM code */
+				>;
+			atmel,nand-addr-offset = <21>;
+			atmel,nand-cmd-offset = <22>;
+			atmel,pmecc-lookup-table-offset = <0x10000 0x18000>;
+			status = "disabled";
+		};
+
 		usb0: ohci@00600000 {
 			compatible = "atmel,at91rm9200-ohci", "usb-ohci";
 			reg = <0x00600000 0x100000>;
