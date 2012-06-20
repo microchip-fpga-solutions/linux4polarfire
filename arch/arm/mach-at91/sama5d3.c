@@ -169,6 +169,7 @@ static void __init sama5d3_register_clocks(void)
 static void __init sama5d3_map_io(void)
 {
 	at91_init_sram(0, SAMA5D3_SRAM_BASE, SAMA5D3_SRAM_SIZE);
+	init_consistent_dma_size(SZ_8M);
 }
 
 void __init sama5d3_initialize(void)
