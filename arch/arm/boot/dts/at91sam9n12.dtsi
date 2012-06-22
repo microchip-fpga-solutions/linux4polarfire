@@ -85,7 +85,7 @@
 			mmc0: mmc@f0008000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf0008000 0x600>;
-				interrupts = <12 4>;
+				interrupts = <12 4 0>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;

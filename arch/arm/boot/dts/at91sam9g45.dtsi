@@ -204,7 +204,7 @@
 			mmc0: mmc@fff80000 {
 				compatible = "atmel,hsmci";
 				reg = <0xfff80000 0x600>;
-				interrupts = <11 4>;
+				interrupts = <11 4 0>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -213,7 +213,7 @@
 			mmc1: mmc@fffd0000 {
 				compatible = "atmel,hsmci";
 				reg = <0xfffd0000 0x600>;
-				interrupts = <29 4>;
+				interrupts = <29 4 0>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
