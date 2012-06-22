@@ -55,12 +55,22 @@ static struct usba_platform_data __initdata ek_usba_udc_data = {
 /*
  * MCI (SD/MMC)
  */
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 static struct at91_mmc_data __initdata ek_mmc_data = {
 	.wire4		= 1,
 	.det_pin	= AT91_PIN_PA15,
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PA15,
+		.wp_pin		= -EINVAL,
+	},
+};
+#endif
 
 
 /*
@@ -302,7 +312,11 @@ static void __init ek_board_init(void)
 	/* SPI */
 	at91_add_device_spi(ek_spi_devices, ARRAY_SIZE(ek_spi_devices));
 	/* MMC */
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 	at91_add_device_mmc(0, &ek_mmc_data);
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &mci0_data);
+#endif
 	/* LCD Controller */
 	at91_add_device_lcdc(&ek_lcdc_data);
 	/* AC97 */

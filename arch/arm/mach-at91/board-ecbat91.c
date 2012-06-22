@@ -63,6 +63,15 @@ static struct at91_usbh_data __initdata ecb_at91usbh_data = {
 	.overcurrent_pin= {-EINVAL, -EINVAL},
 };
 
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata ecbat91_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= -EINVAL,
+		.wp_pin		= -EINVAL,
+	},
+};
+#else
 static struct at91_mmc_data __initdata ecb_at91mmc_data = {
 	.slot_b		= 0,
 	.wire4		= 1,
@@ -70,6 +79,7 @@ static struct at91_mmc_data __initdata ecb_at91mmc_data = {
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 
 #if defined(CONFIG_MTD_DATAFLASH)
@@ -160,7 +170,11 @@ static void __init ecb_at91board_init(void)
 	at91_add_device_i2c(NULL, 0);
 
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &ecbat91_mci0_data);
+#else
 	at91_add_device_mmc(0, &ecb_at91mmc_data);
+#endif
 
 	/* SPI */
 	at91_add_device_spi(ecb_at91spi_devices, ARRAY_SIZE(ecb_at91spi_devices));

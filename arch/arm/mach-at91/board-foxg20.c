@@ -85,7 +85,7 @@ static struct at91_udc_data __initdata foxg20_udc_data = {
  * SPI devices.
  */
 static struct spi_board_info foxg20_spi_devices[] = {
-#if !defined(CONFIG_MMC_AT91)
+#if !defined(CONFIG_MMC_AT91) && !defined(CONFIG_MMC_ATMELMCI)
 	{
 		.modalias	= "mtd_dataflash",
 		.chip_select	= 1,
@@ -108,6 +108,7 @@ static struct macb_platform_data __initdata foxg20_macb_data = {
  * MCI (SD/MMC)
  * det_pin, wp_pin and vcc_pin are not connected
  */
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 static struct at91_mmc_data __initdata foxg20_mmc_data = {
 	.slot_b		= 1,
 	.wire4		= 1,
@@ -115,6 +116,15 @@ static struct at91_mmc_data __initdata foxg20_mmc_data = {
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata foxg20_mci0_data = {
+	.slot[1] = {
+		.bus_width	= 4,
+		.detect_pin	= -EINVAL,
+		.wp_pin		= -EINVAL,
+	},
+};
+#endif
 
 
 /*
@@ -246,7 +256,11 @@ static void __init foxg20_board_init(void)
 	/* Ethernet */
 	at91_add_device_eth(&foxg20_macb_data);
 	/* MMC */
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 	at91_add_device_mmc(0, &foxg20_mmc_data);
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &foxg20_mci0_data);
+#endif
 	/* I2C */
 	at91_add_device_i2c(foxg20_i2c_devices, ARRAY_SIZE(foxg20_i2c_devices));
 	/* LEDs */

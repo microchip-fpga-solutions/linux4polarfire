@@ -57,12 +57,22 @@ static struct at91_usbh_data rsi_ews_usbh_data __initdata = {
 /*
  * SD/MC
  */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata rsi_ews_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PB27,
+		.wp_pin		= AT91_PIN_PB29,
+	},
+};
+#else
 static struct at91_mmc_data rsi_ews_mmc_data __initdata = {
 	.slot_b		= 0,
 	.wire4		= 1,
 	.det_pin	= AT91_PIN_PB27,
 	.wp_pin		= AT91_PIN_PB29,
 };
+#endif
 
 /*
  * I2C
@@ -214,7 +224,11 @@ static void __init rsi_ews_board_init(void)
 	at91_add_device_spi(rsi_ews_spi_devices,
 			ARRAY_SIZE(rsi_ews_spi_devices));
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &rsi_ews_mci0_data);
+#else
 	at91_add_device_mmc(0, &rsi_ews_mmc_data);
+#endif
 	/* NOR Flash */
 	platform_device_register(&rsiews_nor_flash);
 	/* LEDs */

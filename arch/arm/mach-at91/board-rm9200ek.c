@@ -69,6 +69,7 @@ static struct at91_udc_data __initdata ek_udc_data = {
 };
 
 #ifndef CONFIG_MTD_AT91_DATAFLASH_CARD
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 static struct at91_mmc_data __initdata ek_mmc_data = {
 	.det_pin	= AT91_PIN_PB27,
 	.slot_b		= 0,
@@ -76,6 +77,15 @@ static struct at91_mmc_data __initdata ek_mmc_data = {
 	.wp_pin		= AT91_PIN_PA17,
 	.vcc_pin	= -EINVAL,
 };
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata ek_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PB27,
+		.wp_pin		= AT91_PIN_PA17,
+	}
+};
+#endif
 #endif
 
 static struct spi_board_info ek_spi_devices[] = {
@@ -176,7 +186,11 @@ static void __init ek_board_init(void)
 #else
 	/* MMC */
 	at91_set_gpio_output(AT91_PIN_PB22, 1);	/* this MMC card slot can optionally use SPI signaling (CS3). */
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 	at91_add_device_mmc(0, &ek_mmc_data);
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &ek_mci0_data);
+#endif
 #endif
 	/* NOR Flash */
 	platform_device_register(&ek_flash);

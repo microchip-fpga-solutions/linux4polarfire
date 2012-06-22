@@ -69,6 +69,15 @@ static struct at91_cf_data __initdata eb9200_cf_data = {
 	.rst_pin	= AT91_PIN_PC5,
 };
 
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata eb9200_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= -EINVAL,
+		.wp_pin		= -EINVAL,
+	},
+};
+#else
 static struct at91_mmc_data __initdata eb9200_mmc_data = {
 	.slot_b		= 0,
 	.wire4		= 1,
@@ -76,6 +85,7 @@ static struct at91_mmc_data __initdata eb9200_mmc_data = {
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 static struct i2c_board_info __initdata eb9200_i2c_devices[] = {
 	{
@@ -112,7 +122,11 @@ static void __init eb9200_board_init(void)
 	at91_add_device_spi(NULL, 0);
 	/* MMC */
 	/* only supports 1 or 4 bit interface, not wired through to SPI */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &eb9200_mci0_data);
+#else
 	at91_add_device_mmc(0, &eb9200_mmc_data);
+#endif
 }
 
 MACHINE_START(ATEB9200, "Embest ATEB9200")

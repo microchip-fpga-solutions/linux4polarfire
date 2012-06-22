@@ -118,12 +118,22 @@ static struct at91_udc_data __initdata yl9200_udc_data = {
 /*
  * MMC
  */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata yl9200_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PB9,
+		.wp_pin		= -EINVAL,
+	},
+};
+#else
 static struct at91_mmc_data __initdata yl9200_mmc_data = {
 	.det_pin	= AT91_PIN_PB9,
 	.wire4		= 1,
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 /*
  * NAND Flash
@@ -567,7 +577,11 @@ static void __init yl9200_board_init(void)
 	/* I2C */
 	at91_add_device_i2c(yl9200_i2c_devices, ARRAY_SIZE(yl9200_i2c_devices));
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &yl9200_mci0_data);
+#else
 	at91_add_device_mmc(0, &yl9200_mmc_data);
+#endif
 	/* NAND */
 	at91_add_device_nand(&yl9200_nand_data);
 	/* NOR Flash */

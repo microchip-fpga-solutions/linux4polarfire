@@ -74,6 +74,15 @@ static struct spi_board_info flexibity_spi_devices[] = {
 };
 
 /* MCI (SD/MMC) */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata flexibity_mci0_data = {
+	.slot[0] = {
+		.bus_width	= 4,
+		.detect_pin	= AT91_PIN_PC9,
+		.wp_pin		= AT91_PIN_PC4,
+	},
+};
+#else
 static struct at91_mmc_data __initdata flexibity_mmc_data = {
 	.slot_b		= 0,
 	.wire4		= 1,
@@ -81,6 +90,7 @@ static struct at91_mmc_data __initdata flexibity_mmc_data = {
 	.wp_pin		= AT91_PIN_PC4,
 	.vcc_pin	= -EINVAL,
 };
+#endif
 
 /* LEDs */
 static struct gpio_led flexibity_leds[] = {
@@ -151,7 +161,11 @@ static void __init flexibity_board_init(void)
 	at91_add_device_spi(flexibity_spi_devices,
 		ARRAY_SIZE(flexibity_spi_devices));
 	/* MMC */
+#if defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &flexibity_mci0_data);
+#else
 	at91_add_device_mmc(0, &flexibity_mmc_data);
+#endif
 	/* LEDs */
 	at91_gpio_leds(flexibity_leds, ARRAY_SIZE(flexibity_leds));
 }
