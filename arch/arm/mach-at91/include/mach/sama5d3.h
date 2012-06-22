@@ -26,6 +26,8 @@
 #define SAMA5D3_ID_PIOD		 9	/* PIOD */
 #define SAMA5D3_ID_PIOE		10	/* PIOE */
 #define SAMA5D3_ID_HSMCI0	21	/* MCI */
+#define SAMA5D3_ID_HSMCI1	22	/* MCI */
+#define SAMA5D3_ID_HSMCI2	23	/* MCI */
 #define SAMA5D3_ID_TC0        	26      /* Timer Counter 0 */
 #define SAMA5D3_ID_TC1        	27      /* Timer Counter 2 */
 #define SAMA5D3_ID_DMA0		30	/* DMA Controller 0 */
