@@ -54,12 +54,14 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
  */
 #define cpu_has_utmi()		(  cpu_is_at91sam9rl() \
 				|| cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_800M_plla()	(  cpu_is_at91sam9g20() \
 				|| cpu_is_at91sam9g45() \
 				|| cpu_is_at91sam9x5() \
-				|| cpu_is_at91sam9n12())
+				|| cpu_is_at91sam9n12() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_300M_plla()	(cpu_is_at91sam9g10())
 
@@ -69,7 +71,8 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
 				|| cpu_is_at91sam9n12()))
 
 #define cpu_has_upll()		(cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5())
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3())
 
 /* USB host HS & FS */
 #define cpu_has_uhp()		(!cpu_is_at91sam9rl())
@@ -77,18 +80,22 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
 /* USB device FS only */
 #define cpu_has_udpfs()		(!(cpu_is_at91sam9rl() \
 				|| cpu_is_at91sam9g45() \
-				|| cpu_is_at91sam9x5()))
+				|| cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3()))
 
 #define cpu_has_plladiv2()	(cpu_is_at91sam9g45() \
 				|| cpu_is_at91sam9x5() \
-				|| cpu_is_at91sam9n12())
+				|| cpu_is_at91sam9n12() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_mdiv3()		(cpu_is_at91sam9g45() \
 				|| cpu_is_at91sam9x5() \
-				|| cpu_is_at91sam9n12())
+				|| cpu_is_at91sam9n12() \
+				|| cpu_is_sama5d3())
 
 #define cpu_has_alt_prescaler()	(cpu_is_at91sam9x5() \
-				|| cpu_is_at91sam9n12())
+				|| cpu_is_at91sam9n12() \
+				|| cpu_is_sama5d3())
 
 static LIST_HEAD(clocks);
 static DEFINE_SPINLOCK(clk_lock);
@@ -204,10 +211,25 @@ struct clk mck = {
 
 static void pmc_periph_mode(struct clk *clk, int is_on)
 {
-	if (is_on)
-		at91_pmc_write(AT91_PMC_PCER, clk->pmc_mask);
-	else
-		at91_pmc_write(AT91_PMC_PCDR, clk->pmc_mask);
+	u32 regval = 0;
+
+	/*
+	 * With sama5d3 chips, you have more than 32 peripherals so only one
+	 * register is not enough to manage their clocks. A peripheral
+	 * control register has been introduced to solve this issue.
+	 */
+	if (cpu_is_sama5d3()) {
+		regval |= AT91_PMC_PCR_CMD; /* write command */
+		regval |= clk->pid & AT91_PMC_PCR_PID; /* peripheral selection */
+		if (is_on)
+			regval |= AT91_PMC_PCR_EN; /* enable clock */
+		at91_pmc_write(AT91_PMC_PCR, regval);
+	} else {
+		if (is_on)
+			at91_pmc_write(AT91_PMC_PCER, clk->pmc_mask);
+		else
+			at91_pmc_write(AT91_PMC_PCDR, clk->pmc_mask);
+	}
 }
 
 static struct clk __init *at91_css_to_clk(unsigned long css)
@@ -549,7 +571,10 @@ static u32 __init at91_pll_rate(struct clk *pll, u32 freq, u32 reg)
 	unsigned mul, div;
 
 	div = reg & 0xff;
-	mul = (reg >> 16) & 0x7ff;
+	if (cpu_is_sama5d3())
+		mul = (reg >> 18) & 0x7ff;
+	else
+		mul = (reg >> 16) & 0x7ff;
 	if (div && mul) {
 		freq /= div;
 		freq *= mul + 1;
@@ -862,13 +887,20 @@ static int __init at91_clock_reset(void)
 	unsigned long pcdr = 0;
 	unsigned long scdr = 0;
 	struct clk *clk;
+	u32 regval = 0;
 
 	list_for_each_entry(clk, &clocks, node) {
 		if (clk->users > 0)
 			continue;
 
-		if (clk->mode == pmc_periph_mode)
-			pcdr |= clk->pmc_mask;
+		if (clk->mode == pmc_periph_mode) {
+			if (cpu_is_sama5d3()) {
+				regval |= AT91_PMC_PCR_CMD; /* write command */
+				regval |= clk->pid & AT91_PMC_PCR_PID; /* peripheral selection */
+				at91_pmc_write(AT91_PMC_PCR, regval);
+			} else
+				pcdr |= clk->pmc_mask;
+		}
 
 		if (clk->mode == pmc_sys_mode)
 			scdr |= clk->pmc_mask;
@@ -876,7 +908,8 @@ static int __init at91_clock_reset(void)
 		pr_debug("Clocks: disable unused %s\n", clk->name);
 	}
 
-	at91_pmc_write(AT91_PMC_PCDR, pcdr);
+	if (!cpu_is_sama5d3())
+		at91_pmc_write(AT91_PMC_PCDR, pcdr);
 	at91_pmc_write(AT91_PMC_SCDR, scdr);
 
 	return 0;
