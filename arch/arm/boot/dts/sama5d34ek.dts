@@ -41,6 +41,10 @@
 			lcd@f0030000 {
 				status = "okay";
 			};
+
+			lcdovl1@f0030140 {
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {

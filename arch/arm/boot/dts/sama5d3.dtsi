@@ -313,6 +313,13 @@
 				interrupts = <36 4>;
 				status = "disabled";
 			};
+
+			lcdovl1@f0030140 {
+				compatible = "atmel,at91sam9x5-lcd";
+				reg = <0xf0030140 0x23f
+				       0xf0030a00 0x3ff>;
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {

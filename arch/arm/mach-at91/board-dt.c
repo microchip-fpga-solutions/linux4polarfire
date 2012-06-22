@@ -124,6 +124,7 @@ void __init at91_pinmux_lcd(void)
 
 struct of_dev_auxdata at91_auxdata_lookup[] __initdata = {
         OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030000, "atmel_hlcdfb_base", &ek_lcdc_data),
+        OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030140, "atmel_hlcdfb_ovl", &ek_lcdc_data),
 	{ /* sentinel */ }
 };
 
