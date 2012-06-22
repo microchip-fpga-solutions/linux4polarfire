@@ -48,141 +48,11 @@
 			ranges;
 
 			aic: interrupt-controller@fffff000 {
-				#interrupt-cells = <2>;
+				#interrupt-cells = <3>;
 				compatible = "atmel,sama5d3-aic";
 				interrupt-controller;
 				reg = <0xfffff000 0x200>;
 				atmel,external-irqs = <47>;
-				atmel,default-irq-priorities = <
-					7	/* Advanced Interrupt Controller (FIQ) */
-					7	/* System Controller */
-					5	/* Debug Unit */
-					5	/* Periodic Interval Timer */
-					5	/* Watchdog Timer */
-					5	/* Multi-bit ECC */
-					1	/* Parallel IO Controller A */
-					1	/* Parallel IO Controller B */
-					1	/* Parallel IO Controller C */
-					1	/* Parallel IO Controller D */
-					1	/* Parallel IO Controller E */
-					4	/* SMD Soft Modem */
-					5	/* USART 0 */
-					5	/* USART 1 */
-					5	/* USART 2 */
-					5	/* USART 3 */
-					5	/* UART 0 */
-					5	/* UART 1 */
-					6	/* Two-Wire Interface 0 */
-					6	/* Two-Wire Interface 1 */
-					6	/* Two-Wire Interface 2 */
-					0	/* High Speed Multimedia Card Interface 0 */
-					0	/* High Speed Multimedia Card Interface 1 */
-					0	/* High Speed Multimedia Card Interface 2 */
-					5	/* Serial Peripheral Interface 0 */
-					5	/* Serial Peripheral Interface 1 */
-					0	/* Timer Counter 0 */
-					0	/* Timer Counter 1 */
-					5	/* Pulse Width Modulation Controller */
-					5	/* Touch Screean ADC Controller */
-					0	/* DMA Controller 0 */
-					0	/* DMA Controller 1 */
-					2	/* USB Host High Speed */
-					2	/* USB Device High Speed */
-					3	/* Gigabit Ethernet MAC */
-					3	/* Ethernet MAC */
-					3	/* LCD Controller */
-					3	/* Image Sensor Interface */
-					4	/* Synchronous Serial Controller 0 */
-					4	/* Synchronous Serial Controller 1 */
-					4	/* CAN Controller 0 */
-					4	/* CAN Controller 1 */
-					5	/* Secure Hash Algorithm */
-					5	/* Advanced Encryption Standard */
-					5	/* Triple Data Encryption Standard */
-					5	/* True Random Number Generator */
-					5	/* Performance Monitor Unit */
-					0	/* Advanced Interrupt Controller (IRQ) */
-					0	/* Fuse Controller */
-					0	/* MPDDR Controller */
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-					0
-				>;
 			};
 
 			ramc0: ramc@ffffea00 {
@@ -203,37 +73,37 @@
 			pit: timer@fffffe30 {
 				compatible = "atmel,at91sam9260-pit";
 				reg = <0xfffffe30 0xf>;
-				interrupts = <3 4>;
+				interrupts = <3 4 5>;
 			};
 
 			tcb0: timer@f0010000 {
 				compatible = "atmel,at91sam9x5-tcb";
 				reg = <0xf0010000 0x100>;
-				interrupts = <26 4>;
+				interrupts = <26 4 0>;
 			};
 
 			tcb1: timer@f8014000 {
 				compatible = "atmel,at91sam9x5-tcb";
 				reg = <0xf8014000 0x100>;
-				interrupts = <27 4>;
+				interrupts = <27 4 0>;
 			};
 
 			dma0: dma-controller@ffffe600 {
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xffffe600 0x200>;
-				interrupts = <30 4>;
+				interrupts = <30 4 0>;
 			};
 
 			dma1: dma-controller@ffffe800 {
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xffffe800 0x200>;
-				interrupts = <31 4>;
+				interrupts = <31 4 0>;
 			};
 
 			pioA: gpio@fffff200 {
 				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 				reg = <0xfffff200 0x100>;
-				interrupts = <6 4>;
+				interrupts = <6 4 1>;
 				#gpio-cells = <2>;
 				gpio-controller;
 				interrupt-controller;
@@ -242,7 +112,7 @@
 			pioB: gpio@fffff400 {
 				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 				reg = <0xfffff400 0x100>;
-				interrupts = <7 4>;
+				interrupts = <7 4 1>;
 				#gpio-cells = <2>;
 				gpio-controller;
 				interrupt-controller;
@@ -251,7 +121,7 @@
 			pioC: gpio@fffff600 {
 				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 				reg = <0xfffff600 0x100>;
-				interrupts = <8 4>;
+				interrupts = <8 4 1>;
 				#gpio-cells = <2>;
 				gpio-controller;
 				interrupt-controller;
@@ -260,7 +130,7 @@
 			pioD: gpio@fffff800 {
 				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 				reg = <0xfffff800 0x100>;
-				interrupts = <9 4>;
+				interrupts = <9 4 1>;
 				#gpio-cells = <2>;
 				gpio-controller;
 				interrupt-controller;
@@ -269,7 +139,7 @@
 			pioE: gpio@fffffa00 {
 				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 				reg = <0xfffffa00 0x100>;
-				interrupts = <10 4>;
+				interrupts = <10 4 1>;
 				#gpio-cells = <2>;
 				gpio-controller;
 				interrupt-controller;
@@ -278,14 +148,14 @@
 			dbgu: serial@ffffee00 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xffffee00 0x200>;
-				interrupts = <2 4>;
+				interrupts = <2 4 7>;
 				status = "disabled";
 			};
 
 			mmc0: mmc@f0000000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf0000000 0x600>;
-				interrupts = <21 4>;
+				interrupts = <21 4 0>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -294,7 +164,7 @@
 			macb0: ethernet@f0028000 {
 				compatible = "cnds,pc302-gem", "cdns,gem";
 				reg = <0xf0028000 0x100>;
-				interrupts = <34 4>;
+				interrupts = <34 4 3>;
 				status = "disabled";
 			};
 
@@ -302,7 +172,7 @@
 			macb1: ethernet@f802c000 {
 				compatible = "cdns,at32ap7000-macb", "cdns,macb";
 				reg = <0xf802c000 0x100>;
-				interrupts = <35 4>;
+				interrupts = <35 4 3>;
 				status = "disabled";
 			};
 
@@ -310,7 +180,7 @@
 				compatible = "atmel,at91sam9x5-lcd";
 				reg = <0xf0030000 0xff
 				       0xf0030600 0x3ff>;
-				interrupts = <36 4>;
+				interrupts = <36 4 3>;
 				status = "disabled";
 			};
 
@@ -325,14 +195,14 @@
 		usb0: ohci@00600000 {
 			compatible = "atmel,at91rm9200-ohci", "usb-ohci";
 			reg = <0x00600000 0x100000>;
-			interrupts = <32 4>;
+			interrupts = <32 4 2>;
 			status = "disabled";
 		};
 
 		usb1: ehci@00700000 {
 			compatible = "atmel,at91sam9g45-ehci", "usb-ehci";
 			reg = <0x00700000 0x100000>;
-			interrupts = <32 4>;
+			interrupts = <32 4 2>;
 			status = "disabled";
 		};
 	};
