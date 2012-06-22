@@ -33,6 +33,15 @@
 				};
 			};
 
+			mmc1: mmc@f8000000 {
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+					cd-gpios = <&pioD 18 0>;
+				};
+			};
+
 			macb0: ethernet@f0028000 {
 				phy-mode = "rmii";
 				status = "okay";
