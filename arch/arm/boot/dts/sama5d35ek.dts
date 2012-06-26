@@ -34,7 +34,7 @@
 			};
 
 			macb0: ethernet@f0028000 {
-				phy-mode = "rmii";
+				phy-mode = "rgmii";
 				status = "okay";
 			};
 
