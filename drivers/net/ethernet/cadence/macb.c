@@ -152,13 +152,17 @@ static void macb_handle_link_change(struct net_device *dev)
 
 			reg = macb_readl(bp, NCFGR);
 			reg &= ~(MACB_BIT(SPD) | MACB_BIT(FD));
+			if (macb_is_gem(bp))
+				reg &= ~GEM_BIT(GBE);
 
 			if (phydev->duplex)
 				reg |= MACB_BIT(FD);
 			if (phydev->speed == SPEED_100)
 				reg |= MACB_BIT(SPD);
+			if (phydev->speed == SPEED_1000)
+				reg |= GEM_BIT(GBE);
 
-			macb_writel(bp, NCFGR, reg);
+			macb_or_gem_writel(bp, NCFGR, reg);
 
 			bp->speed = phydev->speed;
 			bp->duplex = phydev->duplex;
@@ -186,7 +190,14 @@ static void macb_handle_link_change(struct net_device *dev)
 				    "Full" : "Half");
 		else
 			netdev_info(dev, "link down\n");
+
+#if 0
+	printk(KERN_CRIT "\nmacb_handle_link_change: phydev->speed = %d\n", phydev->speed);
+	printk(KERN_CRIT "                           bp->speed     = %d\n", phydev->speed);
+	printk(KERN_INFO  "macb_handle_link_change-3: macb NCFGR = 0x%08X\n", macb_or_gem_readl(bp, NCFGR));
+#endif
 	}
+
 }
 
 /* based on au1000_eth. c*/
@@ -213,7 +224,10 @@ static int macb_mii_probe(struct net_device *dev)
 	}
 
 	/* mask with MAC supported features */
-	phydev->supported &= PHY_BASIC_FEATURES;
+	if (macb_is_gem(bp))
+		phydev->supported &= PHY_GBIT_FEATURES;
+	else
+		phydev->supported &= PHY_BASIC_FEATURES;
 
 	phydev->advertising = phydev->supported;
 
@@ -1377,7 +1391,9 @@ static int __init macb_probe(struct platform_device *pdev)
 		bp->phy_interface = err;
 	}
 
-	if (bp->phy_interface == PHY_INTERFACE_MODE_RMII)
+	if (bp->phy_interface == PHY_INTERFACE_MODE_RGMII)
+		macb_or_gem_writel(bp, USRIO, GEM_BIT(RGMII));
+	else if (bp->phy_interface == PHY_INTERFACE_MODE_RMII)
 #if defined(CONFIG_ARCH_AT91)
 		macb_or_gem_writel(bp, USRIO, (MACB_BIT(RMII) |
 					       MACB_BIT(CLKEN)));
