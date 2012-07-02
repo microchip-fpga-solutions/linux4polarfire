@@ -208,6 +208,13 @@
 				       0xf0030a00 0x3ff>;
 				status = "disabled";
 			};
+
+			tsadcc: tsadcc@f8018000 {
+				compatible = "atmel,at91sam9x5-tsadcc";
+				reg = <0xf8018000 0x4000>;
+				interrupts = <29 4 5>;
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {
