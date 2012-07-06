@@ -1754,7 +1754,6 @@ static void atmci_tasklet_func(unsigned long priv)
 
 			dev_dbg(&host->pdev->dev, "FSM: cmd ready\n");
 			host->cmd = NULL;
-			host->data = NULL;
 			data->bytes_xfered = data->blocks * data->blksz;
 			data->error = 0;
 			atmci_command_complete(host, mrq->stop);
@@ -1768,6 +1767,7 @@ static void atmci_tasklet_func(unsigned long priv)
 				atmci_writel(host, ATMCI_IER, ATMCI_NOTBUSY);
 				state = STATE_WAITING_NOTBUSY;
 			}
+			host->data = NULL;
 			break;
 
 		case STATE_END_REQUEST:
