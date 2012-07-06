@@ -1,5 +1,5 @@
 /*
- * sama5ek.dts - Device Tree file for SAMA5-EK board
+ * sama5d34ek.dts - Device Tree file for SAMA5-EK board
  *
  *  Copyright (C) 2012 Atmel,
  *                2012 Ludovic Desroches <ludovic.desroches@atmel.com>

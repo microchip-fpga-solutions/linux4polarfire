@@ -1,5 +1,5 @@
 /*
- * sama5d35ek.dts - Device Tree file for SAMA5-EK board
+ * sama5d33ek.dts - Device Tree file for SAMA5-EK board
  *
  *  Copyright (C) 2012 Atmel,
  *                2012 Ludovic Desroches <ludovic.desroches@atmel.com>
@@ -49,6 +49,14 @@
 
 			macb1: ethernet@f802c000 {
 				phy-mode = "mii";
+				status = "okay";
+			};
+
+			lcd@f0030000 {
+				status = "okay";
+			};
+
+			lcdovl1@f0030140 {
 				status = "okay";
 			};
 		};
