@@ -57,11 +57,12 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
 				|| cpu_is_at91sam9x5() \
 				|| cpu_is_sama5d3())
 
+#define cpu_has_1056M_plla()	(cpu_is_sama5d3())
+
 #define cpu_has_800M_plla()	(  cpu_is_at91sam9g20() \
 				|| cpu_is_at91sam9g45() \
 				|| cpu_is_at91sam9x5() \
-				|| cpu_is_at91sam9n12() \
-				|| cpu_is_sama5d3())
+				|| cpu_is_at91sam9n12())
 
 #define cpu_has_300M_plla()	(cpu_is_at91sam9g10())
 
@@ -731,11 +732,14 @@ static int __init at91_pmc_init(unsigned long main_clock)
 
 	/* report if PLLA is more than mildly overclocked */
 	plla.rate_hz = at91_pll_rate(&plla, main_clock, at91_pmc_read(AT91_CKGR_PLLAR));
-	if (cpu_has_300M_plla()) {
-		if (plla.rate_hz > 300000000)
+	if (cpu_has_1056M_plla()) {
+		if (plla.rate_hz > 1056000000)
 			pll_overclock = true;
 	} else if (cpu_has_800M_plla()) {
 		if (plla.rate_hz > 800000000)
+			pll_overclock = true;
+	} else if (cpu_has_300M_plla()) {
+		if (plla.rate_hz > 300000000)
 			pll_overclock = true;
 	} else if (cpu_has_240M_plla()) {
 		if (plla.rate_hz > 240000000)
