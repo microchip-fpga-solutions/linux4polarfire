@@ -338,6 +338,7 @@ static struct spi_board_info ek_spi_devices[] = {
 #else /* CONFIG_SPI_ATMEL_* */
 /* spi0 and mmc/sd share the same PIO pins: cannot be used at the same time */
 
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 /*
  * MCI (SD/MMC)
  * det_pin, wp_pin and vcc_pin are not connected
@@ -348,6 +349,15 @@ static struct at91_mmc_data __initdata ek_mmc_data = {
 	.wp_pin		= -EINVAL,
 	.vcc_pin	= -EINVAL,
 };
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+static struct mci_platform_data __initdata mci0_data = {
+	.slot[0] = {
+		.bus_width      = 4,
+		.detect_pin     = -EINVAL,
+		.wp_pin         = -EINVAL,
+	},
+};
+#endif
 
 #endif /* CONFIG_SPI_ATMEL_* */
 
@@ -600,7 +610,11 @@ static void __init ek_board_init(void)
 	at91_add_device_ssc(AT91SAM9261_ID_SSC1, ATMEL_SSC_TX);
 #else
 	/* MMC */
+#if defined(CONFIG_MMC_AT91) || defined(CONFIG_MMC_AT91_MODULE)
 	at91_add_device_mmc(0, &ek_mmc_data);
+#elif defined(CONFIG_MMC_ATMELMCI) || defined(CONFIG_MMC_ATMELMCI_MODULE)
+	at91_add_device_mci(0, &mci0_data);
+#endif
 #endif
 	/* LCD Controller */
 	at91_add_device_lcdc(&ek_lcdc_data);
