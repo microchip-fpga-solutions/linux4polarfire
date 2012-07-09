@@ -47,11 +47,6 @@
 				status = "okay";
 			};
 
-			macb1: ethernet@f802c000 {
-				phy-mode = "mii";
-				status = "okay";
-			};
-
 			lcd@f0030000 {
 				status = "okay";
 			};
