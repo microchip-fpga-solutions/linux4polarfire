@@ -114,6 +114,7 @@ config SOC_SAMA5
 config SOC_SAMA5D3
 	bool "SAMA5D3x family"
 	select SOC_SAMA5
+	select HAVE_AT91_DBGU1
 	select HAVE_FB_ATMEL_HLCD
 	select HAVE_NET_MACB
 	select HAVE_AT91_DBGU1
