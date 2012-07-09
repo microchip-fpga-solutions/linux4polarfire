@@ -45,7 +45,7 @@
 #include "atmel-mci-regs.h"
 
 #define ATMCI_DATA_ERROR_FLAGS	(ATMCI_DCRCE | ATMCI_DTOE | ATMCI_OVRE | ATMCI_UNRE)
-#define ATMCI_DMA_THRESHOLD	16
+#define ATMCI_DMA_THRESHOLD	65
 
 enum {
 	EVENT_CMD_RDY = 0,
