@@ -43,7 +43,7 @@
 			};
 
 			macb1: ethernet@f802c000 {
-				phy-mode = "mii";
+				phy-mode = "rmii";
 				status = "okay";
 			};
 
