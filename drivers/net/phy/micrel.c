@@ -206,10 +206,10 @@ static int __init ksphy_init(void)
 	ret = phy_driver_register(&ks8041_driver);
 	if (ret)
 		goto err4;
+#endif
 	ret = phy_driver_register(&ks8051_driver);
 	if (ret)
-		goto err5;
-#endif
+		goto err2;
 
 	ret = phy_driver_register(&ksz9021_driver);
 	if (ret)
@@ -227,6 +227,8 @@ err3:
 err2:
 	phy_driver_unregister(&ks8001_driver);
 #endif
+err2:
+	phy_driver_unregister(&ks8051_driver);
 err1:
 	return ret;
 }
