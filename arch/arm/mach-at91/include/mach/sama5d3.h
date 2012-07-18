@@ -38,6 +38,7 @@
 #define SAMA5D3_ID_GMAC		34	/* Gigabit Ethernet MAC */
 #define SAMA5D3_ID_EMAC		35	/* Ethernet MAC */
 #define SAMA5D3_ID_LCDC     	36      /* LCD Controller */
+#define SAMA5D3_ID_ISI		37	/* Image Sensor Interface */
 #define SAMA5D3_ID_IRQ0		41	/* Advanced Interrupt Controller (IRQ0) */
 
 /*
