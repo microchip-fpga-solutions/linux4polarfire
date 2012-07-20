@@ -909,6 +909,7 @@ static int __init at91_clock_reset(void)
 		if (clk->users > 0)
 			continue;
 
+		regval = 0;
 		if (clk->mode == pmc_periph_mode) {
 			if (cpu_is_sama5d3()) {
 				regval |= AT91_PMC_PCR_CMD; /* write command */
