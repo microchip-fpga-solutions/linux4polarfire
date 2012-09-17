@@ -177,6 +177,13 @@ static struct clk vdec_clk = {
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 
+/* AES/TDES/SHA clock - Only for sam9m11/sam9g56 */
+static struct clk aestdessha_clk = {
+	.name		= "aestdessha_clk",
+	.pmc_mask	= 1 << AT91SAM9G45_ID_AESTDESSHA,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
 	&pioB_clk,
@@ -205,6 +212,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&isi_clk,
 	&udphs_clk,
 	&mmc1_clk,
+	&aestdessha_clk,
 	// irq0
 };
 
@@ -226,6 +234,9 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID(NULL, "i2c-at91sam9g10.1", &twi1_clk),
 	CLKDEV_CON_DEV_ID("pclk", "ssc.0", &ssc0_clk),
 	CLKDEV_CON_DEV_ID("pclk", "ssc.1", &ssc1_clk),
+	CLKDEV_CON_DEV_ID("sha_clk", "atmel_sha", &aestdessha_clk),
+	CLKDEV_CON_DEV_ID("tdes_clk", "atmel_tdes", &aestdessha_clk),
+	CLKDEV_CON_DEV_ID("aes_clk", "atmel_aes", &aestdessha_clk),
 	CLKDEV_CON_DEV_ID(NULL, "atmel-trng", &trng_clk),
 	/* more usart lookup table for DT entries */
 	CLKDEV_CON_DEV_ID("usart", "ffffee00.serial", &mck),
@@ -242,6 +253,9 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("mci_clk", "fffd0000.mmc", &mmc1_clk),
 	CLKDEV_CON_DEV_ID(NULL, "fff84000.i2c", &twi0_clk),
 	CLKDEV_CON_DEV_ID(NULL, "fff88000.i2c", &twi1_clk),
+	CLKDEV_CON_DEV_ID("aes_clk", "fffc0000.aes", &aestdessha_clk),
+	CLKDEV_CON_DEV_ID("tdes_clk", "fffc4000.tdes", &aestdessha_clk),
+	CLKDEV_CON_DEV_ID("sha_clk", "fffc8000.sha", &aestdessha_clk),
 	/* fake hclk clock */
 	CLKDEV_CON_DEV_ID("hclk", "at91_ohci", &uhphs_clk),
 	CLKDEV_CON_ID("pioA", &pioA_clk),
@@ -387,7 +401,7 @@ static unsigned int at91sam9g45_default_irq_priority[NR_AIC_IRQS] __initdata = {
 	2,	/* USB Device High speed port */
 	0,
 	0,	/* Multimedia Card Interface 1 */
-	0,
+	0,	/* AESTDESSHA Crypto HW Accelerators */
 	0,	/* Advanced Interrupt Controller (IRQ0) */
 };
 
