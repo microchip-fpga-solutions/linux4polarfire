@@ -85,6 +85,21 @@ static struct clk uhphs_clk = {
 	.pid		= SAMA5D3_ID_UHPHS,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk aes_clk = {
+	.name		= "aes_clk",
+	.pid		= SAMA5D3_ID_AES,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk tdes_clk = {
+	.name		= "tdes_clk",
+	.pid		= SAMA5D3_ID_TDES,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk sha_clk = {
+	.name		= "sha_clk",
+	.pid		= SAMA5D3_ID_SHA,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 /* gmac only for sama5d33, sama5d34, sama5d35 */
 static struct clk macb0_clk = {
 	.name		= "pclk",
@@ -116,6 +131,9 @@ static struct clk *periph_clocks[] __initdata = {
 	&dma0_clk,
 	&dma1_clk,
 	&uhphs_clk,
+	&aes_clk,
+	&tdes_clk,
+	&sha_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
@@ -137,6 +155,9 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("hclk", "600000.ohci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ohci_clk", "600000.ohci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ehci_clk", "700000.ehci", &uhphs_clk),
+	CLKDEV_CON_DEV_ID("aes_clk", "f8038000.aes", &aes_clk),
+	CLKDEV_CON_DEV_ID("tdes_clk", "f803c000.tdes", &tdes_clk),
+	CLKDEV_CON_DEV_ID("sha_clk", "f8034000.sha", &sha_clk),
 };
 
 static void __init sama5d3_register_clocks(void)
