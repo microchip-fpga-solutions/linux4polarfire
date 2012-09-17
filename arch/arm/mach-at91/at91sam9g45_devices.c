@@ -31,7 +31,7 @@
 #include <mach/at91sam9_smc.h>
 #include <mach/at_hdmac.h>
 #include <mach/atmel-mci.h>
-#include <linux/platform_data/atmel-aes.h>
+#include <linux/platform_data/atmel-crypto.h>
 #include <media/atmel-isi.h>
 
 #include "generic.h"
@@ -584,7 +584,7 @@ static void __init at91_add_device_tdes(void) {}
  * -------------------------------------------------------------------- */
 
 #if defined(CONFIG_CRYPTO_DEV_ATMEL_AES) || defined(CONFIG_CRYPTO_DEV_ATMEL_AES_MODULE)
-static struct aes_platform_data aes_data;
+static struct crypto_platform_data aes_data;
 static u64 aes_dmamask = DMA_BIT_MASK(32);
 
 static struct resource aes_resources[] = {
@@ -615,9 +615,9 @@ static struct platform_device at91sam9g45_aes_device = {
 static void __init at91_add_device_aes(void)
 {
 	struct at_dma_slave	*atslave;
-	struct aes_dma_data	*alt_atslave;
+	struct crypto_dma_data	*alt_atslave;
 
-	alt_atslave = kzalloc(sizeof(struct aes_dma_data), GFP_KERNEL);
+	alt_atslave = kzalloc(sizeof(struct crypto_dma_data), GFP_KERNEL);
 
 	/* DMA TX slave channel configuration */
 	atslave = &alt_atslave->txdata;
