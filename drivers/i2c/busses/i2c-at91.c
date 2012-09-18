@@ -747,7 +747,7 @@ static int __devinit at91_twi_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, dev);
 
-	dev->clk = devm_clk_get(dev->dev, NULL);
+	dev->clk = clk_get(dev->dev, NULL);
 	if (IS_ERR(dev->clk)) {
 		dev_err(dev->dev, "no clock defined\n");
 		return -ENODEV;
@@ -777,6 +777,7 @@ static int __devinit at91_twi_probe(struct platform_device *pdev)
 		dev_err(dev->dev, "Adapter %s registration failed\n",
 			dev->adapter.name);
 		clk_disable_unprepare(dev->clk);
+		clk_put(dev->clk);
 		return rc;
 	}
 
@@ -793,6 +794,7 @@ static int __devexit at91_twi_remove(struct platform_device *pdev)
 
 	rc = i2c_del_adapter(&dev->adapter);
 	clk_disable_unprepare(dev->clk);
+	clk_put(dev->clk);
 
 	return rc;
 }
