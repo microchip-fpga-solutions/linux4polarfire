@@ -28,6 +28,7 @@
 #include <linux/ioctl.h>
 #include <linux/completion.h>
 
+#include <asm/io.h>
 #include <asm/uaccess.h>
 
 #include <mach/at91_rtc.h>
