@@ -43,6 +43,14 @@ static void __init at91_dt_init_irq(void)
 static void __init at91_dt_device_init(void)
 {
 	of_platform_populate(NULL, of_default_bus_match_table, NULL, NULL);
+	/* Temporary pin mux stuff */
+	if (of_machine_is_compatible("atmel,at91sam9x5")) {
+		at91_set_A_periph(AT91_PIN_PA30, 0);    /* TWD */
+		at91_set_A_periph(AT91_PIN_PA31, 0);    /* TWCK */
+		printk("AT91: i2c pin mux done\n");
+		at91_set_gpio_input(AT91_PIN_PA7, 1);
+		printk("AT91: qt1070 pin mux done\n");
+	}
 }
 
 static const char *at91_dt_board_compat[] __initdata = {
