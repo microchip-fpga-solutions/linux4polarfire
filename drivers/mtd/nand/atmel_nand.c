@@ -759,7 +759,7 @@ normal_check:
 }
 
 static int atmel_nand_pmecc_read_page(struct mtd_info *mtd,
-	struct nand_chip *chip, uint8_t *buf, int oob_required, int page)
+	struct nand_chip *chip, uint8_t *buf, int page)
 {
 	struct atmel_nand_host *host = chip->priv;
 	int eccsize = chip->ecc.size;
@@ -797,7 +797,7 @@ static int atmel_nand_pmecc_read_page(struct mtd_info *mtd,
 }
 
 static int atmel_nand_pmecc_write_page(struct mtd_info *mtd,
-		struct nand_chip *chip, const uint8_t *buf, int oob_required)
+		struct nand_chip *chip, const uint8_t *buf)
 {
 	struct atmel_nand_host *host = chip->priv;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
