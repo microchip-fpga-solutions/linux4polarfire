@@ -32,75 +32,75 @@
 
 static struct clk pioA_clk = {
 	.name		= "pioA_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOA,
+	.pid		= SAMA5D3_ID_PIOA,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk pioB_clk = {
 	.name		= "pioB_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOB,
+	.pid		= SAMA5D3_ID_PIOB,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk pioC_clk = {
 	.name		= "pioC_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOC,
+	.pid		= SAMA5D3_ID_PIOC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk pioD_clk = {
 	.name		= "pioD_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOD,
+	.pid		= SAMA5D3_ID_PIOD,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk pioE_clk = {
 	.name		= "pioE_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_PIOE,
+	.pid		= SAMA5D3_ID_PIOE,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk mmc0_clk = {
 	.name		= "mci0_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_HSMCI0,
+	.pid		= SAMA5D3_ID_HSMCI0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk tcb0_clk = {
 	.name		= "tcb0_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_TC0,
+	.pid		= SAMA5D3_ID_TC0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk tcb1_clk = {
 	.name		= "tcb1_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_TC1,
+	.pid		= SAMA5D3_ID_TC1,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk dma0_clk = {
 	.name		= "dma0_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_DMA0,
+	.pid		= SAMA5D3_ID_DMA0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk dma1_clk = {
 	.name		= "dma1_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_DMA1,
+	.pid		= SAMA5D3_ID_DMA1,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk uhphs_clk = {
 	.name		= "uhphs",
-	.pmc_mask	= 1 << SAMA5D3_ID_UHPHS,
+	.pid		= SAMA5D3_ID_UHPHS,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 /* gmac only for sama5d33, sama5d34, sama5d35 */
 static struct clk macb0_clk = {
 	.name		= "pclk",
-	.pmc_mask	= 1 << SAMA5D3_ID_GMAC,
+	.pid		= SAMA5D3_ID_GMAC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 /* emac only for sama5d31, sama5d35 */
 static struct clk macb1_clk = {
 	.name		= "pclk",
-	.pmc_mask	= 1 << SAMA5D3_ID_EMAC,
+	.pid		= SAMA5D3_ID_EMAC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 /* lcd only for sama5d31, sama5d33, sama5d34 */
 static struct clk lcdc_clk = {
 	.name		= "lcdc_clk",
-	.pmc_mask	= 1 << SAMA5D3_ID_LCDC,
+	.pid		= SAMA5D3_ID_LCDC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 
