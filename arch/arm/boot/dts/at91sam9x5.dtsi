@@ -208,6 +208,7 @@
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
+				dma = <&dma0 0x10002200>;
 			};
 
 			mmc1: mmc@f000c000 {
@@ -217,6 +218,7 @@
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
+				dma = <&dma1 0x10002200>;
 			};
 
 			i2c0: i2c@f8010000 {
