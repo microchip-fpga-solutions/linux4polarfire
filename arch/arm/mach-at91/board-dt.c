@@ -50,6 +50,30 @@ static void __init at91_dt_device_init(void)
 		printk("AT91: i2c pin mux done\n");
 		at91_set_gpio_input(AT91_PIN_PA7, 1);
 		printk("AT91: qt1070 pin mux done\n");
+
+		at91_set_gpio_input(AT91_PIN_PD14, 1);
+		at91_set_deglitch(AT91_PIN_PD14, 1);
+		at91_set_gpio_input(AT91_PIN_PD15, 1);
+		at91_set_deglitch(AT91_PIN_PD15, 1);
+		/* CLK */
+		at91_set_A_periph(AT91_PIN_PA17, 0);
+		/* CMD */
+		at91_set_A_periph(AT91_PIN_PA16, 1);
+		/* DAT0, DAT1..DAT3 */
+		at91_set_A_periph(AT91_PIN_PA15, 1);
+		at91_set_A_periph(AT91_PIN_PA18, 1);
+		at91_set_A_periph(AT91_PIN_PA19, 1);
+		at91_set_A_periph(AT91_PIN_PA20, 1);
+		/* CLK */
+		at91_set_B_periph(AT91_PIN_PA13, 0);
+		/* CMD */
+		at91_set_B_periph(AT91_PIN_PA12, 1);
+		/* DAT0, DAT1..DAT3 */
+		at91_set_B_periph(AT91_PIN_PA11, 1);
+		at91_set_B_periph(AT91_PIN_PA2, 1);
+		at91_set_B_periph(AT91_PIN_PA3, 1);
+		at91_set_B_periph(AT91_PIN_PA4, 1);
+		printk("AT91: mci0/1 pin mux done\n");
 	}
 }
 
