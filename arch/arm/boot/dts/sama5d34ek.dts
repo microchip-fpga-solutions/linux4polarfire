@@ -61,6 +61,11 @@
 
 			i2c1: i2c@f0018000 {
 				status = "okay";
+				24c256@50 {
+					compatible = "24c256";
+					reg = <0x50>;
+					pagesize = <64>;
+				};
 			};
 		};
 
