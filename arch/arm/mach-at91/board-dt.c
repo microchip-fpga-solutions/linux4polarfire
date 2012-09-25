@@ -247,6 +247,12 @@ static void __init at91_dt_device_init(void)
 	}
 
 	if (of_machine_is_compatible("atmel,sama5ek")) {
+		at91_set_A_periph(AT91_PIN_PA30, 0);    /* TWD0 */
+		at91_set_A_periph(AT91_PIN_PA31, 0);    /* TWCK0 */
+		at91_set_B_periph(AT91_PIN_PC26, 0);    /* TWD1 */
+		at91_set_B_periph(AT91_PIN_PC27, 0);    /* TWCK1 */
+		printk("AT91: i2c pin mux done\n");
+
 		phy_register_fixup_for_uid(PHY_ID_KSZ9021, MICREL_PHY_ID_MASK,
 					   ksz9021rn_phy_fixup);
 		at91_pinmux_lcd();

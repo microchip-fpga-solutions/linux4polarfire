@@ -24,6 +24,9 @@
 		gpio4 = &pioE;
 		tcb0 = &tcb0;
 		tcb1 = &tcb1;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c2 = &i2c2;
 	};
 	cpus {
 		cpu@0 {
@@ -206,6 +209,33 @@
 				compatible = "atmel,at91sam9x5-lcd";
 				reg = <0xf0030140 0x23f
 				       0xf0030a00 0x3ff>;
+				status = "disabled";
+			};
+
+			i2c0: i2c@f0014000 {
+				compatible = "atmel,at91sam9x5-i2c";
+				reg = <0xf0014000 0x100>;
+				interrupts = <18 4 6>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+
+			i2c1: i2c@f0018000 {
+				compatible = "atmel,at91sam9x5-i2c";
+				reg = <0xf0018000 0x100>;
+				interrupts = <19 4 6>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+
+			i2c2: i2c@f801c000 {
+				compatible = "atmel,at91sam9x5-i2c";
+				reg = <0xf801c000 0x100>;
+				interrupts = <20 4 6>;
+				#address-cells = <1>;
+				#size-cells = <0>;
 				status = "disabled";
 			};
 		};
