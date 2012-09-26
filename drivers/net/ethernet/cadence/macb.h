@@ -10,6 +10,9 @@
 #ifndef _MACB_H
 #define _MACB_H
 
+#define MACB_GREGS_NBR 16
+#define MACB_GREGS_VERSION 1
+
 /* MACB register offsets */
 #define MACB_NCR				0x0000
 #define MACB_NCFGR				0x0004
@@ -145,6 +148,8 @@
 #define MACB_IRXFCS_SIZE			1
 
 /* GEM specific NCFGR bitfields. */
+#define GEM_GBE_OFFSET				10
+#define GEM_GBE_SIZE				1
 #define GEM_CLK_OFFSET				18
 #define GEM_CLK_SIZE				3
 #define GEM_DBW_OFFSET				21
@@ -156,8 +161,19 @@
 #define GEM_DBW128				2
 
 /* Bitfields in DMACFG. */
+#define GEM_FBLDO_OFFSET			0
+#define GEM_FBLDO_SIZE				5
+#define GEM_RXBMS_OFFSET			8
+#define GEM_RXBMS_SIZE				2
+#define GEM_TXPBMS_OFFSET			10
+#define GEM_TXPBMS_SIZE				1
+#define GEM_TXCOEN_OFFSET			11
+#define GEM_TXCOEN_SIZE				1
 #define GEM_RXBS_OFFSET				16
 #define GEM_RXBS_SIZE				8
+#define GEM_DDRP_OFFSET				24
+#define GEM_DDRP_SIZE				1
+
 
 /* Bitfields in NSR */
 #define MACB_NSR_LINK_OFFSET			0
@@ -246,6 +262,8 @@
 /* Bitfields in USRIO (AT91) */
 #define MACB_RMII_OFFSET			0
 #define MACB_RMII_SIZE				1
+#define GEM_RGMII_OFFSET			0	/* GEM gigabit mode */
+#define GEM_RGMII_SIZE				1
 #define MACB_CLKEN_OFFSET			1
 #define MACB_CLKEN_SIZE				1
 
@@ -352,7 +370,12 @@
 		__v; \
 	})
 
-struct dma_desc {
+/**
+ * struct macb_dma_desc - Hardware DMA descriptor
+ * @addr: DMA address of data buffer
+ * @ctrl: Control and status bits
+ */
+struct macb_dma_desc {
 	u32	addr;
 	u32	ctrl;
 };
@@ -417,7 +440,29 @@ struct dma_desc {
 #define MACB_TX_USED_OFFSET			31
 #define MACB_TX_USED_SIZE			1
 
-struct ring_info {
+/**
+ * struct macb_rx_page - data associated with a page used as RX buffers
+ * @page: Physical page used as storage for the buffers
+ * @phys: DMA address of the page
+ *
+ * Each page is used to provide %MACB_RX_BUFFERS_PER_PAGE RX buffers.
+ * The page gets an initial reference when it is inserted into the
+ * ring, and an additional reference each time it is passed up the
+ * stack as a fragment. When all the buffers have been used, we drop
+ * the initial reference and allocate a new page. Any additional
+ * references are dropped when the higher layers free the skb.
+ */
+struct macb_rx_page {
+	struct page		*page;
+	dma_addr_t		phys;
+};
+
+/**
+ * struct macb_tx_skb - data about an skb which is being transmitted
+ * @skb: skb currently being transmitted
+ * @mapping: DMA address of the skb's data buffer
+ */
+struct macb_tx_skb {
 	struct sk_buff		*skb;
 	dma_addr_t		mapping;
 };
@@ -502,12 +547,12 @@ struct macb {
 	void __iomem		*regs;
 
 	unsigned int		rx_tail;
-	struct dma_desc		*rx_ring;
-	void			*rx_buffers;
+	struct macb_dma_desc	*rx_ring;
+	struct macb_rx_page	*rx_page;
 
 	unsigned int		tx_head, tx_tail;
-	struct dma_desc		*tx_ring;
-	struct ring_info	*tx_skb;
+	struct macb_dma_desc	*tx_ring;
+	struct macb_tx_skb	*tx_skb;
 
 	spinlock_t		lock;
 	struct platform_device	*pdev;
@@ -515,6 +560,7 @@ struct macb {
 	struct clk		*hclk;
 	struct net_device	*dev;
 	struct napi_struct	napi;
+	struct work_struct	tx_error_task;
 	struct net_device_stats	stats;
 	union {
 		struct macb_stats	macb;
@@ -523,9 +569,6 @@ struct macb {
 
 	dma_addr_t		rx_ring_dma;
 	dma_addr_t		tx_ring_dma;
-	dma_addr_t		rx_buffers_dma;
-
-	unsigned int		rx_pending, tx_pending;
 
 	struct mii_bus		*mii_bus;
 	struct phy_device	*phy_dev;
