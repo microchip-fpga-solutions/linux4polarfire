@@ -243,6 +243,13 @@
 				#size-cells = <0>;
 				status = "disabled";
 			};
+
+			isi: isi@f0034000 {
+				compatible = "atmel,at91sam9g45-isi";
+				reg = <0xf0034000 0x4000>;
+				interrupts = <37 4 5>;
+				status = "disabled";
+			};
 		};
 
 		nand0: nand@60000000 {
