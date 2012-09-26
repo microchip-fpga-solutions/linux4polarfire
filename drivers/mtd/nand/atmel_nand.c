@@ -951,6 +951,7 @@ static int __init atmel_pmecc_nand_init_params(struct platform_device *pdev,
 	/* set ECC page size and oob layout */
 	switch (mtd->writesize) {
 	case 2048:
+	case 4096:
 		host->pmecc_degree = PMECC_GF_DIMENSION_13;
 		host->pmecc_cw_len = (1 << host->pmecc_degree) - 1;
 		host->pmecc_sector_number = mtd->writesize / sector_size;
@@ -976,7 +977,6 @@ static int __init atmel_pmecc_nand_init_params(struct platform_device *pdev,
 		break;
 	case 512:
 	case 1024:
-	case 4096:
 		/* TODO */
 		dev_warn(host->dev,
 			"Unsupported page size for PMECC, use Software ECC\n");
@@ -1414,7 +1414,11 @@ static int __init atmel_nand_probe(struct platform_device *pdev)
 		nand_chip->dev_ready = atmel_nand_device_ready;
 
 	nand_chip->ecc.mode = host->board.ecc_mode;
-	nand_chip->chip_delay = 20;		/* 20us command delay time */
+
+	/* For support 4k-page flash, incease the delay time to 25us.
+	 * In P.108 of MT29F8G08ABABA datasheet, tR max is 25us.
+	 */
+	nand_chip->chip_delay = 25;
 
 	if (host->board.bus_width_16)	/* 16-bit bus width */
 		nand_chip->options |= NAND_BUSWIDTH_16;
