@@ -103,12 +103,14 @@
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xffffec00 0x200>;
 				interrupts = <20 4 0>;
+				#dma-cells = <1>;
 			};
 
 			dma1: dma-controller@ffffee00 {
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xffffee00 0x200>;
 				interrupts = <21 4 0>;
+				#dma-cells = <1>;
 			};
 
 			pioA: gpio@fffff400 {
@@ -221,6 +223,7 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf8010000 0x100>;
 				interrupts = <9 4 6>;
+				dma = <&dma0 0x10002278>;
 				#address-cells = <1>;
 				#size-cells = <0>;
 				status = "disabled";
@@ -230,6 +233,7 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf8014000 0x100>;
 				interrupts = <10 4 6>;
+				dma = <&dma1 0x10002256>;
 				#address-cells = <1>;
 				#size-cells = <0>;
 				status = "disabled";
@@ -239,6 +243,7 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf8018000 0x100>;
 				interrupts = <11 4 6>;
+				dma = <&dma0 0x1000229A>;
 				#address-cells = <1>;
 				#size-cells = <0>;
 				status = "disabled";
