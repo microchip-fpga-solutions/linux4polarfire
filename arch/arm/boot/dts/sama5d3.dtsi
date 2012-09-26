@@ -208,6 +208,13 @@
 				       0xf0030a00 0x3ff>;
 				status = "disabled";
 			};
+
+			isi: isi@f0034000 {
+				compatible = "atmel,at91sam9g45-isi";
+				reg = <0xf0034000 0x4000>;
+				interrupts = <37 4 5>;
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {

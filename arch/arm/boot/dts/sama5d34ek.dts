@@ -54,6 +54,11 @@
 			lcdovl1@f0030140 {
 				status = "okay";
 			};
+
+			/* Enable LCD or ISI not both */
+			isi: isi@f0034000 {
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {

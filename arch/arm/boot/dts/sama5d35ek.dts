@@ -51,6 +51,10 @@
 				phy-mode = "rmii";
 				status = "okay";
 			};
+
+			isi: isi@f0034000 {
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {
