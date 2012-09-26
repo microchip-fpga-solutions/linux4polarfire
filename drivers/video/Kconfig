@@ -8,6 +8,9 @@ menu "Graphics support"
 config HAVE_FB_ATMEL
 	bool
 
+config HAVE_FB_ATMEL_HLCD
+	bool
+
 config SH_MIPI_DSI
 	tristate
 	depends on (SUPERH || ARCH_SHMOBILE) && HAVE_CLK
@@ -1030,7 +1033,7 @@ config FB_ATMEL_STN
 
 config FB_ATMEL_HLCD
 	tristate "AT91 HLCD Controller support"
-	depends on FB && HAVE_FB_ATMEL
+	depends on FB && HAVE_FB_ATMEL_HLCD
 	select FB_CFB_FILLRECT
 	select FB_CFB_COPYAREA
 	select FB_CFB_IMAGEBLIT
