@@ -1,0 +1,46 @@
+This file lists all branches that are pulled into the at91-3.4-sama5d3_merge
+branch of git://rfolxts01.rfo.atmel.com/linux and their external dependencies.
+
+The at91-3.4-sama5d3/v3.4.x_* branches are kept in the order in which they
+get applied.
+
+external dependencies:
+at91-3.4-trunk_merge	git://rfolxts01.rfo.atmel.com/linux at91-3.4-trunk_merge
+(1fd93fe)
+
+at91-3.4-sama5d3_merge:
+at91-3.4-sama5d3/v3.4.x_sama5d3	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3
+				depends on at91-3.4-trunk_merge
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_pmecc	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_pmecc
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_i2c	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_i2c
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_isi	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_isi
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_isi+i2c	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_isi+i2c
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3_i2c
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3_isi
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_mci	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_mci
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_touch	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_touch
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_crypto	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_crypto
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_media_video_heo git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_media_video_heo
+						depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_clk-div	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_clk-div
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3
+					depends on at91-3.4-sama5d3/v3.4.x_sama5d3_i2c
+
+at91-3.4-sama5d3/v3.4.x_sama5d3_pinctrl	git://rfolxts01.rfo.atmel.com/linux at91-3.4-sama5d3/v3.4.x_sama5d3_pinctrl
+					depends on **all**
