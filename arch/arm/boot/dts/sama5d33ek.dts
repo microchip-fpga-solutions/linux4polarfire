@@ -1,0 +1,73 @@
+/*
+ * sama5d33ek.dts - Device Tree file for SAMA5-EK board
+ *
+ *  Copyright (C) 2012 Atmel,
+ *                2012 Ludovic Desroches <ludovic.desroches@atmel.com>
+ *
+ * Licensed under GPLv2 or later.
+ */
+/dts-v1/;
+/include/ "sama5d3.dtsi"
+/include/ "sama5d3cm.dtsi"
+
+/ {
+	model = "Atmel SAMA5D3-EK";
+	compatible = "atmel,sama5ek", "atmel,sama5d3", "atmel,sama5";
+
+	chosen {
+		bootargs = "console=ttyS0,115200 mtdparts=atmel_nand:8M(bootstrap/uboot/kernel)ro,-(rootfs) rw rootfstype=ubifs ubi.mtd=1 root=ubi0:rootfs";
+	};
+
+	ahb {
+		apb {
+			dbgu: serial@ffffee00 {
+				status = "okay";
+			};
+
+			mmc0: mmc@f0000000 {
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+					cd-gpios = <&pioD 17 0>;
+				};
+			};
+
+			mmc1: mmc@f8000000 {
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+					cd-gpios = <&pioD 18 0>;
+				};
+			};
+
+			macb0: ethernet@f0028000 {
+				phy-mode = "rgmii";
+				status = "okay";
+			};
+
+			lcd@f0030000 {
+				status = "okay";
+			};
+
+			lcdovl1@f0030140 {
+				status = "okay";
+			};
+		};
+
+		usb0: ohci@00600000 {
+			status = "okay";
+			num-ports = <3>;
+			atmel,vbus-gpio = <&pioD 25 1
+					   &pioD 26 1
+					   &pioD 27 1
+					  >;
+		};
+
+		usb1: ehci@00700000 {
+			status = "okay";
+		};
+
+	};
+};

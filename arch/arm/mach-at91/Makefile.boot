@@ -36,3 +36,8 @@ dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9n12ek.dtb
 dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9g25ek.dtb
 dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9g35ek.dtb
 dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9x25ek.dtb
+# sama5d3x
+dtb-$(CONFIG_MACH_AT91SAM_DT) += sama5d31ek.dtb
+dtb-$(CONFIG_MACH_AT91SAM_DT) += sama5d33ek.dtb
+dtb-$(CONFIG_MACH_AT91SAM_DT) += sama5d34ek.dtb
+dtb-$(CONFIG_MACH_AT91SAM_DT) += sama5d35ek.dtb

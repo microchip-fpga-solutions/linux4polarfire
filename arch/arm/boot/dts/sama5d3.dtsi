@@ -1,0 +1,227 @@
+/*
+ * sama5d3.dtsi - Device Tree Include file for SAMA5D3x family SoC
+ *                applies to SAMA5D31, SAMA5D33, SAMA5D34, SAMA5D35 SoC
+ *
+ *  Copyright (C) 2012 Atmel,
+ *                2012 Ludovic Desroches <ludovic.desroches@atmel.com>
+ *
+ * Licensed under GPLv2 or later.
+ */
+
+/include/ "skeleton.dtsi"
+
+/ {
+	model = "Atmel SAMA5D3 family SoC";
+	compatible = "atmel,sama5d3";
+	interrupt-parent = <&aic>;
+
+	aliases {
+		serial0 = &dbgu;
+		gpio0 = &pioA;
+		gpio1 = &pioB;
+		gpio2 = &pioC;
+		gpio3 = &pioD;
+		gpio4 = &pioE;
+		tcb0 = &tcb0;
+		tcb1 = &tcb1;
+	};
+	cpus {
+		cpu@0 {
+			compatible = "arm,cortex-a5";
+		};
+	};
+
+	memory {
+		reg = <0x20000000 0x8000000>;
+	};
+
+	ahb {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		apb {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+
+			aic: interrupt-controller@fffff000 {
+				#interrupt-cells = <3>;
+				compatible = "atmel,sama5d3-aic";
+				interrupt-controller;
+				reg = <0xfffff000 0x200>;
+				atmel,external-irqs = <47>;
+			};
+
+			ramc0: ramc@ffffea00 {
+				compatible = "atmel,at91sam9g45-ddramc";
+				reg = <0xffffea00 0x200>;
+			};
+
+			pmc: pmc@fffffc00 {
+				compatible = "atmel,at91rm9200-pmc";
+				reg = <0xfffffc00 0x100>;
+			};
+
+			rstc@fffffe00 {
+				compatible = "atmel,at91sam9g45-rstc";
+				reg = <0xfffffe00 0x10>;
+			};
+
+			pit: timer@fffffe30 {
+				compatible = "atmel,at91sam9260-pit";
+				reg = <0xfffffe30 0xf>;
+				interrupts = <3 4 5>;
+			};
+
+			tcb0: timer@f0010000 {
+				compatible = "atmel,at91sam9x5-tcb";
+				reg = <0xf0010000 0x100>;
+				interrupts = <26 4 0>;
+			};
+
+			tcb1: timer@f8014000 {
+				compatible = "atmel,at91sam9x5-tcb";
+				reg = <0xf8014000 0x100>;
+				interrupts = <27 4 0>;
+			};
+
+			dma0: dma-controller@ffffe600 {
+				compatible = "atmel,at91sam9g45-dma";
+				reg = <0xffffe600 0x200>;
+				interrupts = <30 4 0>;
+			};
+
+			dma1: dma-controller@ffffe800 {
+				compatible = "atmel,at91sam9g45-dma";
+				reg = <0xffffe800 0x200>;
+				interrupts = <31 4 0>;
+			};
+
+			pioA: gpio@fffff200 {
+				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+				reg = <0xfffff200 0x100>;
+				interrupts = <6 4 1>;
+				#gpio-cells = <2>;
+				gpio-controller;
+				interrupt-controller;
+			};
+
+			pioB: gpio@fffff400 {
+				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+				reg = <0xfffff400 0x100>;
+				interrupts = <7 4 1>;
+				#gpio-cells = <2>;
+				gpio-controller;
+				interrupt-controller;
+			};
+
+			pioC: gpio@fffff600 {
+				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+				reg = <0xfffff600 0x100>;
+				interrupts = <8 4 1>;
+				#gpio-cells = <2>;
+				gpio-controller;
+				interrupt-controller;
+			};
+
+			pioD: gpio@fffff800 {
+				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+				reg = <0xfffff800 0x100>;
+				interrupts = <9 4 1>;
+				#gpio-cells = <2>;
+				gpio-controller;
+				interrupt-controller;
+			};
+
+			pioE: gpio@fffffa00 {
+				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+				reg = <0xfffffa00 0x100>;
+				interrupts = <10 4 1>;
+				#gpio-cells = <2>;
+				gpio-controller;
+				interrupt-controller;
+			};
+
+			dbgu: serial@ffffee00 {
+				compatible = "atmel,at91sam9260-usart";
+				reg = <0xffffee00 0x200>;
+				interrupts = <2 4 7>;
+				status = "disabled";
+			};
+
+			mmc0: mmc@f0000000 {
+				compatible = "atmel,hsmci";
+				reg = <0xf0000000 0x600>;
+				interrupts = <21 4 0>;
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			mmc1: mmc@f8000000 {
+				compatible = "atmel,hsmci";
+				reg = <0xf8000000 0x600>;
+				interrupts = <22 4 0>;
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			mmc2: mmc@f8004000 {
+				compatible = "atmel,hsmci";
+				reg = <0xf8004000 0x600>;
+				interrupts = <23 4 0>;
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			macb0: ethernet@f0028000 {
+				compatible = "cnds,pc302-gem", "cdns,gem";
+				reg = <0xf0028000 0x100>;
+				interrupts = <34 4 3>;
+				status = "disabled";
+			};
+
+
+			macb1: ethernet@f802c000 {
+				compatible = "cdns,at32ap7000-macb", "cdns,macb";
+				reg = <0xf802c000 0x100>;
+				interrupts = <35 4 3>;
+				status = "disabled";
+			};
+
+			lcd@f0030000 {
+				compatible = "atmel,at91sam9x5-lcd";
+				reg = <0xf0030000 0xff
+				       0xf0030600 0x3ff>;
+				interrupts = <36 4 3>;
+				status = "disabled";
+			};
+
+			lcdovl1@f0030140 {
+				compatible = "atmel,at91sam9x5-lcd";
+				reg = <0xf0030140 0x23f
+				       0xf0030a00 0x3ff>;
+				status = "disabled";
+			};
+		};
+
+		usb0: ohci@00600000 {
+			compatible = "atmel,at91rm9200-ohci", "usb-ohci";
+			reg = <0x00600000 0x100000>;
+			interrupts = <32 4 2>;
+			status = "disabled";
+		};
+
+		usb1: ehci@00700000 {
+			compatible = "atmel,at91sam9g45-ehci", "usb-ehci";
+			reg = <0x00700000 0x100000>;
+			interrupts = <32 4 2>;
+			status = "disabled";
+		};
+	};
+};
