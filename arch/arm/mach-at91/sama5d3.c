@@ -57,38 +57,45 @@ static struct clk pioE_clk = {
 };
 static struct clk usart0_clk = {
 	.name		= "usart0_clk",
-	.pmc_mask	= SAMA5D3_ID_USART0,
+	.pid		= SAMA5D3_ID_USART0,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk usart1_clk = {
 	.name		= "usart1_clk",
-	.pmc_mask	= SAMA5D3_ID_USART1,
+	.pid		= SAMA5D3_ID_USART1,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk usart2_clk = {
 	.name		= "usart2_clk",
-	.pmc_mask	= SAMA5D3_ID_USART2,
+	.pid		= SAMA5D3_ID_USART2,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk usart3_clk = {
 	.name		= "usart3_clk",
-	.pmc_mask	= SAMA5D3_ID_USART3,
+	.pid		= SAMA5D3_ID_USART3,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk twi0_clk = {
 	.name		= "twi0_clk",
-	.pmc_mask	= SAMA5D3_ID_TWI0,
+	.pid		= SAMA5D3_ID_TWI0,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk twi1_clk = {
 	.name		= "twi1_clk",
-	.pmc_mask	= SAMA5D3_ID_TWI1,
+	.pid		= SAMA5D3_ID_TWI1,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk twi2_clk = {
 	.name		= "twi2_clk",
-	.pmc_mask	= SAMA5D3_ID_TWI2,
+	.pid		= SAMA5D3_ID_TWI2,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk mmc0_clk = {
 	.name		= "mci0_clk",
@@ -97,38 +104,41 @@ static struct clk mmc0_clk = {
 };
 static struct clk mmc1_clk = {
 	.name		= "mci1_clk",
-	.pmc_mask	= SAMA5D3_ID_HSMCI1,
+	.pid		= SAMA5D3_ID_HSMCI1,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk mmc2_clk = {
 	.name		= "mci2_clk",
-	.pmc_mask	= SAMA5D3_ID_HSMCI2,
+	.pid		= SAMA5D3_ID_HSMCI2,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk spi0_clk = {
 	.name		= "spi0_clk",
-	.pmc_mask	= SAMA5D3_ID_SPI0,
+	.pid		= SAMA5D3_ID_SPI0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk spi1_clk = {
 	.name		= "spi1_clk",
-	.pmc_mask	= SAMA5D3_ID_SPI1,
+	.pid		= SAMA5D3_ID_SPI1,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk tcb0_clk = {
 	.name		= "tcb0_clk",
 	.pid		= SAMA5D3_ID_TC0,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk tcb1_clk = {
 	.name		= "tcb1_clk",
 	.pid		= SAMA5D3_ID_TC1,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk adc_clk = {
 	.name		= "adc_clk",
-	.pmc_mask	= SAMA5D3_ID_ADC,
+	.pid		= SAMA5D3_ID_ADC,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk adc_op_clk = {
 	.name		= "adc_op_clk",
@@ -171,42 +181,47 @@ static struct clk lcdc_clk = {
 /* isi only for sama5d33, sama5d35 */
 static struct clk isi_clk = {
 	.name		= "isi_clk",
-	.pmc_mask	= SAMA5D3_ID_ISI,
+	.pid		= SAMA5D3_ID_ISI,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk ssc0_clk = {
 	.name		= "ssc0_clk",
-	.pmc_mask	= SAMA5D3_ID_SSC0,
+	.pid		= SAMA5D3_ID_SSC0,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk ssc1_clk = {
 	.name		= "ssc1_clk",
-	.pmc_mask	= SAMA5D3_ID_SSC1,
+	.pid		= SAMA5D3_ID_SSC1,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk can0_clk = {
 	.name		= "can0_clk",
-	.pmc_mask	= SAMA5D3_ID_CAN0,
+	.pid		= SAMA5D3_ID_CAN0,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk can1_clk = {
 	.name		= "can1_clk",
-	.pmc_mask	= SAMA5D3_ID_CAN1,
+	.pid		= SAMA5D3_ID_CAN1,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk sha_clk = {
 	.name		= "sha_clk",
-	.pmc_mask	= SAMA5D3_ID_SHA,
+	.pid		= SAMA5D3_ID_SHA,
 	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV8,
 };
 static struct clk aes_clk = {
 	.name		= "aes_clk",
-	.pmc_mask	= SAMA5D3_ID_AES,
+	.pid		= SAMA5D3_ID_AES,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk tdes_clk = {
 	.name		= "tdes_clk",
-	.pmc_mask	= SAMA5D3_ID_TDES,
+	.pid		= SAMA5D3_ID_TDES,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 
@@ -246,14 +261,14 @@ static struct clk *periph_clocks[] __initdata = {
 
 static struct clk pck0 = {
 	.name		= "pck0",
-	.pmc_mask	= AT91_PMC_PCK0,
+	.pid	= AT91_PMC_PCK0,
 	.type		= CLK_TYPE_PROGRAMMABLE,
 	.id		= 0,
 };
 
 static struct clk pck2 = {
 	.name		= "pck2",
-	.pmc_mask	= AT91_PMC_PCK2,
+	.pid	= AT91_PMC_PCK2,
 	.type		= CLK_TYPE_PROGRAMMABLE,
 	.id		= 2,
 };
