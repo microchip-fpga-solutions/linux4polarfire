@@ -52,8 +52,12 @@
 				status = "okay";
 			};
 
+			/*
+			 * i2c0 conflicts with ISI:
+			 * disable it to allow the use of ISI
+			 */
 			i2c0: i2c@f0014000 {
-				status = "okay";
+				status = "disabled";
 			};
 
 			i2c1: i2c@f0018000 {

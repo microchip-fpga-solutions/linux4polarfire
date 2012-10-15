@@ -261,7 +261,7 @@ static struct i2c_board_info i2c_camera = {
 static struct soc_camera_link iclink_ov2640 = {
 	.bus_id			= -1,
 	.board_info		= &i2c_camera,
-	.i2c_adapter_id		= 1,
+	.i2c_adapter_id		= 0,
 	.power			= i2c_camera_power,
 	.query_bus_param	= isi_camera_query_bus_param,
 };
