@@ -302,6 +302,7 @@ static void __init at91sam9x5_register_clocks(void)
 static void __init at91sam9x5_map_io(void)
 {
 	at91_init_sram(0, AT91SAM9X5_SRAM_BASE, AT91SAM9X5_SRAM_SIZE);
+	init_consistent_dma_size(SZ_8M);
 }
 
 void __init at91sam9x5_initialize(void)
