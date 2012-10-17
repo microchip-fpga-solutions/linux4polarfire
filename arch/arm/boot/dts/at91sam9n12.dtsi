@@ -109,6 +109,7 @@
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xffffec00 0x200>;
 				interrupts = <20 4 0>;
+				#dma-cells = <1>;
 			};
 
 			pioA: gpio@fffff400 {
@@ -210,6 +211,29 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 				status = "disabled";
+			};
+
+			aes@f000c000 {
+				compatible = "atmel,sam9g46-aes";
+				reg = <0xf000c000 0x100>;
+				interrupts = <29 4 0>;
+				dma = <&dma 0x2000060B	/* tx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_DST_H2SEL_HW */
+								/* | ATC_DST_PER(AT_DMA_ID_AES_TX); */
+					&dma 0x200060A0	/* rx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_SRC_H2SEL_HW */
+								/* | ATC_SRC_PER(AT_DMA_ID_AES_RX); */
+					>;
+				dma-name = "tx", "rx";
+			};
+
+			sha@f0014000 {
+				compatible = "atmel,sam9g46-sha";
+				reg = <0xf0014000 0x100>;
+				interrupts = <27 4 0>;
+				dma = <&dma 0x200060C0>;	/* rx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_SRC_H2SEL_HW */
+								/* | ATC_SRC_PER(AT_DMA_ID_SHA_RX); */
 			};
 		};
 
