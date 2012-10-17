@@ -28,7 +28,7 @@
 #include <linux/delay.h>
 
 #include <mach/hardware.h>
-#include <video/atmel_lcdc.h>
+#include <video/atmel_lcdfb.h>
 #include <media/soc_camera.h>
 #include <media/atmel-isi.h>
 
@@ -42,6 +42,8 @@
 
 #include <mach/board.h>
 #include <mach/at91_aic.h>
+#include <mach/gpio.h>
+#include <mach/atmel_lcdc.h>
 #include <mach/at91sam9_smc.h>
 #include <mach/at91_shdwc.h>
 #include <mach/system_rev.h>
