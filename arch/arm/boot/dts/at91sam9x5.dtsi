@@ -201,10 +201,42 @@
 				};
 
 				nand {
-					pinctrl_nand: nand-0 {
+					pinctrl_nand_rdy_enable: nand_rdy_enable-0 {
 						atmel,pins =
 							<3 4 0x0 0x1	/* PD5 gpio RDY pin pull_up */
 							 3 5 0x0 0x1>;	/* PD4 gpio enable pin pull_up */
+					};
+
+					pinctrl_nand_oe_we_ale_cle: nand_oe_we_ale_cle-0 {
+						atmel,pins =
+							<3 0 0x1 0x1	/* PD0 periph A with pullup */
+							 3 1 0x1 0x1	/* PD1 periph A with pullup */
+							 3 3 0x1 0x1	/* PD2 periph A with pullup */
+							 3 3 0x1 0x1>;	/* PD3 periph A with pullup */
+					};
+
+					pinctrl_nand_bus_on_d0: nand_bus_on_d0-0 {
+						atmel,pins =
+							<3 6 0x1 0x1	/* PD6 periph A with pullup */
+							 3 7 0x1 0x1	/* PD7 periph A with pullup */
+							 3 8 0x1 0x1	/* PD8 periph A with pullup */
+							 3 9 0x1 0x1	/* PD9 periph A with pullup */
+							 3 10 0x1 0x1	/* PD10 periph A with pullup */
+							 3 11 0x1 0x1	/* PD11 periph A with pullup */
+							 3 12 0x1 0x1	/* PD12 periph A with pullup */
+							 3 13 0x1 0x1>;	/* PD13 periph A with pullup */
+					};
+
+					pinctrl_nand_bus_on_d0_16bit: nand_bus_on_d0_16bit-0 {
+						atmel,pins =
+							<3 14 0x1 0x1	/* PD14 periph A with pullup */
+							 3 15 0x1 0x1	/* PD15 periph A with pullup */
+							 3 16 0x1 0x1	/* PD16 periph A with pullup */
+							 3 17 0x1 0x1	/* PD17 periph A with pullup */
+							 3 18 0x1 0x1	/* PD18 periph A with pullup */
+							 3 19 0x1 0x1	/* PD19 periph A with pullup */
+							 3 20 0x1 0x1	/* PD20 periph A with pullup */
+							 3 21 0x1 0x1>;	/* PD21 periph A with pullup */
 					};
 				};
 
@@ -457,7 +489,7 @@
 			atmel,nand-addr-offset = <21>;
 			atmel,nand-cmd-offset = <22>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_nand>;
+			pinctrl-0 = <&pinctrl_nand_rdy_enable &pinctrl_nand_oe_we_ale_cle>;
 			gpios = <&pioD 5 0
 				 &pioD 4 0
 				 0
