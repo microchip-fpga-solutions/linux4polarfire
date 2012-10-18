@@ -59,6 +59,10 @@
 			i2c1: i2c@f0018000 {
 				status = "okay";
 			};
+
+			isi: isi@f0034000 {
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {
