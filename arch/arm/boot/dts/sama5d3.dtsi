@@ -221,8 +221,15 @@
 
 			lcdovl1@f0030140 {
 				compatible = "atmel,at91sam9x5-lcd";
-				reg = <0xf0030140 0x23f
+				reg = <0xf0030140 0xff
 				       0xf0030a00 0x3ff>;
+				status = "disabled";
+			};
+
+			lcdheo1@f0030340 {
+				compatible = "atmel,sama5d3-heo";
+				reg = <0xf0030340 0xff>;
+				interrupts = <36 4 3>;
 				status = "disabled";
 			};
 
