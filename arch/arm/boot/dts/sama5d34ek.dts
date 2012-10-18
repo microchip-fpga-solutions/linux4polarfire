@@ -72,6 +72,15 @@
 			isi: isi@f0034000 {
 				status = "disabled";
 			};
+
+			tsadcc: tsadcc@f8018000 {
+				atmel,tsadcc_clock = <300000>;
+				atmel,filtering_average = <0x03>;
+				atmel,pendet_debounce = <0x08>;
+				atmel,pendet_sensitivity = <0x02>;
+				atmel,ts_sample_hold_time = <0x0a>;
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {

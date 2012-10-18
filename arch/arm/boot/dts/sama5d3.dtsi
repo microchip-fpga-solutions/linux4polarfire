@@ -262,6 +262,13 @@
 				interrupts = <37 4 5>;
 				status = "disabled";
 			};
+
+			tsadcc: tsadcc@f8018000 {
+				compatible = "atmel,at91sam9x5-tsadcc";
+				reg = <0xf8018000 0x4000>;
+				interrupts = <29 4 5>;
+				status = "disabled";
+			};
 		};
 
 		nand0: nand@60000000 {
