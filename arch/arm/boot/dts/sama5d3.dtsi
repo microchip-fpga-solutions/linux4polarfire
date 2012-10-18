@@ -269,6 +269,43 @@
 				interrupts = <29 4 5>;
 				status = "disabled";
 			};
+
+			aes@f8038000 {
+				compatible = "atmel,sam9g46-aes";
+				reg = <0xf8038000 0x100>;
+				interrupts = <43 4 0>;
+				dma = <&dma1 0x20000603	/* tx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_DST_H2SEL_HW */
+								/* | ATC_DST_PER(AT_DMA_ID_AES_TX); */
+					&dma1 0x20006020	/* rx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_SRC_H2SEL_HW */
+								/* | ATC_SRC_PER(AT_DMA_ID_AES_RX); */
+					>;
+				dma-name = "tx", "rx";
+			};
+
+			tdes@f803c000 {
+				compatible = "atmel,sam9g46-tdes";
+				reg = <0xf803c000 0x100>;
+				interrupts = <44 4 0>;
+				dma = <&dma1 0x20000605	/* tx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_DST_H2SEL_HW */
+								/* | ATC_DST_PER(AT_DMA_ID_TDES_TX); */
+					&dma1 0x20006040	/* rx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_SRC_H2SEL_HW */
+								/* | ATC_SRC_PER(AT_DMA_ID_TDES_RX); */
+					>;
+				dma-name = "tx", "rx";
+			};
+
+			sha@f8034000 {
+				compatible = "atmel,sam9g46-sha";
+				reg = <0xf8034000 0x100>;
+				interrupts = <42 4 0>;
+				dma = <&dma1 0x20006010>;	/* rx cfg = ATC_FIFOCFG_ENOUGHSPACE */
+								/* | ATC_SRC_H2SEL_HW */
+								/* | ATC_SRC_PER(AT_DMA_ID_SHA_RX); */
+			};
 		};
 
 		nand0: nand@60000000 {
