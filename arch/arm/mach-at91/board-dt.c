@@ -11,6 +11,8 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/gpio.h>
+#include <linux/phy.h>
+#include <linux/micrel_phy.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
@@ -26,10 +28,14 @@
 
 #include "generic.h"
 
+/************************************/
+/* TEMPORARY NON-DT STUFF FOR MIURA */
+/************************************/
 #include <linux/fb.h>
-
 #include <video/atmel_lcdfb.h>
 #include <mach/atmel_hlcdc.h>
+
+#include <mach/sama5d3.h>
 
 /*
  * LCD Controller
@@ -118,15 +124,59 @@ void __init at91sam9x5_pinmux_lcd(void)
 	printk("AT91: lcd pin mux done\n");
 }
 
+void __init at91_pinmux_lcd(void)
+{
+	at91_set_A_periph(AT91_PIN_PA24, 0);    /* LCDPWM */
+
+	at91_set_A_periph(AT91_PIN_PA26, 0);    /* LCDVSYNC */
+	at91_set_A_periph(AT91_PIN_PA27, 0);    /* LCDHSYNC */
+
+	at91_set_A_periph(AT91_PIN_PA25, 0);    /* LCDDISP */
+	at91_set_A_periph(AT91_PIN_PA29, 0);    /* LCDDEN */
+	at91_set_A_periph(AT91_PIN_PA28, 0);    /* LCDPCK */
+
+	at91_set_A_periph(AT91_PIN_PA0, 0);     /* LCDD0 */
+	at91_set_A_periph(AT91_PIN_PA1, 0);     /* LCDD1 */
+	at91_set_A_periph(AT91_PIN_PA2, 0);     /* LCDD2 */
+	at91_set_A_periph(AT91_PIN_PA3, 0);     /* LCDD3 */
+	at91_set_A_periph(AT91_PIN_PA4, 0);     /* LCDD4 */
+	at91_set_A_periph(AT91_PIN_PA5, 0);     /* LCDD5 */
+	at91_set_A_periph(AT91_PIN_PA6, 0);     /* LCDD6 */
+	at91_set_A_periph(AT91_PIN_PA7, 0);     /* LCDD7 */
+	at91_set_A_periph(AT91_PIN_PA8, 0);     /* LCDD8 */
+	at91_set_A_periph(AT91_PIN_PA9, 0);     /* LCDD9 */
+	at91_set_A_periph(AT91_PIN_PA10, 0);    /* LCDD10 */
+	at91_set_A_periph(AT91_PIN_PA11, 0);    /* LCDD11 */
+	at91_set_A_periph(AT91_PIN_PA12, 0);    /* LCDD12 */
+	at91_set_A_periph(AT91_PIN_PA13, 0);    /* LCDD13 */
+	at91_set_A_periph(AT91_PIN_PA14, 0);    /* LCDD14 */
+	at91_set_A_periph(AT91_PIN_PA15, 0);    /* LCDD15 */
+	at91_set_C_periph(AT91_PIN_PC14, 0);    /* LCDD16 */
+	at91_set_C_periph(AT91_PIN_PC13, 0);    /* LCDD17 */
+	at91_set_C_periph(AT91_PIN_PC12, 0);    /* LCDD18 */
+	at91_set_C_periph(AT91_PIN_PC11, 0);    /* LCDD19 */
+	at91_set_C_periph(AT91_PIN_PC10, 0);    /* LCDD20 */
+	at91_set_C_periph(AT91_PIN_PC15, 0);    /* LCDD21 */
+	at91_set_C_periph(AT91_PIN_PE27, 0);    /* LCDD22 */
+	at91_set_C_periph(AT91_PIN_PE28, 0);    /* LCDD23 */
+}
+
 struct of_dev_auxdata at91_auxdata_lookup[] __initdata = {
 	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038000, "atmel_hlcdfb_base", &ek_lcdc_data),
 	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038100, "atmel_hlcdfb_ovl", &ek_lcdc_data),
+	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030000, "atmel_hlcdfb_base", &ek_lcdc_data),
+	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030140, "atmel_hlcdfb_ovl", &ek_lcdc_data),
 	{ /* sentinel */ }
 };
+
+/************************************/
+/*              END                 */
+/************************************/
 
 static const struct of_device_id irq_of_match[] __initconst = {
 
 	{ .compatible = "atmel,at91rm9200-aic", .data = at91_aic_of_init },
+	{ .compatible = "atmel,sama5d3-aic", .data = at91_aic5_of_init },
 	{ .compatible = "atmel,at91rm9200-gpio", .data = at91_gpio_of_irq_setup },
 	{ .compatible = "atmel,at91sam9x5-gpio", .data = at91_gpio_of_irq_setup },
 	{ /*sentinel*/ }
@@ -135,6 +185,28 @@ static const struct of_device_id irq_of_match[] __initconst = {
 static void __init at91_dt_init_irq(void)
 {
 	of_irq_init(irq_of_match);
+}
+
+static int ksz9021rn_phy_fixup(struct phy_device *phy)
+{
+	int value;
+
+#define GMII_RCCPSR	260
+#define GMII_RRDPSR	261
+#define GMII_ERCR	11
+#define GMII_ERDWR	12
+
+	/* Set delay values */
+	value = GMII_RCCPSR | 0x8000;
+	phy_write(phy, GMII_ERCR, value);
+	value = 0xF2F4;
+	phy_write(phy, GMII_ERDWR, value);
+	value = GMII_RRDPSR | 0x8000;
+	phy_write(phy, GMII_ERCR, value);
+	value = 0x2222;
+	phy_write(phy, GMII_ERDWR, value);
+
+	return 0;
 }
 
 static void __init at91_dt_device_init(void)
@@ -174,8 +246,30 @@ static void __init at91_dt_device_init(void)
 		at91sam9x5_pinmux_lcd();
 	}
 
+	if (of_machine_is_compatible("atmel,sama5ek")) {
+		phy_register_fixup_for_uid(PHY_ID_KSZ9021, MICREL_PHY_ID_MASK,
+					   ksz9021rn_phy_fixup);
+		at91_pinmux_lcd();
+	}
+
 	of_platform_populate(NULL, of_default_bus_match_table, at91_auxdata_lookup, NULL);
 }
+
+static const char *sama5_dt_board_compat[] __initdata = {
+	"atmel,sama5ek",
+	NULL
+};
+
+DT_MACHINE_START(sama5_dt, "Atmel SAMA5 (Device Tree)")
+	/* Maintainer: Atmel */
+	.timer		= &at91sam926x_timer,
+	.map_io		= at91_map_io,
+	.handle_irq	= at91_aic5_handle_irq,
+	.init_early	= at91_dt_initialize,
+	.init_irq	= at91_dt_init_irq,
+	.init_machine	= at91_dt_device_init,
+	.dt_compat	= sama5_dt_board_compat,
+MACHINE_END
 
 static const char *at91_dt_board_compat[] __initdata = {
 	"atmel,at91sam9",
