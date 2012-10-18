@@ -29,6 +29,8 @@
 #define SAMA5D3_ID_TWI1		19	/* Two-Wire Interface 1 */
 #define SAMA5D3_ID_TWI2		20	/* Two-Wire Interface 2 */
 #define SAMA5D3_ID_HSMCI0	21	/* MCI */
+#define SAMA5D3_ID_HSMCI1	22	/* MCI */
+#define SAMA5D3_ID_HSMCI2	23	/* MCI */
 #define SAMA5D3_ID_TC0        	26      /* Timer Counter 0 */
 #define SAMA5D3_ID_TC1        	27      /* Timer Counter 2 */
 #define SAMA5D3_ID_DMA0		30	/* DMA Controller 0 */

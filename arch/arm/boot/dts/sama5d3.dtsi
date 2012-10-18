@@ -164,6 +164,10 @@
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
+				dma = <&dma0 0x10002200>; /* cfg = ATC_FIFOCFG_HALFFIFO
+								| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
+								| ATC_SRC_PER(AT_DMA_ID_MCI0)
+								| ATC_DST_PER(AT_DMA_ID_MCI0) */
 			};
 
 			mmc1: mmc@f8000000 {
@@ -173,6 +177,10 @@
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
+				dma = <&dma1 0x10002200>; /* cfg = ATC_FIFOCFG_HALFFIFO
+								| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
+								| ATC_SRC_PER(AT_DMA_ID_MCI1)
+								| ATC_DST_PER(AT_DMA_ID_MCI1) */
 			};
 
 			mmc2: mmc@f8004000 {
@@ -182,6 +190,10 @@
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
+				dma = <&dma1 0x10002211>; /* cfg = ATC_FIFOCFG_HALFFIFO
+								| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
+								| ATC_SRC_PER(AT_DMA_ID_MCI2)
+								| ATC_DST_PER(AT_DMA_ID_MCI2) */
 			};
 
 			macb0: ethernet@f0028000 {
