@@ -208,6 +208,13 @@
 				       0xf0030a00 0x3ff>;
 				status = "disabled";
 			};
+
+			lcdheo1@f0030340 {
+				compatible = "atmel,sama5d3-heo";
+				reg = <0xf0030340 0xff>;
+				interrupts = <36 4 3>;
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {
