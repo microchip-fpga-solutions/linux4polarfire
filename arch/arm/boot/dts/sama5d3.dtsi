@@ -105,55 +105,347 @@
 				#dma-cells = <1>;
 			};
 
-			pioA: gpio@fffff200 {
-				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
-				reg = <0xfffff200 0x100>;
-				interrupts = <6 4 1>;
-				#gpio-cells = <2>;
-				gpio-controller;
-				interrupt-controller;
-			};
+			pinctrl@fffff200 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "atmel,at91sam9x5-pinctrl", "atmel,at91rm9200-pinctrl", "simple-bus";
+				ranges = <0xfffff200 0xfffff200 0xa00>;
+				atmel,mux-mask = <
+					/*   A          B          C  */
+					0xffffffff 0xc0fc0000 0xc0ff0000	/* pioA */
+					0xffffffff 0x0ff8ffff 0x00000000	/* pioB */
+					0xffffffff 0xbc00f1ff 0x7c00fc00	/* pioC */
+					0xffffffff 0xc001c0e0 0x0001c1e0	/* pioD */
+					0xffffffff 0xbf9f8000 0x18000000	/* pioE */
+					>;
 
-			pioB: gpio@fffff400 {
-				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
-				reg = <0xfffff400 0x100>;
-				interrupts = <7 4 1>;
-				#gpio-cells = <2>;
-				gpio-controller;
-				interrupt-controller;
-			};
+				/* shared pinctrl settings */
+				dbgu {
+					pinctrl_dbgu: dbgu-0 {
+						atmel,pins =
+							<1 30 0x1 0x0	/* PB30 periph A */
+							 1 31 0x1 0x1>;	/* PB31 periph A with pullup */
+					};
+				};
 
-			pioC: gpio@fffff600 {
-				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
-				reg = <0xfffff600 0x100>;
-				interrupts = <8 4 1>;
-				#gpio-cells = <2>;
-				gpio-controller;
-				interrupt-controller;
-			};
+				macb0 {
+					pinctrl_macb0_data_rgmii: macb0_data_rgmii {
+						atmel,pins =
+							<1 0 0x1 0x0	/* PB0 periph A GTX0 */
+							 1 1 0x1 0x0	/* PB1 periph A GTX1 */
+							 1 2 0x1 0x0	/* PB2 periph A GTX2 */
+							 1 3 0x1 0x0	/* PB3 periph A GTX3 */
+							 1 4 0x1 0x0	/* PB4 periph A GRX0 */
+							 1 5 0x1 0x0	/* PB5 periph A GRX1 */
+							 1 6 0x1 0x0	/* PB6 periph A GRX2 */
+							 1 7 0x1 0x0>;	/* PB7 periph A GRX3 */
+					};
+					pinctrl_macb0_data_gmii: macb0_data_gmii {
+						atmel,pins =
+							<1 19 0x2 0x0	/* PB19 periph B GTX4 */
+							 1 20 0x2 0x0	/* PB20 periph B GTX5 */
+							 1 21 0x2 0x0	/* PB21 periph B GTX6 */
+							 1 22 0x2 0x0	/* PB22 periph B GTX7 */
+							 1 23 0x2 0x0	/* PB23 periph B GRX4 */
+							 1 24 0x2 0x0	/* PB24 periph B GRX5 */
+							 1 25 0x2 0x0	/* PB25 periph B GRX6 */
+							 1 26 0x2 0x0>;	/* PB26 periph B GRX7 */
+					};
+					pinctrl_macb0_signal_rgmii: macb0_signal_rgmii {
+						atmel,pins =
+							<1 8 0x1 0x0	/* PB8 periph A GTXCK */
+							 1 9 0x1 0x0	/* PB9 periph A GTXEN */
+							 1 11 0x1 0x0	/* PB11 periph A GRXCK */
+							 1 13 0x1 0x0	/* PB13 periph A GRXER */
+							 1 16 0x1 0x0	/* PB16 periph A GMDC */
+							 1 17 0x1 0x0	/* PB17 periph A GMDIO */
+							 1 18 0x1 0x0>;	/* PB18 periph A G125CK */
+					};
+					pinctrl_macb0_signal_gmii: macb0_signal_gmii {
+						atmel,pins =
+							<1 9 0x1 0x0	/* PB9 periph A GTXEN */
+							 1 10 0x1 0x0	/* PB10 periph A GTXER */
+							 1 11 0x1 0x0	/* PB11 periph A GRXCK */
+							 1 12 0x1 0x0	/* PB12 periph A GRXDV */
+							 1 13 0x1 0x0	/* PB13 periph A GRXER */
+							 1 14 0x1 0x0	/* PB14 periph A GCRS */
+							 1 15 0x1 0x0	/* PB15 periph A GCOL */
+							 1 16 0x1 0x0	/* PB16 periph A GMDC */
+							 1 17 0x1 0x0	/* PB17 periph A GMDIO */
+							 1 27 0x2 0x0>;	/* PB27 periph B G125CKO */
+					};
 
-			pioD: gpio@fffff800 {
-				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
-				reg = <0xfffff800 0x100>;
-				interrupts = <9 4 1>;
-				#gpio-cells = <2>;
-				gpio-controller;
-				interrupt-controller;
-			};
+				};
 
-			pioE: gpio@fffffa00 {
-				compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
-				reg = <0xfffffa00 0x100>;
-				interrupts = <10 4 1>;
-				#gpio-cells = <2>;
-				gpio-controller;
-				interrupt-controller;
+				i2c0 {
+					pinctrl_i2c0: i2c0-0 {
+						atmel,pins =
+							<0 30 0x1 0x0	/* PA30 periph A TWD0 pin */
+							 0 31 0x1 0x0>;	/* PA31 periph A TWCK0 pin */
+					};
+				};
+
+				i2c1 {
+					pinctrl_i2c1: i2c1-0 {
+						atmel,pins =
+							<2 26 0x2 0x0	/* PC26 periph B TWD1 pin */
+							 2 27 0x2 0x0>;	/* PC27 periph B TWCK1 pin */
+					};
+				};
+
+				isi {
+					pinctrl_isi: isi-0 {
+						atmel,pins =
+							<0 16 0x3 0x0	/* PA16 periph C ISI_D0 */
+							 0 17 0x3 0x0	/* PA17 periph C ISI_D1 */
+							 0 18 0x3 0x0	/* PA18 periph C ISI_D2 */
+							 0 19 0x3 0x0	/* PA19 periph C ISI_D3 */
+							 0 20 0x3 0x0	/* PA20 periph C ISI_D4 */
+							 0 21 0x3 0x0	/* PA21 periph C ISI_D5 */
+							 0 22 0x3 0x0	/* PA22 periph C ISI_D6 */
+							 0 23 0x3 0x0	/* PA23 periph C ISI_D7 */
+							 2 30 0x3 0x0	/* PC30 periph C ISI_PCK */
+							 0 31 0x3 0x0	/* PA31 periph C ISI_HSYNC */
+							 0 30 0x3 0x0	/* PA30 periph C ISI_VSYMC */
+							 2 29 0x3 0x0	/* PC29 periph C ISI_PD8 */
+							 2 28 0x3 0x0>;	/* PC28 periph C ISI_PD9 */
+					};
+					pinctrl_isi_pck_as_mck: isi_pck_as_mck-0 {
+						atmel,pins =
+							<2 15 0x2 0x0>;	/* PC15 periph B ISI_MCK */
+					};
+					pinctrl_isi_camera: isi_camera-0 {
+						atmel,pins =
+							<4 28 0x0 0x0	/* PE28 gpio ZB_SLPTR */
+							 4 29 0x0 0x0>;	/* PE29 gpio ZB_RSTN */
+					};
+				};
+
+				lcd {
+					pinctrl_lcd: lcd-0 {
+						atmel,pins =
+							<0 24 0x1 0x0	/* PA24 periph A LCDPWM */
+							 0 26 0x1 0x0	/* PA26 periph A LCDVSYNC */
+							 0 27 0x1 0x0	/* PA27 periph A LCDHSYNC */
+							 0 25 0x1 0x0	/* PA25 periph A LCDDISP */
+							 0 29 0x1 0x0	/* PA29 periph A LCDDEN */
+							 0 28 0x1 0x0	/* PA28 periph A LCDPCK */
+							 0 0 0x1 0x0	/* PA0 periph A LCDD0 pin */
+							 0 1 0x1 0x0	/* PA1 periph A LCDD1 pin */
+							 0 2 0x1 0x0	/* PA2 periph A LCDD2 pin */
+							 0 3 0x1 0x0	/* PA3 periph A LCDD3 pin */
+							 0 4 0x1 0x0	/* PA4 periph A LCDD4 pin */
+							 0 5 0x1 0x0	/* PA5 periph A LCDD5 pin */
+							 0 6 0x1 0x0	/* PA6 periph A LCDD6 pin */
+							 0 7 0x1 0x0	/* PA7 periph A LCDD7 pin */
+							 0 8 0x1 0x0	/* PA8 periph A LCDD8 pin */
+							 0 9 0x1 0x0	/* PA9 periph A LCDD9 pin */
+							 0 10 0x1 0x0	/* PA10 periph A LCDD10 pin */
+							 0 11 0x1 0x0	/* PA11 periph A LCDD11 pin */
+							 0 12 0x1 0x0	/* PA12 periph A LCDD12 pin */
+							 0 13 0x1 0x0	/* PA13 periph A LCDD13 pin */
+							 0 14 0x1 0x0	/* PA14 periph A LCDD14 pin */
+							 0 15 0x1 0x0	/* PA15 periph A LCDD15 pin */
+							 2 14 0x3 0x0	/* PC14 periph C LCDD16 pin */
+							 2 13 0x3 0x0	/* PC13 periph C LCDD17 pin */
+							 2 12 0x3 0x0	/* PC12 periph C LCDD18 pin */
+							 2 11 0x3 0x0	/* PC11 periph C LCDD19 pin */
+							 2 10 0x3 0x0	/* PC10 periph C LCDD20 pin */
+							 2 15 0x3 0x0	/* PC15 periph C LCDD21 pin */
+							 4 27 0x3 0x0	/* PE27 periph C LCDD22 pin */
+							 4 28 0x3 0x0>;	/* PE28 periph C LCDD23 pin */
+					};
+				};
+
+				mmc0 {
+					pinctrl_mmc0_clk_cmd_dat0: mmc0_clk_cmd_dat0 {
+						atmel,pins =
+							<3 9 0x1 0x0	/* PD9 periph A MCI0_CK */
+							 3 0 0x1 0x1	/* PD0 periph A MCI0_CDA with pullup */
+							 3 1 0x1 0x1>;	/* PD1 periph A MCI0_DA0 with pullup */
+					};
+					pinctrl_mmc0_dat1_3: mmc0_dat1_3 {
+						atmel,pins =
+							<3 2 0x1 0x1	/* PD2 periph A MCI0_DA1 with pullup */
+							 3 3 0x1 0x1	/* PD3 periph A MCI0_DA2 with pullup */
+							 3 4 0x1 0x1>;	/* PD4 periph A MCI0_DA3 with pullup */
+					};
+					pinctrl_mmc0_dat4_7: mmc0_dat4_7 {
+						atmel,pins =
+							<3 5 0x1 0x1	/* PD5 periph A MCI0_DA4 with pullup */
+							 3 6 0x1 0x1	/* PD6 periph A MCI0_DA5 with pullup */
+							 3 7 0x1 0x1	/* PD7 periph A MCI0_DA6 with pullup */
+							 3 8 0x1 0x1>;	/* PD8 periph A MCI0_DA7 with pullup */
+					};
+				};
+
+				mmc1 {
+					pinctrl_mmc1_clk_cmd_dat0: mmc1_clk_cmd_dat0 {
+						atmel,pins =
+							<1 24 0x1 0x0	/* PB24 periph A MCI1_CK */
+							 1 19 0x1 0x1	/* PB19 periph A MCI1_CDA with pullup */
+							 1 20 0x1 0x1>;	/* PB20 periph A MCI1_DA0 with pullup */
+					};
+					pinctrl_mmc1_dat1_3: mmc1_dat1_3 {
+						atmel,pins =
+							<1 21 0x1 0x1	/* PB21 periph A MCI1_DA1 with pullup */
+							 1 22 0x1 0x1	/* PB22 periph A MCI1_DA2 with pullup */
+							 1 23 0x1 0x1>;	/* PB23 periph A MCI1_DA3 with pullup */
+					};
+				};
+
+				mmc2 {
+					pinctrl_mmc2_clk_cmd_dat0: mmc2_clk_cmd_dat0 {
+						atmel,pins =
+							<2 15 0x1 0x0	/* PC15 periph A MCI2_CK */
+							 2 10 0x1 0x1	/* PC10 periph A MCI2_CDA with pullup */
+							 2 11 0x1 0x1>;	/* PC11 periph A MCI2_DA0 with pullup */
+					};
+					pinctrl_mmc2_dat1_3: mmc2_dat1_3 {
+						atmel,pins =
+							<2 12 0x1 0x0	/* PC12 periph A MCI2_DA1 with pullup */
+							 2 13 0x1 0x0	/* PC13 periph A MCI2_DA2 with pullup */
+							 2 14 0x1 0x0>;	/* PC14 periph A MCI2_DA3 with pullup */
+					};
+				};
+
+				nand0 {
+					pinctrl_nand0_ale_cle: nand0_ale_cle-0 {
+						atmel,pins =
+							<4 21 0x1 0x1	/* PE21 periph A with pullup */
+							 4 22 0x1 0x1>;	/* PE22 periph A with pullup */
+					};
+				};
+
+				uart0 {
+					pinctrl_uart0: uart0-0 {
+						atmel,pins =
+							<3 17 0x1 0x0	/* PD17 periph A */
+							 3 18 0x1 0x1>;	/* PD18 periph A with pullup */
+					};
+
+					pinctrl_uart0_rts_cts: uart0_rts_cts-0 {
+						atmel,pins =
+							<3 15 0x1 0x0	/* PD15 periph A */
+							 3 16 0x1 0x0>;	/* PD16 periph A */
+					};
+				};
+
+				uart1 {
+					pinctrl_uart1: uart1-0 {
+						atmel,pins =
+							<1 28 0x1 0x0	/* PB28 periph A */
+							 1 29 0x1 0x1>;	/* PB29 periph A with pullup */
+					};
+
+					pinctrl_uart1_rts_cts: uart1_rts_cts-0 {
+						atmel,pins =
+							<1 26 0x1 0x0	/* PB26 periph A */
+							 1 27 0x1 0x0>;	/* PB27 periph A */
+					};
+				};
+
+				uart2 {
+					pinctrl_uart2: uart2-0 {
+						atmel,pins =
+							<4 25 0x2 0x0	/* PE25 periph B */
+							 4 26 0x2 0x1>;	/* PE26 periph B with pullup */
+					};
+
+					pinctrl_uart2_rts_cts: uart2_rts_cts-0 {
+						atmel,pins =
+							<4 23 0x2 0x0	/* PE23 periph B */
+							 4 24 0x2 0x0>;	/* PE24 periph B */
+					};
+				};
+
+				uart3 {
+					pinctrl_uart3: uart3-0 {
+						atmel,pins =
+							<4 18 0x2 0x0	/* PE18 periph B */
+							 4 19 0x2 0x1>;	/* PE19 periph B with pullup */
+					};
+
+					pinctrl_uart3_rts_cts: uart3_rts_cts-0 {
+						atmel,pins =
+							<4 16 0x2 0x0	/* PE16 periph B */
+							 4 17 0x2 0x0>;	/* PE17 periph B */
+					};
+				};
+
+				usart0 {
+					pinctrl_usart0: usart0-0 {
+						atmel,pins =
+							<3 29 0x1 0x0	/* PC29 periph A */
+							 3 30 0x1 0x1>;	/* PC30 periph A with pullup */
+					};
+				};
+
+				usart1 {
+					pinctrl_usart1: usart1-0 {
+						atmel,pins =
+							<0 30 0x2 0x0	/* PA30 periph B */
+							 0 31 0x2 0x1>;	/* PA31 periph B with pullup */
+					};
+				};
+
+				pioA: gpio@fffff200 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfffff200 0x100>;
+					interrupts = <6 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioB: gpio@fffff400 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfffff400 0x100>;
+					interrupts = <7 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioC: gpio@fffff600 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfffff600 0x100>;
+					interrupts = <8 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioD: gpio@fffff800 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfffff800 0x100>;
+					interrupts = <9 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioE: gpio@fffffa00 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfffffa00 0x100>;
+					interrupts = <10 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
 			};
 
 			dbgu: serial@ffffee00 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xffffee00 0x200>;
 				interrupts = <2 4 7>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_dbgu>;
 				status = "disabled";
 			};
 
@@ -161,6 +453,8 @@
 				compatible = "atmel,hsmci";
 				reg = <0xf0000000 0x600>;
 				interrupts = <21 4 0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3 &pinctrl_mmc_dat4_7>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -174,6 +468,8 @@
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
 				interrupts = <22 4 0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -187,6 +483,8 @@
 				compatible = "atmel,hsmci";
 				reg = <0xf8004000 0x600>;
 				interrupts = <23 4 0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc2_clk_cmd_dat0 &pinctrl_mmc2_dat1_3>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -200,6 +498,8 @@
 				compatible = "cnds,pc302-gem", "cdns,gem";
 				reg = <0xf0028000 0x100>;
 				interrupts = <34 4 3>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_macb0_data_rgmii &pinctrl_macb0_data_gmii &pinctrl_macb0_signal_gmii>;
 				status = "disabled";
 			};
 
@@ -216,6 +516,8 @@
 				reg = <0xf0030000 0xff
 				       0xf0030600 0x3ff>;
 				interrupts = <36 4 3>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_lcd>;
 				status = "disabled";
 			};
 
@@ -237,6 +539,8 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf0014000 0x100>;
 				interrupts = <18 4 6>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c0>;
 				dma = <&dma0 0x10002278>;
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -247,6 +551,8 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf0018000 0x100>;
 				interrupts = <19 4 6>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c1>;
 				dma = <&dma0 0x1000229a>;
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -267,6 +573,8 @@
 				compatible = "atmel,at91sam9g45-isi";
 				reg = <0xf0034000 0x4000>;
 				interrupts = <37 4 5>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_isi &pinctrl_isi_pck_as_mck &pinctrl_isi_camera>;
 				status = "disabled";
 			};
 
@@ -326,6 +634,8 @@
 				>;
 			atmel,nand-addr-offset = <21>;
 			atmel,nand-cmd-offset = <22>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_nand0_ale_cle>;
 			atmel,pmecc-lookup-table-offset = <0x10000 0x18000>;
 			status = "disabled";
 		};

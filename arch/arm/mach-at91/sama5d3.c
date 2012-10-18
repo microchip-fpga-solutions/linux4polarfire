@@ -199,11 +199,6 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("tsc_clk", "f8018000.tsadcc", &adc_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "ffffe600.dma-controller", &dma0_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "ffffe800.dma-controller", &dma1_clk),
-	CLKDEV_CON_ID("pioA", &pioA_clk),
-	CLKDEV_CON_ID("pioB", &pioB_clk),
-	CLKDEV_CON_ID("pioC", &pioC_clk),
-	CLKDEV_CON_ID("pioD", &pioD_clk),
-	CLKDEV_CON_ID("pioE", &pioE_clk),
 	/* additional fake clock for macb_hclk */
 	CLKDEV_CON_DEV_ID("hclk", "f0028000.ethernet", &macb0_clk),
 	CLKDEV_CON_DEV_ID("hclk", "f802c000.ethernet", &macb1_clk),
@@ -216,6 +211,11 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("aes_clk", "f8038000.aes", &aes_clk),
 	CLKDEV_CON_DEV_ID("tdes_clk", "f803c000.tdes", &tdes_clk),
 	CLKDEV_CON_DEV_ID("sha_clk", "f8034000.sha", &sha_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fffff200.gpio", &pioA_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fffff400.gpio", &pioB_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fffff600.gpio", &pioC_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fffff800.gpio", &pioD_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fffffa00.gpio", &pioE_clk),
 };
 
 static void __init sama5d3_register_clocks(void)
@@ -261,7 +261,8 @@ void __init sama5d3_initialize(void)
 	at91_gpio_init(NULL, 0);
 }
 
-struct at91_init_soc __initdata sama5d3_soc = {
+struct at91_init_soc __initdata sama5d3_soc __used = {
+	.builtin = 1,
 	.map_io = sama5d3_map_io,
 	.register_clocks = sama5d3_register_clocks,
 	.init = sama5d3_initialize,

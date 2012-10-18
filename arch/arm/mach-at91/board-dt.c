@@ -92,81 +92,6 @@ static struct atmel_lcdfb_info __initdata ek_lcdc_data = {
 	.lcd_wiring_mode		= ATMEL_LCDC_WIRING_RGB,
 };
 
-void __init at91sam9x5_pinmux_lcd(void)
-{
-	at91_set_A_periph(AT91_PIN_PC26, 0);    /* LCDPWM */
-
-	at91_set_A_periph(AT91_PIN_PC27, 0);    /* LCDVSYNC */
-	at91_set_A_periph(AT91_PIN_PC28, 0);    /* LCDHSYNC */
-
-	at91_set_A_periph(AT91_PIN_PC24, 0);    /* LCDDISP */
-	at91_set_A_periph(AT91_PIN_PC29, 0);    /* LCDDEN */
-	at91_set_A_periph(AT91_PIN_PC30, 0);    /* LCDPCK */
-
-	at91_set_A_periph(AT91_PIN_PC0, 0);     /* LCDD0 */
-	at91_set_A_periph(AT91_PIN_PC1, 0);     /* LCDD1 */
-	at91_set_A_periph(AT91_PIN_PC2, 0);     /* LCDD2 */
-	at91_set_A_periph(AT91_PIN_PC3, 0);     /* LCDD3 */
-	at91_set_A_periph(AT91_PIN_PC4, 0);     /* LCDD4 */
-	at91_set_A_periph(AT91_PIN_PC5, 0);     /* LCDD5 */
-	at91_set_A_periph(AT91_PIN_PC6, 0);     /* LCDD6 */
-	at91_set_A_periph(AT91_PIN_PC7, 0);     /* LCDD7 */
-	at91_set_A_periph(AT91_PIN_PC8, 0);     /* LCDD8 */
-	at91_set_A_periph(AT91_PIN_PC9, 0);     /* LCDD9 */
-	at91_set_A_periph(AT91_PIN_PC10, 0);    /* LCDD10 */
-	at91_set_A_periph(AT91_PIN_PC11, 0);    /* LCDD11 */
-	at91_set_A_periph(AT91_PIN_PC12, 0);    /* LCDD12 */
-	at91_set_A_periph(AT91_PIN_PC13, 0);    /* LCDD13 */
-	at91_set_A_periph(AT91_PIN_PC14, 0);    /* LCDD14 */
-	at91_set_A_periph(AT91_PIN_PC15, 0);    /* LCDD15 */
-	at91_set_A_periph(AT91_PIN_PC16, 0);    /* LCDD16 */
-	at91_set_A_periph(AT91_PIN_PC17, 0);    /* LCDD17 */
-	at91_set_A_periph(AT91_PIN_PC18, 0);    /* LCDD18 */
-	at91_set_A_periph(AT91_PIN_PC19, 0);    /* LCDD19 */
-	at91_set_A_periph(AT91_PIN_PC20, 0);    /* LCDD20 */
-	at91_set_A_periph(AT91_PIN_PC21, 0);    /* LCDD21 */
-	at91_set_A_periph(AT91_PIN_PC22, 0);    /* LCDD22 */
-	at91_set_A_periph(AT91_PIN_PC23, 0);    /* LCDD23 */
-
-	printk("AT91: lcd pin mux done\n");
-}
-
-void __init at91_pinmux_lcd(void)
-{
-	at91_set_A_periph(AT91_PIN_PA24, 0);    /* LCDPWM */
-
-	at91_set_A_periph(AT91_PIN_PA26, 0);    /* LCDVSYNC */
-	at91_set_A_periph(AT91_PIN_PA27, 0);    /* LCDHSYNC */
-
-	at91_set_A_periph(AT91_PIN_PA25, 0);    /* LCDDISP */
-	at91_set_A_periph(AT91_PIN_PA29, 0);    /* LCDDEN */
-	at91_set_A_periph(AT91_PIN_PA28, 0);    /* LCDPCK */
-
-	at91_set_A_periph(AT91_PIN_PA0, 0);     /* LCDD0 */
-	at91_set_A_periph(AT91_PIN_PA1, 0);     /* LCDD1 */
-	at91_set_A_periph(AT91_PIN_PA2, 0);     /* LCDD2 */
-	at91_set_A_periph(AT91_PIN_PA3, 0);     /* LCDD3 */
-	at91_set_A_periph(AT91_PIN_PA4, 0);     /* LCDD4 */
-	at91_set_A_periph(AT91_PIN_PA5, 0);     /* LCDD5 */
-	at91_set_A_periph(AT91_PIN_PA6, 0);     /* LCDD6 */
-	at91_set_A_periph(AT91_PIN_PA7, 0);     /* LCDD7 */
-	at91_set_A_periph(AT91_PIN_PA8, 0);     /* LCDD8 */
-	at91_set_A_periph(AT91_PIN_PA9, 0);     /* LCDD9 */
-	at91_set_A_periph(AT91_PIN_PA10, 0);    /* LCDD10 */
-	at91_set_A_periph(AT91_PIN_PA11, 0);    /* LCDD11 */
-	at91_set_A_periph(AT91_PIN_PA12, 0);    /* LCDD12 */
-	at91_set_A_periph(AT91_PIN_PA13, 0);    /* LCDD13 */
-	at91_set_A_periph(AT91_PIN_PA14, 0);    /* LCDD14 */
-	at91_set_A_periph(AT91_PIN_PA15, 0);    /* LCDD15 */
-	at91_set_C_periph(AT91_PIN_PC14, 0);    /* LCDD16 */
-	at91_set_C_periph(AT91_PIN_PC13, 0);    /* LCDD17 */
-	at91_set_C_periph(AT91_PIN_PC12, 0);    /* LCDD18 */
-	at91_set_C_periph(AT91_PIN_PC11, 0);    /* LCDD19 */
-	at91_set_C_periph(AT91_PIN_PC10, 0);    /* LCDD20 */
-	at91_set_C_periph(AT91_PIN_PC15, 0);    /* LCDD21 */
-	at91_set_C_periph(AT91_PIN_PE27, 0);    /* LCDD22 */
-	at91_set_C_periph(AT91_PIN_PE28, 0);    /* LCDD23 */
-}
 /*
  *  ISI
  */
@@ -188,23 +113,7 @@ void __init at91_config_isi(bool use_pck_as_mck)
 	struct clk *pck;
 	struct clk *parent;
 
-	at91_set_C_periph(AT91_PIN_PA16, 0);	/* ISI_D0 */
-	at91_set_C_periph(AT91_PIN_PA17, 0);	/* ISI_D1 */
-	at91_set_C_periph(AT91_PIN_PA18, 0);	/* ISI_D2 */
-	at91_set_C_periph(AT91_PIN_PA19, 0);	/* ISI_D3 */
-	at91_set_C_periph(AT91_PIN_PA20, 0);	/* ISI_D4 */
-	at91_set_C_periph(AT91_PIN_PA21, 0);	/* ISI_D5 */
-	at91_set_C_periph(AT91_PIN_PA22, 0);	/* ISI_D6 */
-	at91_set_C_periph(AT91_PIN_PA23, 0);	/* ISI_D7 */
-	at91_set_C_periph(AT91_PIN_PC30, 0);	/* ISI_PCK */
-	at91_set_C_periph(AT91_PIN_PA31, 0);	/* ISI_HSYNC */
-	at91_set_C_periph(AT91_PIN_PA30, 0);	/* ISI_VSYNC */
-	at91_set_C_periph(AT91_PIN_PC29, 0);	/* ISI_PD8 */
-	at91_set_C_periph(AT91_PIN_PC28, 0);	/* ISI_PD9 */
-
 	if (use_pck_as_mck) {
-		at91_set_B_periph(AT91_PIN_PC15, 0);	/* ISI_MCK (PCK2) */
-
 		pck = clk_get(NULL, "pck2");
 		parent = clk_get(NULL, "plla");
 
@@ -237,20 +146,54 @@ static unsigned long isi_camera_query_bus_param(struct soc_camera_link *link)
 
 static int i2c_camera_power(struct device *dev, int on)
 {
-	/* enable or disable the camera */
+	int res;
+
 	pr_debug("%s: %s the camera\n", __func__, on ? "ENABLE" : "DISABLE");
-	at91_set_gpio_output(AT91_PIN_PE29 , !on);
+
+	res = devm_gpio_request(dev, AT91_PIN_PE29, "ov2640_power");
+	if (res < 0) {
+		printk("can't request ov2640_power pin\n");
+		return -1;
+	}
+
+	/* enable or disable the camera */
+	res = gpio_direction_output(AT91_PIN_PE29, !on);
+	if (res < 0) {
+		printk("can't request output direction for ov2640_power pin\n");
+		devm_gpio_free(dev, AT91_PIN_PE29);
+		return -1;
+	}
 
 	if (!on)
 		goto out;
 
 	/* If enabled, give a reset impulse */
-	at91_set_gpio_output(AT91_PIN_PE28, 0);
+	res = devm_gpio_request(dev, AT91_PIN_PE28, "ov2640_reset");
+	if (res < 0) {
+		printk("can't request ov2640_power pin\n");
+		devm_gpio_free(dev, AT91_PIN_PE29);
+		return -1;
+	}
+	res = gpio_direction_output(AT91_PIN_PE28, 0);
+	if (res < 0) {
+		printk("can't request output direction for ov2640_reset pin\n");
+		devm_gpio_free(dev, AT91_PIN_PE29);
+		devm_gpio_free(dev, AT91_PIN_PE28);
+		return -1;
+	}
 	msleep(20);
-	at91_set_gpio_output(AT91_PIN_PE28, 1);
+	res = gpio_direction_output(AT91_PIN_PE28, 1);
+	if (res < 0) {
+		printk("can't request output direction for ov2640_reset pin\n");
+		devm_gpio_free(dev, AT91_PIN_PE29);
+		devm_gpio_free(dev, AT91_PIN_PE28);
+		return -1;
+	}
 	msleep(100);
+	devm_gpio_free(dev, AT91_PIN_PE28);
 
 out:
+	devm_gpio_free(dev, AT91_PIN_PE29);
 	return 0;
 }
 
@@ -328,22 +271,8 @@ static int ksz9021rn_phy_fixup(struct phy_device *phy)
 
 static void __init at91_dt_device_init(void)
 {
-	/* Temporary pin mux stuff */
-	if (of_machine_is_compatible("atmel,at91sam9x5")) {
-		at91_set_gpio_input(AT91_PIN_PA7, 1);
-		printk("AT91: qt1070 pin mux done\n");
-
-		at91sam9x5_pinmux_lcd();
-	}
-
 	if (of_machine_is_compatible("atmel,sama5ek")) {
 		struct device_node *np;
-
-		at91_set_A_periph(AT91_PIN_PA30, 0);    /* TWD0 */
-		at91_set_A_periph(AT91_PIN_PA31, 0);    /* TWCK0 */
-		at91_set_B_periph(AT91_PIN_PC26, 0);    /* TWD1 */
-		at91_set_B_periph(AT91_PIN_PC27, 0);    /* TWCK1 */
-		printk("AT91: i2c pin mux done\n");
 
 		phy_register_fixup_for_uid(PHY_ID_KSZ9021, MICREL_PHY_ID_MASK,
 					   ksz9021rn_phy_fixup);
@@ -351,12 +280,7 @@ static void __init at91_dt_device_init(void)
 		np = of_find_compatible_node(NULL, NULL, "atmel,at91sam9g45-isi");
 		if (np) {
 			if (of_device_is_available(np))
-				/* reset and pck2 pins is conflicted with LCD */
 				at91_config_isi(true);
-			else
-				at91_pinmux_lcd();
-		} else {
-			at91_pinmux_lcd();
 		}
 	}
 
