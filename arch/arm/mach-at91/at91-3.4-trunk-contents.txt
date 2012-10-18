@@ -59,3 +59,13 @@ at91-3.4-trunk/v3.4.x_sam9x5_dt		git://rfolxts01.rfo.atmel.com/linux at91-3.4-tr
 
 at91-3.4-trunk/v3.4.x_crypto		git://rfolxts01.rfo.atmel.com/linux at91-3.4-trunk/v3.4.x_crypto
 					depends on at91-3.4-trunk/v3.4.x_aic5
+
+at91-3.4-trunk/v3.4.x_pinctrl		git://rfolxts01.rfo.atmel.com/linux at91-3.4-trunk/v3.4.x_pinctrl
+					depends on at91-3.4-trunk/v3.4.x_base
+					depends on at91-3.4-trunk/v3.4.x_cleanup+fixes
+					depends on at91-3.4-trunk/v3.4.x_aic5
+					depends on at91-3.4-trunk/v3.4.x_pmecc
+					depends on at91-3.4-trunk/v3.4.x_pmecc_4k_support
+
+at91-3.4-trunk/v3.4.x_pinctrl_drivers	git://rfolxts01.rfo.atmel.com/linux at91-3.4-trunk/v3.4.x_pinctrl_drivers
+					depends on **ALL**
