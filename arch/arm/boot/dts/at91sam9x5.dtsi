@@ -208,6 +208,30 @@
 					};
 				};
 
+				i2c0 {
+					pinctrl_i2c0: i2c0-0 {
+						atmel,pins =
+							<0 30 0x1 0x2	/* PA30 periph A Multidrive */
+							 0 31 0x1 0x3>;	/* PA31 periph A Multidrive with pullup */
+					};
+				};
+
+				i2c1 {
+					pinctrl_i2c1: i2c1-0 {
+						atmel,pins =
+							<2 0 0x3 0x2	/* PA0 periph C Multidrive */
+							 2 1 0x3 0x3>;	/* PC1 periph C Multidrive with pullup */
+					};
+				};
+
+				i2c2 {
+					pinctrl_i2c2: i2c2-0 {
+						atmel,pins =
+							<1 4 0x2 0x2	/* PB4 periph B Multidrive */
+							 1 5 0x2 0x3>;	/* PB5 periph B Multidrive with pullup */
+					};
+				};
+
 				pioA: gpio@fffff400 {
 					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 					reg = <0xfffff400 0x200>;
@@ -334,6 +358,8 @@
 				dma = <&dma0 0x10002278>;
 				#address-cells = <1>;
 				#size-cells = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c0>;
 				status = "disabled";
 			};
 
@@ -344,6 +370,8 @@
 				dma = <&dma1 0x10002256>;
 				#address-cells = <1>;
 				#size-cells = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c2>;
 				status = "disabled";
 			};
 
@@ -354,6 +382,8 @@
 				dma = <&dma0 0x1000229A>;
 				#address-cells = <1>;
 				#size-cells = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c1>;
 				status = "disabled";
 			};
 
