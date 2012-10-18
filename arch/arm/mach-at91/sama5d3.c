@@ -85,6 +85,21 @@ static struct clk uhphs_clk = {
 	.pid		= SAMA5D3_ID_UHPHS,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk twi0_clk = {
+	.name		= "twi0_clk",
+	.pid		= SAMA5D3_ID_TWI0,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk twi1_clk = {
+	.name		= "twi1_clk",
+	.pid		= SAMA5D3_ID_TWI1,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk twi2_clk = {
+	.name		= "twi2_clk",
+	.pid		= SAMA5D3_ID_TWI2,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 /* gmac only for sama5d33, sama5d34, sama5d35 */
 static struct clk macb0_clk = {
 	.name		= "pclk",
@@ -116,6 +131,9 @@ static struct clk *periph_clocks[] __initdata = {
 	&dma0_clk,
 	&dma1_clk,
 	&uhphs_clk,
+	&twi0_clk,
+	&twi1_clk,
+	&twi2_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
@@ -137,6 +155,9 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("hclk", "600000.ohci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ohci_clk", "600000.ohci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ehci_clk", "700000.ehci", &uhphs_clk),
+	CLKDEV_CON_DEV_ID(NULL, "f0014000.i2c", &twi0_clk),
+	CLKDEV_CON_DEV_ID(NULL, "f0018000.i2c", &twi1_clk),
+	CLKDEV_CON_DEV_ID(NULL, "f801c000.i2c", &twi2_clk),
 };
 
 static void __init sama5d3_register_clocks(void)

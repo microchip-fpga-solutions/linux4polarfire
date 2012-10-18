@@ -54,6 +54,19 @@
 			lcdovl1@f0030140 {
 				status = "okay";
 			};
+
+			i2c0: i2c@f0014000 {
+				status = "okay";
+			};
+
+			i2c1: i2c@f0018000 {
+				status = "okay";
+				24c256@50 {
+					compatible = "24c256";
+					reg = <0x50>;
+					pagesize = <64>;
+				};
+			};
 		};
 
 		usb0: ohci@00600000 {
