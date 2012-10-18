@@ -219,7 +219,7 @@
 				i2c1 {
 					pinctrl_i2c1: i2c1-0 {
 						atmel,pins =
-							<2 0 0x3 0x2	/* PA0 periph C Multidrive */
+							<2 0 0x3 0x2	/* PC0 periph C Multidrive */
 							 2 1 0x3 0x3>;	/* PC1 periph C Multidrive with pullup */
 					};
 				};
@@ -229,6 +229,38 @@
 						atmel,pins =
 							<1 4 0x2 0x2	/* PB4 periph B Multidrive */
 							 1 5 0x2 0x3>;	/* PB5 periph B Multidrive with pullup */
+					};
+				};
+
+				mmc0 {
+					pinctrl_mmc0_clk_cmd_dat0: mm0_clk_cmd_dat0 {
+						atmel,pins =
+							<0 17 0x1 0x0	/* PA17 periph A */
+							 0 16 0x1 0x1	/* PA16 periph A with pullpup */
+							 0 15 0x1 0x1>;	/* PA15 periph A with pullpup */
+					};
+
+					pinctrl_mmc0_dat1_3: mm0_dat1_3 {
+						atmel,pins =
+							<0 18 0x1 0x1	/* PA18 periph A with pullpup  */
+							 0 19 0x1 0x1	/* PA19 periph A with pullpup */
+							 0 20 0x1 0x1>;	/* PA20 periph A with pullpup */
+					};
+				};
+
+				mmc1 {
+					pinctrl_mmc1_clk_cmd_dat0: mm1_clk_cmd_dat0 {
+						atmel,pins =
+							<0 13 0x2 0x0	/* PA13 periph B */
+							 0 12 0x2 0x1	/* PA12 periph B with pullpup */
+							 0 11 0x2 0x1>;	/* PA11 periph B with pullpup */
+					};
+
+					pinctrl_mmc1_dat1_3: mm1_dat1_3 {
+						atmel,pins =
+							<0 2 0x2 0x1	/* PA2 periph B with pullpup  */
+							 0 3 0x2 0x1	/* PA3 periph B with pullpup */
+							 0 4 0x2 0x1>;	/* PA4 periph B with pullpup */
 					};
 				};
 
@@ -335,20 +367,22 @@
 				compatible = "atmel,hsmci";
 				reg = <0xf0008000 0x600>;
 				interrupts = <12 4 0>;
-				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
 				dma = <&dma0 0x10002200>;
+				pinctrl-names = "default";
+				status = "disabled";
 			};
 
 			mmc1: mmc@f000c000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf000c000 0x600>;
 				interrupts = <26 4 0>;
-				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
 				dma = <&dma1 0x10002200>;
+				pinctrl-names = "default";
+				status = "disabled";
 			};
 
 			i2c0: i2c@f8010000 {
