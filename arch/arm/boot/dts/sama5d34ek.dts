@@ -54,6 +54,10 @@
 			lcdovl1@f0030140 {
 				status = "okay";
 			};
+
+			lcdheo1@f0030340 {
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {
