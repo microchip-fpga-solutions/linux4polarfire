@@ -20,12 +20,27 @@
 
 	ahb {
 		apb {
+			pinctrl@fffff200 {
+				board {
+					pinctrl_mmc0_cd: mmc0_cd {
+						atmel,pins =
+							<3 17 0x0 0x5>;	/* PD17 periph A with pullup deglitch */
+					};
+
+					pinctrl_mmc1_cd: mmc1_cd {
+						atmel,pins =
+							<3 18 0x0 0x5>;	/* PD18 periph A with pullup deglitch */
+					};
+				};
+			};
+
 			dbgu: serial@ffffee00 {
 				status = "okay";
 			};
 
 			mmc0: mmc@f0000000 {
 				status = "okay";
+				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3 &pinctrl_mmc0_cd>;
 				slot@0 {
 					reg = <0>;
 					bus-width = <4>;
@@ -35,6 +50,7 @@
 
 			mmc1: mmc@f8000000 {
 				status = "okay";
+				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3 &pinctrl_mmc1_cd>;
 				slot@0 {
 					reg = <0>;
 					bus-width = <4>;
