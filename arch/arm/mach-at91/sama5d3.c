@@ -118,6 +118,12 @@ static struct clk lcdc_clk = {
 	.pid		= SAMA5D3_ID_LCDC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+/* isi only for sama5d33, sama5d35 */
+static struct clk isi_clk = {
+	.name		= "isi_clk",
+	.pid		= SAMA5D3_ID_ISI,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
@@ -134,6 +140,13 @@ static struct clk *periph_clocks[] __initdata = {
 	&twi0_clk,
 	&twi1_clk,
 	&twi2_clk,
+};
+
+static struct clk pck2 = {
+	.name		= "pck2",
+	.pmc_mask	= AT91_PMC_PCK2,
+	.type		= CLK_TYPE_PROGRAMMABLE,
+	.id		= 2,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
@@ -181,6 +194,10 @@ static void __init sama5d3_register_clocks(void)
 
 	if (!cpu_is_sama5d35())
 		clk_register(&lcdc_clk);
+
+	clk_register(&isi_clk);
+
+	clk_register(&pck2);
 }
 
 /* --------------------------------------------------------------------

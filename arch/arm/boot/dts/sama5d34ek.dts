@@ -67,6 +67,11 @@
 					pagesize = <64>;
 				};
 			};
+
+			/* Enable LCD or ISI not both */
+			isi: isi@f0034000 {
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {
