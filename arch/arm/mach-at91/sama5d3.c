@@ -60,6 +60,16 @@ static struct clk mmc0_clk = {
 	.pid		= SAMA5D3_ID_HSMCI0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk mmc1_clk = {
+	.name		= "mci1_clk",
+	.pid		= SAMA5D3_ID_HSMCI1,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk mmc2_clk = {
+	.name		= "mci2_clk",
+	.pid		= SAMA5D3_ID_HSMCI2,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 static struct clk tcb0_clk = {
 	.name		= "tcb0_clk",
 	.pid		= SAMA5D3_ID_TC0,
@@ -68,6 +78,11 @@ static struct clk tcb0_clk = {
 static struct clk tcb1_clk = {
 	.name		= "tcb1_clk",
 	.pid		= SAMA5D3_ID_TC1,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk adc_clk = {
+	.name		= "adc_clk",
+	.pid		= SAMA5D3_ID_ADC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk dma0_clk = {
@@ -132,8 +147,11 @@ static struct clk *periph_clocks[] __initdata = {
 	&pioD_clk,
 	&pioE_clk,
 	&mmc0_clk,
+	&mmc1_clk,
+	&mmc2_clk,
 	&tcb0_clk,
 	&tcb1_clk,
+	&adc_clk,
 	&dma0_clk,
 	&dma1_clk,
 	&uhphs_clk,
@@ -153,8 +171,11 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	/* lookup table for DT entries */
 	CLKDEV_CON_DEV_ID("usart", "ffffee00.serial", &mck),
 	CLKDEV_CON_DEV_ID("mci_clk", "f0000000.mmc", &mmc0_clk),
+	CLKDEV_CON_DEV_ID("mci_clk", "f8000000.mmc", &mmc1_clk),
+	CLKDEV_CON_DEV_ID("mci_clk", "f8004000.mmc", &mmc2_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "f0010000.timer", &tcb0_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "f8014000.timer", &tcb1_clk),
+	CLKDEV_CON_DEV_ID("tsc_clk", "f8018000.tsadcc", &adc_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "ffffe600.dma-controller", &dma0_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "ffffe800.dma-controller", &dma1_clk),
 	CLKDEV_CON_ID("pioA", &pioA_clk),
