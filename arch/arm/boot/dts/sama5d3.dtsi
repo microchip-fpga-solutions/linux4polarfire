@@ -309,19 +309,11 @@
 					};
 				};
 
-				nand {
-					/*
-					pinctrl_nandi_gpio: nand-0 {
+				nand0 {
+					pinctrl_nand0_ale_cle: nand0_ale_cle-0 {
 						atmel,pins =
-							<4 29 0x0 0x1
-							 4 30 0x0 0x1>;
-					};
-					*/
-
-					pinctrl_nand_hw: nand-0 {
-						atmel,pins =
-							<4 29 0x1 0x1 	/* PE29 periph A ready pin with pullup */
-							 4 30 0x1 0x1>;	/* PE30 periph A enable pin with pullup */
+							<4 21 0x1 0x1	/* PE21 periph A with pullup */
+							 4 22 0x1 0x1>;	/* PE22 periph A with pullup */
 					};
 				};
 
@@ -643,7 +635,7 @@
 			atmel,nand-addr-offset = <21>;
 			atmel,nand-cmd-offset = <22>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_nand_hw>;
+			pinctrl-0 = <&pinctrl_nand0_ale_cle>;
 			atmel,pmecc-lookup-table-offset = <0x10000 0x18000>;
 			status = "disabled";
 		};
