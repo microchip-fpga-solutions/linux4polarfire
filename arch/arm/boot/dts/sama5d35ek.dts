@@ -51,6 +51,22 @@
 				phy-mode = "rmii";
 				status = "okay";
 			};
+
+			/*
+			 * i2c0 conflicts with ISI:
+			 * disable it to allow the use of ISI
+			 */
+			i2c0: i2c@f0014000 {
+				status = "disabled";
+			};
+
+			i2c1: i2c@f0018000 {
+				status = "okay";
+			};
+
+			isi: isi@f0034000 {
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {

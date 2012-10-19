@@ -54,6 +54,19 @@
 			lcdovl1@f0030140 {
 				status = "okay";
 			};
+
+			i2c0: i2c@f0014000 {
+				status = "okay";
+			};
+
+			i2c1: i2c@f0018000 {
+				status = "okay";
+			};
+
+			/* Enable LCD or ISI not both */
+			isi: isi@f0034000 {
+				status = "disabled";
+			};
 		};
 
 		usb0: ohci@00600000 {
