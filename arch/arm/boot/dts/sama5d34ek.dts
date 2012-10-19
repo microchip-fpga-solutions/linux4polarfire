@@ -55,6 +55,10 @@
 				status = "okay";
 			};
 
+			lcdheo1@f0030340 {
+				status = "okay";
+			};
+
 			i2c0: i2c@f0014000 {
 				status = "okay";
 			};
