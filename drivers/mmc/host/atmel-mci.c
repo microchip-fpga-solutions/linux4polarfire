@@ -2241,9 +2241,10 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 				clear_bit(ATMCI_CARD_PRESENT, &slot->flags);
 			}
 		}
-	} else {
-		mmc->caps |= MMC_CAP_NEEDS_POLL;
 	}
+
+	if (!gpio_is_valid(slot->detect_pin))
+		mmc->caps |= MMC_CAP_NEEDS_POLL;
 
 	if (gpio_is_valid(slot->wp_pin)) {
 		if (devm_gpio_request(&mmc->class_dev, slot->wp_pin,
