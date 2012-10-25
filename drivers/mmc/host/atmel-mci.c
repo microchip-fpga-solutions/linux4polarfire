@@ -2226,23 +2226,37 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 	/* Assume card is present initially */
 	set_bit(ATMCI_CARD_PRESENT, &slot->flags);
 	if (gpio_is_valid(slot->detect_pin)) {
-		if (devm_gpio_request(&mmc->class_dev, slot->detect_pin, "mmc_detect")
-			|| gpio_direction_input(slot->detect_pin)) {
-			dev_err(&mmc->class_dev, "can't request detect pin\n");
+		if (devm_gpio_request(&mmc->class_dev, slot->detect_pin,
+								"mmc_detect")) {
+			dev_dbg(&mmc->class_dev, "can't request detect pin\n");
 			slot->detect_pin = -EBUSY;
-		} else if (gpio_get_value(slot->detect_pin) ^
-				slot->detect_is_active_high) {
-			clear_bit(ATMCI_CARD_PRESENT, &slot->flags);
+		} else {
+			if (gpio_direction_input(slot->detect_pin)) {
+				dev_err(&mmc->class_dev,
+					"can't set detect pin direction\n");
+				devm_gpio_free(&mmc->class_dev, slot->detect_pin);
+				slot->detect_pin = -EBUSY;
+			} else if (gpio_get_value(slot->detect_pin) ^
+					slot->detect_is_active_high) {
+				clear_bit(ATMCI_CARD_PRESENT, &slot->flags);
+			}
 		}
 	} else {
 		mmc->caps |= MMC_CAP_NEEDS_POLL;
 	}
 
 	if (gpio_is_valid(slot->wp_pin)) {
-		if (devm_gpio_request(&mmc->class_dev, slot->wp_pin, "mmc_wp")
-			|| gpio_direction_output(slot->wp_pin, 0)) {
+		if (devm_gpio_request(&mmc->class_dev, slot->wp_pin,
+								"mmc_wp")) {
 			dev_dbg(&mmc->class_dev, "no WP pin available\n");
 			slot->wp_pin = -EBUSY;
+		} else {
+			if (gpio_direction_output(slot->wp_pin, 0)) {
+				dev_err(&mmc->class_dev,
+					"can't set WP pin direction\n");
+				devm_gpio_free(&mmc->class_dev, slot->wp_pin);
+				slot->wp_pin = -EBUSY;
+			}
 		}
 	}
 

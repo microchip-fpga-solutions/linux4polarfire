@@ -271,6 +271,12 @@ static int ksz9021rn_phy_fixup(struct phy_device *phy)
 
 static void __init at91_dt_device_init(void)
 {
+	/* Temporary pin mux stuff */
+	if (of_machine_is_compatible("atmel,at91sam9x5")) {
+		at91_set_gpio_input(AT91_PIN_PA7, 1);
+		printk("AT91: qt1070 pin mux done\n");
+	}
+
 	if (of_machine_is_compatible("atmel,sama5ek")) {
 		struct device_node *np;
 

@@ -22,13 +22,12 @@
 				board {
 					pinctrl_mmc0_cd: mmc0_cd {
 						atmel,pins =
-							<3 10 0x0 0x5>;	/* PD15 gpio with pullup debligth */
+							<3 15 0x0 0x5>;	/* PD15 gpio with pullup deglitch */
 					};
 
 					pinctrl_mmc1_cd: mmc1_cd {
 						atmel,pins =
-							<3 11 0x0 0x5>;	/* PD14 gpio with pullup debligth */
-
+							<3 14 0x0 0x5>;	/* PD14 gpio with pullup deglitch */
 					};
 				};
 			};
@@ -70,10 +69,6 @@
 			};
 
 			i2c0: i2c@f8010000 {
-				status = "okay";
-			};
-
-			i2c2: i2c@f8018000 {
 				status = "okay";
 			};
 		};
