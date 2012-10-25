@@ -63,16 +63,20 @@
 				status = "okay";
 			};
 
-			lcd@f0030000 {
+			lcd_bus@f0030000 {
 				status = "okay";
-			};
 
-			lcdovl1@f0030140 {
-				status = "okay";
-			};
+				lcd@f0030000 {
+					status = "okay";
+				};
 
-			lcdheo1@f0030340 {
-				status = "okay";
+				lcdovl1@f0030140 {
+					status = "okay";
+				};
+
+				lcdheo1@f0030340 {
+					status = "okay";
+				};
 			};
 
 			i2c0: i2c@f0014000 {
