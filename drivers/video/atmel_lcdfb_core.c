@@ -559,7 +559,6 @@ int __atmel_lcdfb_probe(struct platform_device *pdev,
 	struct resource *regs = NULL, *clut = NULL;
 	struct resource *map = NULL;
 	int ret;
-	struct pinctrl *pinctrl;
 
 	dev_dbg(dev, "%s BEGIN\n", __func__);
 
@@ -636,13 +635,6 @@ int __atmel_lcdfb_probe(struct platform_device *pdev,
 	if (!clut) {
 		dev_err(dev, "clut resources unusable\n");
 		ret = -ENXIO;
-		goto stop_clk;
-	}
-
-	pinctrl = devm_pinctrl_get_select_default(dev);
-	if (IS_ERR(pinctrl)) {
-		dev_err(dev, "Failed to request pinctrl\n");
-		ret = PTR_ERR(pinctrl);
 		goto stop_clk;
 	}
 
