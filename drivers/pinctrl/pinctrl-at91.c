@@ -58,7 +58,7 @@ static struct at91_gpio_chip *gpio_chips[MAX_GPIO_BANKS];
 
 static int gpio_banks;
 
-#define PULL_UP		(0 << 1)
+#define PULL_UP		(1 << 0)
 #define MULTI_DRIVE	(1 << 1)
 #define DEGLITCH	(1 << 2)
 #define PULL_DOWN	(1 << 3)
@@ -455,8 +455,6 @@ static bool at91_mux_pio3_get_pulldown(void __iomem *pio, unsigned pin)
 
 static void at91_mux_pio3_set_pulldown(void __iomem *pio, unsigned mask, bool is_on)
 {
-	/* Disable pull-up anyway */
-	__raw_writel(mask, pio + PIO_PUDR);
 	__raw_writel(mask, pio + (is_on ? PIO_PPDER : PIO_PPDDR));
 }
 
@@ -753,12 +751,15 @@ static int at91_pinconf_set(struct pinctrl_dev *pctldev,
 	pio = pin_to_controller(info, pin_to_bank(pin_id));
 	mask = pin_to_mask(pin_id % MAX_NB_GPIO_PER_BANK);
 
+	if (config & PULL_UP && config & PULL_DOWN)
+		return -EINVAL;
+
 	at91_mux_set_pullup(pio, mask, config & PULL_UP);
 	at91_mux_set_multidrive(pio, mask, config & MULTI_DRIVE);
 	if (info->ops->set_deglitch)
 		info->ops->set_deglitch(pio, mask, config & DEGLITCH);
 	if (info->ops->set_debounce)
-		info->ops->set_debounce(pio, mask, DEBOUNCE,
+		info->ops->set_debounce(pio, mask, config & DEBOUNCE,
 				(config & DEBOUNCE_VAL) >> DEBOUNCE_VAL_SHIFT);
 	if (info->ops->set_pulldown)
 		info->ops->set_pulldown(pio, mask, config & PULL_DOWN);
