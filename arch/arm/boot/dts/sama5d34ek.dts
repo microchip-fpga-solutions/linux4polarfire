@@ -41,7 +41,16 @@
 						atmel,pins =
 							<4 31 0x0 0x5>;	/* PE31 GPIO with pull up deglith */
 					};
+
+					pinctrl_mxt_ts: mxt_irq {
+						atmel,pins =
+							<4 31 0x0 0x5>; /* PE31 gpio with pullup deglitch */
+					};
 				};
+			};
+
+			adc0: adc@f8018000 {
+				status = "okay";
 			};
 
 			can0: can@f000c000 {
@@ -110,6 +119,23 @@
 					pinctrl-names = "default";
 					pinctrl-0 = <&pinctrl_qt1070_irq>;
 				};
+
+				atmel_mxt_ts@4a {
+					compatible = "atmel,atmel_mxt_tsv";
+					reg = <0x4a>;
+					interrupt-parent = <&pioE>;
+					interrupts = <31 0x0>;
+					pinctrl-names = "default";
+					pinctrl-0 = <&pinctrl_mxt_ts>;
+					x_line = <19>;
+					y_line = <11>;
+					x_size = <1024>;
+					y_size = <1024>;
+					blen = <0x0>;
+					threshold = <0x23>;
+					voltage = <3300000>;
+					orient = <0x00>;
+				};
 			};
 
 			/* Enable LCD or ISI not both */
@@ -122,7 +148,7 @@
 			};
 
 			tsadcc: tsadcc@f8018000 {
-				status = "okay";
+				status = "disabled";
 			};
 
 			lcd_bus@f0030000 {
