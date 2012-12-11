@@ -1,0 +1,28 @@
+/*
+ * Copyright (C) 2013 Atmel,
+ *                    Nicolas Ferre <nicolas.ferre@atmel.com>
+ *
+ * SMC Calls
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#ifndef __ATMEL_FIRMWARE_SMC_H
+#define __ATMEL_FIRMWARE_SMC_H
+
+/*#define SMC_CMD_INIT		(-1)*/
+/*#define SMC_CMD_INFO		(-2)*/
+/* For Power Management */
+/* For CP15 Access */
+/* For L2 Cache Access */
+#define SMC_CMD_L2CC_ENABLE		0x42
+#define SMC_CMD_L2CC_DISABLE		0x43
+
+#ifndef __ASSEMBLY__
+
+extern void atmel_smc(u32 cmd, u32 arg1, u32 arg2, u32 arg3);
+
+#endif
+#endif
