@@ -134,6 +134,17 @@ static struct clk ssc_clk = {
 	.pmc_mask	= 1 << AT91SAM9N12_ID_SSC,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk aes_clk = {
+	.name		= "aes_clk",
+	.pmc_mask	= 1 << AT91SAM9N12_ID_AES,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk sha_clk = {
+	.name		= "sha_clk",
+	.pmc_mask	= 1 << AT91SAM9N12_ID_SHA,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
 
 static struct clk *periph_clocks[] __initdata = {
 	&pioAB_clk,
@@ -157,6 +168,8 @@ static struct clk *periph_clocks[] __initdata = {
 	&uhp_clk,
 	&udp_clk,
 	&ssc_clk,
+	&aes_clk,
+	&sha_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
@@ -168,11 +181,16 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("usart", "f8028000.serial", &usart3_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "f8008000.timer", &tcb_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "f800c000.timer", &tcb_clk),
+	CLKDEV_CON_DEV_ID("mci_clk", "f0008000.mmc", &mmc_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "ffffec00.dma-controller", &dma_clk),
+	CLKDEV_CON_DEV_ID(NULL, "f8010000.i2c", &twi0_clk),
+	CLKDEV_CON_DEV_ID(NULL, "f8014000.i2c", &twi1_clk),
 	CLKDEV_CON_DEV_ID(NULL, "fffff400.gpio", &pioAB_clk),
 	CLKDEV_CON_DEV_ID(NULL, "fffff600.gpio", &pioAB_clk),
 	CLKDEV_CON_DEV_ID(NULL, "fffff800.gpio", &pioCD_clk),
 	CLKDEV_CON_DEV_ID(NULL, "fffffa00.gpio", &pioCD_clk),
+	CLKDEV_CON_DEV_ID("aes_clk", "f000c000.aes", &aes_clk),
+	CLKDEV_CON_DEV_ID("sha_clk", "f0014000.sha", &sha_clk),
 	/* additional fake clock for macb_hclk */
 	CLKDEV_CON_DEV_ID("hclk", "500000.ohci", &uhp_clk),
 	CLKDEV_CON_DEV_ID("ohci_clk", "500000.ohci", &uhp_clk),
@@ -216,6 +234,7 @@ static void __init at91sam9n12_register_clocks(void)
 static void __init at91sam9n12_map_io(void)
 {
 	at91_init_sram(0, AT91SAM9N12_SRAM_BASE, AT91SAM9N12_SRAM_SIZE);
+	init_consistent_dma_size(SZ_4M);
 }
 
 void __init at91sam9n12_initialize(void)

@@ -28,6 +28,7 @@
 		gpio2 = &pioC;
 		tcb0 = &tcb0;
 		tcb1 = &tcb1;
+		i2c0 = &i2c0;
 	};
 	cpus {
 		cpu@0 {
@@ -111,6 +112,14 @@
 				      >;
 
 				/* shared pinctrl settings */
+
+				nand {
+					pinctrl_nand: nand-0 {
+						atmel,pins =
+							<2 13 0x0 0x1	/* PC13 gpio RDY pin pull_up */
+							 2 14 0x0 0x1>;	/* PC14 gpio enable pin pull_up */
+					};
+				};
 
 				pioA: gpio@fffff400 {
 					compatible = "atmel,at91rm9200-gpio";
@@ -218,6 +227,15 @@
 				status = "disabled";
 			};
 
+			i2c0: i2c@fffac000 {
+				compatible = "atmel,at91sam9260-i2c";
+				reg = <0xfffac000 0x100>;
+				interrupts = <11 4 6>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+
 			adc0: adc@fffe0000 {
 				compatible = "atmel,at91sam9260-adc";
 				reg = <0xfffe0000 0x100>;
@@ -252,6 +270,55 @@
 					trigger-external;
 				};
 			};
+
+			mmc0: mmc@fffa8000 {
+				compatible = "atmel,hsmci";
+				reg = <0xfffa800 0x600>;
+				interrupts = <9 4 0>;
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			spi0: spi@fffc8000 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "atmel,at91rm9200-spi";
+				reg = <0xfffc8000 0x200>;
+				interrupts = <12 4 3>;
+				cs-gpios = <&pioA 3 0
+					    &pioC 11 0
+					    &pioC 16 0
+					    &pioC 17 0
+					   >;
+				dma-mask = <0xffffffff>;
+				dma_type = <1>;
+				version = <2>;
+				status = "disabled";
+			};
+
+			spi1: spi@fffcc000 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "atmel,at91rm9200-spi";
+				reg = <0xfffcc000 0x200>;
+				interrupts = <13 4 3>;
+				cs-gpios = <&pioB 3 0
+					    &pioC 5 0
+					    &pioC 4 0
+					    &pioC 3 0
+					   >;
+				dma-mask = <0xffffffff>;
+				dma_type = <1>;
+				version = <2>;
+				status = "disabled";
+			};
+
+			watchdog@fffffd40 {
+				compatible = "atmel,at91sam9260-wdt";
+				reg = <0xfffffd40 0x10>;
+				status = "disabled";
+			};
 		};
 
 		nand0: nand@40000000 {
@@ -263,6 +330,8 @@
 			      >;
 			atmel,nand-addr-offset = <21>;
 			atmel,nand-cmd-offset = <22>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_nand>;
 			gpios = <&pioC 13 0
 				 &pioC 14 0
 				 0
