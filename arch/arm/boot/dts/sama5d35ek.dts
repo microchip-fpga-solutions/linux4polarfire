@@ -24,12 +24,12 @@
 				board {
 					pinctrl_mmc0_cd: mmc0_cd {
 						atmel,pins =
-							<3 17 0x0 0x5>; /* PD17 periph A with pullup deglitch */
+							<3 17 0x0 0x5>; /* PD17 GPIO with pullup deglitch */
 					};
 
 					pinctrl_mmc1_cd: mmc1_cd {
 						atmel,pins =
-							<3 18 0x0 0x5>; /* PD18 periph A with pullup deglitch */
+							<3 18 0x0 0x5>; /* PD18 GPIO with pullup deglitch */
 					};
 
 					pinctrl_qt1070_irq: qt1070_irq {
