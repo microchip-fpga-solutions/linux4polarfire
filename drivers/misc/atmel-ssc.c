@@ -18,6 +18,11 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 
+#include <linux/of.h>
+#include <linux/of_device.h>
+#include <linux/pinctrl/consumer.h>
+#include <linux/platform_data/dma-atmel.h>
+
 /* Serialize access to ssc_list and user count */
 static DEFINE_SPINLOCK(user_lock);
 static LIST_HEAD(ssc_list);
@@ -29,7 +34,13 @@ struct ssc_device *ssc_request(unsigned int ssc_num)
 
 	spin_lock(&user_lock);
 	list_for_each_entry(ssc, &ssc_list, list) {
-		if (ssc->pdev->id == ssc_num) {
+		if (ssc->pdev->dev.of_node) {
+			if (of_alias_get_id(ssc->pdev->dev.of_node, "ssc")
+				== ssc_num) {
+				ssc_valid = 1;
+				break;
+			}
+		} else if (ssc->pdev->id == ssc_num) {
 			ssc_valid = 1;
 			break;
 		}
@@ -68,39 +79,172 @@ void ssc_free(struct ssc_device *ssc)
 }
 EXPORT_SYMBOL(ssc_free);
 
-static int __init ssc_probe(struct platform_device *pdev)
+static struct atmel_ssc_platform_data at91rm9200_config = {
+	.use_dma = 0,
+};
+
+static struct atmel_ssc_platform_data at91sam9g45_config = {
+	.use_dma = 1,
+};
+
+static const struct platform_device_id atmel_ssc_devtypes[] = {
+	{
+		.name = "at91rm9200_ssc",
+		.driver_data = (unsigned long) &at91rm9200_config,
+	}, {
+		.name = "at91sam9g45_ssc",
+		.driver_data = (unsigned long) &at91sam9g45_config,
+	}, {
+		/* sentinel */
+	}
+};
+
+#ifdef CONFIG_OF
+static const struct of_device_id atmel_ssc_dt_ids[] = {
+	{
+		.compatible = "atmel,at91rm9200-ssc",
+		.data = &at91rm9200_config,
+	}, {
+		.compatible = "atmel,at91sam9g45-ssc",
+		.data = &at91sam9g45_config,
+	}, {
+		/* sentinel */
+	}
+};
+MODULE_DEVICE_TABLE(of, atmel_ssc_dt_ids);
+#endif
+
+static inline const struct atmel_ssc_platform_data * __init
+	atmel_ssc_get_driver_data(struct platform_device *pdev)
 {
-	int retval = 0;
+	if (pdev->dev.of_node) {
+		const struct of_device_id *match;
+		match = of_match_node(atmel_ssc_dt_ids, pdev->dev.of_node);
+		if (match == NULL)
+			return NULL;
+		return match->data;
+	}
+
+	return (struct atmel_ssc_platform_data *)
+		platform_get_device_id(pdev)->driver_data;
+}
+
+static int atmel_dma_of_init(struct device_node *np,
+                            struct at_dma_slave *atslave)
+{
+       struct of_phandle_args  dma_spec;
+       struct device_node      *dmac_np;
+       struct platform_device  *dmac_pdev;
+       const __be32            *nbcells;
+       int                     ret;
+
+       ret = of_parse_phandle_with_args(np, "dma", "#dma-cells", 0, &dma_spec);
+       if (ret || !dma_spec.np) {
+               pr_err("%s: can't parse dma property (%d)\n", np->full_name, ret);
+               goto err0;
+       }
+       dmac_np = dma_spec.np;
+
+       /* check property format */
+       nbcells = of_get_property(dmac_np, "#dma-cells", NULL);
+       if (!nbcells) {
+               pr_err("%s: #dma-cells property is required\n", np->full_name);
+               ret = -EINVAL;
+               goto err1;
+       }
+
+       if (dma_spec.args_count != be32_to_cpup(nbcells)
+               || dma_spec.args_count != 1) {
+               pr_err("%s: wrong #dma-cells for %s\n",
+                       np->full_name, dmac_np->full_name);
+               ret = -EINVAL;
+               goto err1;
+       }
+
+       /* retreive DMA controller information */
+       dmac_pdev = of_find_device_by_node(dmac_np);
+       if (!dmac_pdev) {
+               pr_err("%s: unable to find pdev from DMA controller\n",
+                       dmac_np->full_name);
+               ret = -EINVAL;
+               goto err1;
+       }
+
+       /* now fill in the at_dma_slave structure */
+       atslave->dma_dev = &dmac_pdev->dev;
+       atslave->cfg = dma_spec.args[0];
+
+err1:
+       of_node_put(dma_spec.np);
+err0:
+       pr_debug("%s exited with status %d\n", __func__, ret);
+       return ret;
+}
+
+static int ssc_probe(struct platform_device *pdev)
+{
 	struct resource *regs;
 	struct ssc_device *ssc;
+	const struct atmel_ssc_platform_data *plat_dat;
+	struct pinctrl *pinctrl;
+	struct at_dma_slave *atslave;
+	struct device_node *np = pdev->dev.of_node;
 
-	ssc = kzalloc(sizeof(struct ssc_device), GFP_KERNEL);
+	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		dev_err(&pdev->dev, "Failed to request pinctrl\n");
+		return PTR_ERR(pinctrl);
+	}
+
+	ssc = devm_kzalloc(&pdev->dev, sizeof(struct ssc_device), GFP_KERNEL);
 	if (!ssc) {
 		dev_dbg(&pdev->dev, "out of memory\n");
-		retval = -ENOMEM;
-		goto out;
+		return -ENOMEM;
+	}
+
+	ssc->pdev = pdev;
+
+	plat_dat = atmel_ssc_get_driver_data(pdev);
+	if (!plat_dat)
+		return -ENODEV;
+	ssc->pdata = (struct atmel_ssc_platform_data *)plat_dat;
+
+	if (plat_dat->use_dma) {
+		atslave = devm_kzalloc(&pdev->dev, sizeof(struct at_dma_slave),
+				GFP_KERNEL);
+		if (!atslave) {
+			dev_err(&pdev->dev, "failed alloc memory for dma\n");
+			devm_kfree(&pdev->dev, atslave);
+			return -ENOMEM;
+	       }
+
+		if (atmel_dma_of_init(np, atslave)) {
+			dev_err(&pdev->dev, "could not find DMA parameters\n");
+			devm_kfree(&pdev->dev, atslave);
+			return -EINVAL;
+		}
+
+		pdev->dev.platform_data = atslave;
 	}
 
 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!regs) {
 		dev_dbg(&pdev->dev, "no mmio resource defined\n");
-		retval = -ENXIO;
-		goto out_free;
+		return -ENXIO;
 	}
 
-	ssc->clk = clk_get(&pdev->dev, "pclk");
-	if (IS_ERR(ssc->clk)) {
-		dev_dbg(&pdev->dev, "no pclk clock defined\n");
-		retval = -ENXIO;
-		goto out_free;
-	}
-
-	ssc->pdev = pdev;
-	ssc->regs = ioremap(regs->start, resource_size(regs));
+	ssc->regs = devm_request_and_ioremap(&pdev->dev, regs);
 	if (!ssc->regs) {
 		dev_dbg(&pdev->dev, "ioremap failed\n");
-		retval = -EINVAL;
-		goto out_clk;
+		return -EINVAL;
+	}
+
+	ssc->phybase = regs->start;
+
+	ssc->clk = devm_clk_get(&pdev->dev, "pclk");
+	if (IS_ERR(ssc->clk)) {
+		dev_dbg(&pdev->dev, "no pclk clock defined\n");
+		return -ENXIO;
 	}
 
 	/* disable all interrupts */
@@ -112,8 +256,7 @@ static int __init ssc_probe(struct platform_device *pdev)
 	ssc->irq = platform_get_irq(pdev, 0);
 	if (!ssc->irq) {
 		dev_dbg(&pdev->dev, "could not get irq\n");
-		retval = -ENXIO;
-		goto out_unmap;
+		return -ENXIO;
 	}
 
 	spin_lock(&user_lock);
@@ -125,16 +268,7 @@ static int __init ssc_probe(struct platform_device *pdev)
 	dev_info(&pdev->dev, "Atmel SSC device at 0x%p (irq %d)\n",
 			ssc->regs, ssc->irq);
 
-	goto out;
-
-out_unmap:
-	iounmap(ssc->regs);
-out_clk:
-	clk_put(ssc->clk);
-out_free:
-	kfree(ssc);
-out:
-	return retval;
+	return 0;
 }
 
 static int __devexit ssc_remove(struct platform_device *pdev)
@@ -142,34 +276,23 @@ static int __devexit ssc_remove(struct platform_device *pdev)
 	struct ssc_device *ssc = platform_get_drvdata(pdev);
 
 	spin_lock(&user_lock);
-	iounmap(ssc->regs);
-	clk_put(ssc->clk);
 	list_del(&ssc->list);
-	kfree(ssc);
 	spin_unlock(&user_lock);
 
 	return 0;
 }
 
 static struct platform_driver ssc_driver = {
-	.remove		= __devexit_p(ssc_remove),
 	.driver		= {
 		.name		= "ssc",
 		.owner		= THIS_MODULE,
+		.of_match_table	= of_match_ptr(atmel_ssc_dt_ids),
 	},
+	.id_table	= atmel_ssc_devtypes,
+	.probe		= ssc_probe,
+	.remove		= __devexit_p(ssc_remove),
 };
-
-static int __init ssc_init(void)
-{
-	return platform_driver_probe(&ssc_driver, ssc_probe);
-}
-module_init(ssc_init);
-
-static void __exit ssc_exit(void)
-{
-	platform_driver_unregister(&ssc_driver);
-}
-module_exit(ssc_exit);
+module_platform_driver(ssc_driver);
 
 MODULE_AUTHOR("Hans-Christian Egtvedt <hcegtvedt@atmel.com>");
 MODULE_DESCRIPTION("SSC driver for Atmel AVR32 and AT91");
