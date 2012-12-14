@@ -346,8 +346,8 @@ static struct resource twi_resources[] = {
 };
 
 static struct platform_device at91sam9rl_twi_device = {
-	.name		= "at91_i2c",
-	.id		= -1,
+	.name		= "i2c-at91sam9g20",
+	.id		= 0,
 	.resource	= twi_resources,
 	.num_resources	= ARRAY_SIZE(twi_resources),
 };
