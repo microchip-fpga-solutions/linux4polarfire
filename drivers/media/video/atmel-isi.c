@@ -20,6 +20,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/slab.h>
 
 #include <media/atmel-isi.h>
@@ -94,7 +95,7 @@ struct atmel_isi {
 	struct clk			*pclk;
 	/* ISI_MCK, feed to camera sensor to generate pixel clock */
 	struct clk			*mck;
-	unsigned int			irq;
+	int				irq;
 
 	struct isi_platform_data	*pdata;
 	u16				width_flags;	/* max 12 bits */
@@ -883,6 +884,12 @@ static int isi_camera_set_bus_param(struct soc_camera_device *icd)
 	return 0;
 }
 
+
+static int isi_camera_set_parm(struct soc_camera_device *icd, struct v4l2_streamparm *parm)
+{
+	return 0;
+}
+
 static struct soc_camera_host_ops isi_soc_camera_host_ops = {
 	.owner		= THIS_MODULE,
 	.add		= isi_camera_add_device,
@@ -894,6 +901,8 @@ static struct soc_camera_host_ops isi_soc_camera_host_ops = {
 	.poll		= isi_camera_poll,
 	.querycap	= isi_camera_querycap,
 	.set_bus_param	= isi_camera_set_bus_param,
+	.set_parm	= isi_camera_set_parm,
+	.get_parm	= isi_camera_set_parm,
 };
 
 /* -----------------------------------------------------------------------*/
@@ -923,7 +932,7 @@ static int __devexit atmel_isi_remove(struct platform_device *pdev)
 
 static int __devinit atmel_isi_probe(struct platform_device *pdev)
 {
-	unsigned int irq;
+	int irq;
 	struct atmel_isi *isi;
 	struct clk *pclk;
 	struct resource *regs;
@@ -931,6 +940,7 @@ static int __devinit atmel_isi_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct soc_camera_host *soc_host;
 	struct isi_platform_data *pdata;
+	struct pinctrl *pinctrl;
 
 	pdata = dev->platform_data;
 	if (!pdata || !pdata->data_width_flags || !pdata->mck_hz) {
@@ -942,6 +952,12 @@ static int __devinit atmel_isi_probe(struct platform_device *pdev)
 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!regs)
 		return -ENXIO;
+
+	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		dev_err(&pdev->dev, "Failed to request pinctrl\n");
+		return PTR_ERR(pinctrl);
+	}
 
 	pclk = clk_get(&pdev->dev, "isi_clk");
 	if (IS_ERR(pclk))
