@@ -25,76 +25,12 @@
 #include <mach/board.h>
 #include <mach/cpu.h>
 
-/* Register definitions based on AT91SAM9RL64 preliminary draft datasheet */
+#include "atmel_tsadcc.h"
 
-#define ATMEL_TSADCC_CR		0x00	/* Control register */
-#define   ATMEL_TSADCC_SWRST	(1 << 0)	/* Software Reset*/
-#define	  ATMEL_TSADCC_START	(1 << 1)	/* Start conversion */
-
-#define ATMEL_TSADCC_MR		0x04	/* Mode register */
-#define	  ATMEL_TSADCC_TSAMOD	(3    <<  0)	/* ADC mode */
-#define	    ATMEL_TSADCC_TSAMOD_ADC_ONLY_MODE	(0x0)	/* ADC Mode */
-#define	    ATMEL_TSADCC_TSAMOD_TS_ONLY_MODE	(0x1)	/* Touch Screen Only Mode */
-#define	  ATMEL_TSADCC_LOWRES	(1    <<  4)	/* Resolution selection */
-#define	  ATMEL_TSADCC_SLEEP	(1    <<  5)	/* Sleep mode */
-#define	  ATMEL_TSADCC_PENDET	(1    <<  6)	/* Pen Detect selection */
-#define	  ATMEL_TSADCC_PRES	(1    <<  7)	/* Pressure Measurement Selection */
-#define	  ATMEL_TSADCC_PRESCAL	(0x3f <<  8)	/* Prescalar Rate Selection */
-#define	  ATMEL_TSADCC_EPRESCAL	(0xff <<  8)	/* Prescalar Rate Selection (Extended) */
-#define	  ATMEL_TSADCC_STARTUP	(0x7f << 16)	/* Start Up time */
-#define	  ATMEL_TSADCC_SHTIM	(0xf  << 24)	/* Sample & Hold time */
-#define	  ATMEL_TSADCC_PENDBC	(0xf  << 28)	/* Pen Detect debouncing time */
-
-#define ATMEL_TSADCC_TRGR	0x08	/* Trigger register */
-#define	  ATMEL_TSADCC_TRGMOD	(7      <<  0)	/* Trigger mode */
-#define	    ATMEL_TSADCC_TRGMOD_NONE		(0 << 0)
-#define     ATMEL_TSADCC_TRGMOD_EXT_RISING	(1 << 0)
-#define     ATMEL_TSADCC_TRGMOD_EXT_FALLING	(2 << 0)
-#define     ATMEL_TSADCC_TRGMOD_EXT_ANY		(3 << 0)
-#define     ATMEL_TSADCC_TRGMOD_PENDET		(4 << 0)
-#define     ATMEL_TSADCC_TRGMOD_PERIOD		(5 << 0)
-#define     ATMEL_TSADCC_TRGMOD_CONTINUOUS	(6 << 0)
-#define   ATMEL_TSADCC_TRGPER	(0xffff << 16)	/* Trigger period */
-
-#define ATMEL_TSADCC_TSR	0x0C	/* Touch Screen register */
-#define	  ATMEL_TSADCC_TSFREQ	(0xf <<  0)	/* TS Frequency in Interleaved mode */
-#define	  ATMEL_TSADCC_TSSHTIM	(0xf << 24)	/* Sample & Hold time */
-
-#define ATMEL_TSADCC_CHER	0x10	/* Channel Enable register */
-#define ATMEL_TSADCC_CHDR	0x14	/* Channel Disable register */
-#define ATMEL_TSADCC_CHSR	0x18	/* Channel Status register */
-#define	  ATMEL_TSADCC_CH(n)	(1 << (n))	/* Channel number */
-
-#define ATMEL_TSADCC_SR		0x1C	/* Status register */
-#define	  ATMEL_TSADCC_EOC(n)	(1 << ((n)+0))	/* End of conversion for channel N */
-#define	  ATMEL_TSADCC_OVRE(n)	(1 << ((n)+8))	/* Overrun error for channel N */
-#define	  ATMEL_TSADCC_DRDY	(1 << 16)	/* Data Ready */
-#define	  ATMEL_TSADCC_GOVRE	(1 << 17)	/* General Overrun Error */
-#define	  ATMEL_TSADCC_ENDRX	(1 << 18)	/* End of RX Buffer */
-#define	  ATMEL_TSADCC_RXBUFF	(1 << 19)	/* TX Buffer full */
-#define	  ATMEL_TSADCC_PENCNT	(1 << 20)	/* Pen contact */
-#define	  ATMEL_TSADCC_NOCNT	(1 << 21)	/* No contact */
-
-#define ATMEL_TSADCC_LCDR	0x20	/* Last Converted Data register */
-#define	  ATMEL_TSADCC_DATA	(0x3ff << 0)	/* Channel data */
-
-#define ATMEL_TSADCC_IER	0x24	/* Interrupt Enable register */
-#define ATMEL_TSADCC_IDR	0x28	/* Interrupt Disable register */
-#define ATMEL_TSADCC_IMR	0x2C	/* Interrupt Mask register */
-#define ATMEL_TSADCC_CDR0	0x30	/* Channel Data 0 */
-#define ATMEL_TSADCC_CDR1	0x34	/* Channel Data 1 */
-#define ATMEL_TSADCC_CDR2	0x38	/* Channel Data 2 */
-#define ATMEL_TSADCC_CDR3	0x3C	/* Channel Data 3 */
-#define ATMEL_TSADCC_CDR4	0x40	/* Channel Data 4 */
-#define ATMEL_TSADCC_CDR5	0x44	/* Channel Data 5 */
-
-#define ATMEL_TSADCC_XPOS	0x50
-#define ATMEL_TSADCC_Z1DAT	0x54
-#define ATMEL_TSADCC_Z2DAT	0x58
-
-#define PRESCALER_VAL(x)	((x) >> 8)
+#define cpu_has_9x5_adc() (cpu_is_at91sam9x5())
 
 #define ADC_DEFAULT_CLOCK	100000
+#define ZTHRESHOLD		3200
 
 struct atmel_tsadcc {
 	struct input_dev	*input;
@@ -103,7 +39,9 @@ struct atmel_tsadcc {
 	int			irq;
 	unsigned int		prev_absx;
 	unsigned int		prev_absy;
-	unsigned char		bufferedmeasure;
+	unsigned int		prev_absz;
+
+	struct at91_tsadcc_data board;
 };
 
 static void __iomem		*tsc_base;
@@ -111,67 +49,187 @@ static void __iomem		*tsc_base;
 #define atmel_tsadcc_read(reg)		__raw_readl(tsc_base + (reg))
 #define atmel_tsadcc_write(reg, val)	__raw_writel((val), tsc_base + (reg))
 
+static void atmel_tsadcc_dump_conf(struct platform_device *pdev)
+{
+	dev_info(&pdev->dev, "--- configuration ---\n");
+	dev_info(&pdev->dev, "Mode Register: %#x\n", atmel_tsadcc_read(ATMEL_TSADCC_MR));
+	dev_info(&pdev->dev, "Trigger Register: %#x\n", atmel_tsadcc_read(ATMEL_TSADCC_TRGR));
+	dev_info(&pdev->dev, "Touchscreen Mode Register: %#x\n", atmel_tsadcc_read(ATMEL_TSADCC_TSMR));
+	dev_info(&pdev->dev, "Analog Control Register: %#x\n", atmel_tsadcc_read(ATMEL_TSADCC_ACR));
+	dev_info(&pdev->dev, "ADC Channel Status Register: %#x\n", atmel_tsadcc_read(ATMEL_TSADCC_CHSR));
+	dev_info(&pdev->dev, "---------------------\n");
+}
+
 static irqreturn_t atmel_tsadcc_interrupt(int irq, void *dev)
 {
 	struct atmel_tsadcc	*ts_dev = (struct atmel_tsadcc *)dev;
 	struct input_dev	*input_dev = ts_dev->input;
+	struct at91_tsadcc_data *pdata = &ts_dev->board;
 
 	unsigned int status;
 	unsigned int reg;
+	unsigned int z1, z2;
+	unsigned int Rxp = 1;
+	unsigned int factor = 1000;
 
 	status = atmel_tsadcc_read(ATMEL_TSADCC_SR);
 	status &= atmel_tsadcc_read(ATMEL_TSADCC_IMR);
 
 	if (status & ATMEL_TSADCC_NOCNT) {
 		/* Contact lost */
-		reg = atmel_tsadcc_read(ATMEL_TSADCC_MR) | ATMEL_TSADCC_PENDBC;
-
-		atmel_tsadcc_write(ATMEL_TSADCC_MR, reg);
+		if (cpu_has_9x5_adc()) {
+			/* 9X5 using TSMR to set PENDBC time */
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_TSMR) | ((pdata->pendet_debounce << 28) & ATMEL_TSADCC_PENDBC);
+			atmel_tsadcc_write(ATMEL_TSADCC_TSMR, reg);
+		} else {
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_MR) | ATMEL_TSADCC_PENDBC;
+			atmel_tsadcc_write(ATMEL_TSADCC_MR, reg);
+		}
 		atmel_tsadcc_write(ATMEL_TSADCC_TRGR, ATMEL_TSADCC_TRGMOD_NONE);
 		atmel_tsadcc_write(ATMEL_TSADCC_IDR,
-				   ATMEL_TSADCC_EOC(3) | ATMEL_TSADCC_NOCNT);
+				   ATMEL_TSADCC_CONVERSION_END | ATMEL_TSADCC_NOCNT);
 		atmel_tsadcc_write(ATMEL_TSADCC_IER, ATMEL_TSADCC_PENCNT);
 
 		input_report_key(input_dev, BTN_TOUCH, 0);
-		ts_dev->bufferedmeasure = 0;
 		input_sync(input_dev);
 
 	} else if (status & ATMEL_TSADCC_PENCNT) {
 		/* Pen detected */
-		reg = atmel_tsadcc_read(ATMEL_TSADCC_MR);
-		reg &= ~ATMEL_TSADCC_PENDBC;
+		if (cpu_has_9x5_adc()) {
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_TSMR);
+			reg &= ~ATMEL_TSADCC_PENDBC;
+			atmel_tsadcc_write(ATMEL_TSADCC_TSMR, reg);
+		} else {
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_MR);
+			reg &= ~ATMEL_TSADCC_PENDBC;
+			atmel_tsadcc_write(ATMEL_TSADCC_MR, reg);
+		}
 
 		atmel_tsadcc_write(ATMEL_TSADCC_IDR, ATMEL_TSADCC_PENCNT);
-		atmel_tsadcc_write(ATMEL_TSADCC_MR, reg);
 		atmel_tsadcc_write(ATMEL_TSADCC_IER,
-				   ATMEL_TSADCC_EOC(3) | ATMEL_TSADCC_NOCNT);
+				   ATMEL_TSADCC_CONVERSION_END | ATMEL_TSADCC_NOCNT);
+		/* this value is related to the resistor bits value of
+		 * ACR register and R64. If internal resistor value is
+		 * increased then this value has to be increased. This
+		 * behavior seems to happen only with averaging on 8
+		 * values
+		 */
 		atmel_tsadcc_write(ATMEL_TSADCC_TRGR,
-				   ATMEL_TSADCC_TRGMOD_PERIOD | (0x0FFF << 16));
+				   ATMEL_TSADCC_TRGMOD_PERIOD | (0x0FF << 16));
 
-	} else if (status & ATMEL_TSADCC_EOC(3)) {
+	} else if ((status & ATMEL_TSADCC_CONVERSION_END) == ATMEL_TSADCC_CONVERSION_END) {
 		/* Conversion finished */
 
-		if (ts_dev->bufferedmeasure) {
-			/* Last measurement is always discarded, since it can
-			 * be erroneous.
-			 * Always report previous measurement */
+		/* make new measurement */
+		if (cpu_has_9x5_adc()) {
+			unsigned int xscale, yscale;
+
+			/* calculate position */
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_XPOSR);
+			ts_dev->prev_absx = (reg & ATMEL_TSADCC_XPOS) << 10;
+			xscale = (reg & ATMEL_TSADCC_XSCALE) >> 16;
+			ts_dev->prev_absx /= xscale ? xscale: 1;
+
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_YPOSR);
+			ts_dev->prev_absy = (reg & ATMEL_TSADCC_YPOS) << 10;
+			yscale = (reg & ATMEL_TSADCC_YSCALE) >> 16;
+			ts_dev->prev_absy /= yscale ? yscale: 1 << 10;
+
+			/* calculate the pressure */
+			reg = atmel_tsadcc_read(ATMEL_TSADCC_PRESSR);
+			z1 = reg & ATMEL_TSADCC_PRESSR_Z1;
+			z2 = (reg & ATMEL_TSADCC_PRESSR_Z2) >> 16;
+
+			if (z1 != 0)
+				ts_dev->prev_absz = Rxp * (ts_dev->prev_absx * factor / 1024) * (z2 * factor / z1 - factor) / factor;
+			else
+				ts_dev->prev_absz = 0;
+
+		} else {
+			ts_dev->prev_absx = atmel_tsadcc_read(ATMEL_TSADCC_CDR3) << 10;
+			ts_dev->prev_absx /= atmel_tsadcc_read(ATMEL_TSADCC_CDR2);
+
+			ts_dev->prev_absy = atmel_tsadcc_read(ATMEL_TSADCC_CDR1) << 10;
+			ts_dev->prev_absy /= atmel_tsadcc_read(ATMEL_TSADCC_CDR0);
+		}
+
+		/* report measurement to input layer */
+		if (ts_dev->prev_absz < ZTHRESHOLD) {
+			dev_dbg(&input_dev->dev,
+					"x = %d, y = %d, pressure = %d\n",
+					ts_dev->prev_absx, ts_dev->prev_absy,
+					ts_dev->prev_absz);
 			input_report_abs(input_dev, ABS_X, ts_dev->prev_absx);
 			input_report_abs(input_dev, ABS_Y, ts_dev->prev_absy);
+			if (cpu_has_9x5_adc())
+				input_report_abs(input_dev, ABS_PRESSURE, ts_dev->prev_absz);
 			input_report_key(input_dev, BTN_TOUCH, 1);
 			input_sync(input_dev);
-		} else
-			ts_dev->bufferedmeasure = 1;
-
-		/* Now make new measurement */
-		ts_dev->prev_absx = atmel_tsadcc_read(ATMEL_TSADCC_CDR3) << 10;
-		ts_dev->prev_absx /= atmel_tsadcc_read(ATMEL_TSADCC_CDR2);
-
-		ts_dev->prev_absy = atmel_tsadcc_read(ATMEL_TSADCC_CDR1) << 10;
-		ts_dev->prev_absy /= atmel_tsadcc_read(ATMEL_TSADCC_CDR0);
+		} else {
+			dev_dbg(&input_dev->dev,
+					"pressure too low: not reporting\n");
+		}
 	}
 
 	return IRQ_HANDLED;
 }
+
+#if defined(CONFIG_OF)
+static int __devinit atmel_of_init_tsadcc(struct device_node *np,
+				struct at91_tsadcc_data *pdata,
+				struct platform_device *pdev)
+{
+	u32 val;
+
+	if (of_property_read_u32(np, "atmel,tsadcc_clock", &val) == 0)
+		pdata->adc_clock = val;
+
+	if (of_property_read_u32(np, "atmel,filtering_average", &val) == 0) {
+		if (val > 0x03) {
+			dev_err(&pdev->dev, "invalid touch average setting, 0x%02x\n",
+				val);
+			return -EINVAL;
+		}
+		pdata->filtering_average = (u8)val;
+	}
+
+	if (of_property_read_u32(np, "atmel,pendet_debounce", &val) == 0) {
+		if (val > 0x0f) {
+			dev_err(&pdev->dev, "invalid pen detect debounce, 0x%02x\n",
+				val);
+			return -EINVAL;
+		}
+		pdata->pendet_debounce = (u8)val;
+	}
+
+	if (of_property_read_u32(np, "atmel,pendet_sensitivity", &val) == 0) {
+		if (val > 0x03) {
+			dev_err(&pdev->dev, "invalid pen detective sensitivity setting, 0x%02x\n",
+				val);
+			return -EINVAL;
+		}
+		pdata->pendet_sensitivity = (u8)val;
+	}
+
+	if (of_property_read_u32(np, "atmel,ts_sample_hold_time", &val) == 0) {
+		if (val > 0x0f) {
+			dev_err(&pdev->dev, "invalid ts sample hold time, 0x%02x\n",
+				val);
+			return -EINVAL;
+		}
+		pdata->ts_sample_hold_time = (u8)val;
+	}
+
+	return 0;
+}
+#else
+static int __devinit atmel_of_init_tsadcc(struct device_node *np,
+				struct at91_tsadcc_data *pdata,
+				struct platform_device *pdev)
+{
+	return -EINVAL;
+}
+#endif
 
 /*
  * The functions for inserting/removing us as a module.
@@ -182,7 +240,7 @@ static int __devinit atmel_tsadcc_probe(struct platform_device *pdev)
 	struct atmel_tsadcc	*ts_dev;
 	struct input_dev	*input_dev;
 	struct resource		*res;
-	struct at91_tsadcc_data *pdata = pdev->dev.platform_data;
+	struct at91_tsadcc_data *pdata;
 	int		err = 0;
 	unsigned int	prsc;
 	unsigned int	reg;
@@ -200,6 +258,7 @@ static int __devinit atmel_tsadcc_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 	platform_set_drvdata(pdev, ts_dev);
+	pdata = &ts_dev->board;
 
 	input_dev = input_allocate_device();
 	if (!input_dev) {
@@ -244,7 +303,6 @@ static int __devinit atmel_tsadcc_probe(struct platform_device *pdev)
 	}
 
 	ts_dev->input = input_dev;
-	ts_dev->bufferedmeasure = 0;
 
 	snprintf(ts_dev->phys, sizeof(ts_dev->phys),
 		 "%s/input0", dev_name(&pdev->dev));
@@ -256,6 +314,7 @@ static int __devinit atmel_tsadcc_probe(struct platform_device *pdev)
 	__set_bit(EV_ABS, input_dev->evbit);
 	input_set_abs_params(input_dev, ABS_X, 0, 0x3FF, 0, 0);
 	input_set_abs_params(input_dev, ABS_Y, 0, 0x3FF, 0, 0);
+	input_set_abs_params(input_dev, ABS_PRESSURE, 0, 0xffffff, 0, 0);
 
 	input_set_capability(input_dev, EV_KEY, BTN_TOUCH);
 
@@ -265,8 +324,16 @@ static int __devinit atmel_tsadcc_probe(struct platform_device *pdev)
 	prsc = clk_get_rate(ts_dev->clk);
 	dev_info(&pdev->dev, "Master clock is set at: %d Hz\n", prsc);
 
-	if (!pdata)
-		goto err_fail;
+	if (pdev->dev.of_node) {
+		err = atmel_of_init_tsadcc(pdev->dev.of_node, pdata, pdev);
+		if (err)
+			goto err_fail;
+	} else {
+		if (!pdev->dev.platform_data)
+			goto err_fail;
+		else
+			memcpy(pdata, pdev->dev.platform_data, sizeof(*pdata));
+	}
 
 	if (!pdata->adc_clock)
 		pdata->adc_clock = ADC_DEFAULT_CLOCK;
@@ -284,21 +351,52 @@ static int __devinit atmel_tsadcc_probe(struct platform_device *pdev)
 
 	dev_info(&pdev->dev, "Prescaler is set at: %d\n", prsc);
 
-	reg = ATMEL_TSADCC_TSAMOD_TS_ONLY_MODE		|
-		((0x00 << 5) & ATMEL_TSADCC_SLEEP)	|	/* Normal Mode */
-		((0x01 << 6) & ATMEL_TSADCC_PENDET)	|	/* Enable Pen Detect */
-		(prsc << 8)				|
-		((0x26 << 16) & ATMEL_TSADCC_STARTUP)	|
-		((pdata->pendet_debounce << 28) & ATMEL_TSADCC_PENDBC);
+	if (cpu_has_9x5_adc()) {
+		reg = 	((0x00 << 5) & ATMEL_TSADCC_SLEEP)	|	/* no Sleep Mode */
+			((0x00 << 6) & ATMEL_TSADCC_FWUP)	|	/* no Fast Wake Up needed */
+			(prsc << 8)				|
+			((0x4 << 16) & ATMEL_TSADCC_STARTUP)	|
+			((pdata->ts_sample_hold_time << 24) & ATMEL_TSADCC_TRACKTIM);
+	} else {
+		reg = ATMEL_TSADCC_TSAMOD_TS_ONLY_MODE		|
+			((0x00 << 5) & ATMEL_TSADCC_SLEEP)	|	/* Normal Mode */
+			((0x01 << 6) & ATMEL_TSADCC_PENDET)	|	/* Enable Pen Detect */
+			(prsc << 8)				|
+			((0x26 << 16) & ATMEL_TSADCC_STARTUP)	|
+			((pdata->pendet_debounce << 28) & ATMEL_TSADCC_PENDBC);
+	}
 
 	atmel_tsadcc_write(ATMEL_TSADCC_CR, ATMEL_TSADCC_SWRST);
 	atmel_tsadcc_write(ATMEL_TSADCC_MR, reg);
 	atmel_tsadcc_write(ATMEL_TSADCC_TRGR, ATMEL_TSADCC_TRGMOD_NONE);
-	atmel_tsadcc_write(ATMEL_TSADCC_TSR,
-		(pdata->ts_sample_hold_time << 24) & ATMEL_TSADCC_TSSHTIM);
+
+	if (cpu_has_9x5_adc()) {
+		atmel_tsadcc_write(ATMEL_TSADCC_TSMR,
+					ATMEL_TSADCC_TSMODE_4WIRE_PRESS	|
+					((pdata->filtering_average << 4) & ATMEL_TSADCC_TSAV) |	/* Touchscreen average */
+					ATMEL_TSADCC_NOTSDMA		|
+					ATMEL_TSADCC_PENDET_ENA		|
+					((pdata->pendet_debounce << 28) & ATMEL_TSADCC_PENDBC) |
+					(0x3 << 8));				/* Touchscreen freq */
+	} else {
+		atmel_tsadcc_write(ATMEL_TSADCC_TSR,
+			(pdata->ts_sample_hold_time << 24) & ATMEL_TSADCC_TSSHTIM);
+	}
+
+	/* Change adc internal resistor value for better pen detection,
+	 * default value is 100 kOhm.
+	 * 0 = 200 kOhm, 1 = 150 kOhm, 2 = 100 kOhm, 3 = 50 kOhm
+	 * option only available on ES2 and higher
+	 */
+	if (cpu_has_9x5_adc()) {
+		if (pdata->pendet_sensitivity <= ATMEL_TSADCC_PENDET_SENSITIVITY)
+			atmel_tsadcc_write(ATMEL_TSADCC_ACR, pdata->pendet_sensitivity);
+	}
 
 	atmel_tsadcc_read(ATMEL_TSADCC_SR);
 	atmel_tsadcc_write(ATMEL_TSADCC_IER, ATMEL_TSADCC_PENCNT);
+
+	/* atmel_tsadcc_dump_conf(pdev); */
 
 	/* All went ok, so register to the input system */
 	err = input_register_device(input_dev);
@@ -344,11 +442,21 @@ static int __devexit atmel_tsadcc_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id atmel_tsaddcc_dt_ids[] = {
+	{ .compatible = "atmel,at91sam9x5-tsadcc"},
+	{ /* sentinel */ }
+}
+
+MODULE_DEVICE_TABLE(of, atmel_tsaddcc_dt_ids);
+#endif
+
 static struct platform_driver atmel_tsadcc_driver = {
 	.probe		= atmel_tsadcc_probe,
 	.remove		= __devexit_p(atmel_tsadcc_remove),
 	.driver		= {
 		.name	= "atmel_tsadcc",
+		.of_match_table = of_match_ptr(atmel_tsaddcc_dt_ids),
 	},
 };
 module_platform_driver(atmel_tsadcc_driver);
