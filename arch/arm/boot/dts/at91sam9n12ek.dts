@@ -37,6 +37,32 @@
 			dbgu: serial@fffff200 {
 				status = "okay";
 			};
+
+			mmc0: mmc@f0008000 {
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+					cd-gpios = <&pioA 7 0>;
+				};
+			};
+
+			i2c0: i2c@f8010000 {
+				status = "okay";
+			};
+
+			i2c1: i2c@f8014000 {
+				status = "okay";
+			};
+
+			spi0: spi@f0000000 {
+				status = "okay";
+				m25p80@0 {
+					compatible = "atmel,at25df321a";
+					spi-max-frequency = <50000000>;
+					reg = <0>;
+				};
+			};
 		};
 
 		nand0: nand@40000000 {
