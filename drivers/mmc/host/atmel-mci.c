@@ -19,12 +19,16 @@
 #include <linux/interrupt.h>
 #include <linux/ioport.h>
 #include <linux/module.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
+#include <linux/of_gpio.h>
 #include <linux/platform_device.h>
 #include <linux/scatterlist.h>
 #include <linux/seq_file.h>
 #include <linux/slab.h>
 #include <linux/stat.h>
 #include <linux/types.h>
+#include <linux/pinctrl/consumer.h>
 
 #include <linux/mmc/host.h>
 #include <linux/mmc/sdio.h>
@@ -500,6 +504,141 @@ err:
 	dev_err(&mmc->class_dev, "failed to initialize debugfs for slot\n");
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id atmci_dt_ids[] = {
+	{ .compatible = "atmel,hsmci" },
+	{ /* sentinel */ }
+};
+
+MODULE_DEVICE_TABLE(of, atmci_dt_ids);
+
+static int atmci_dma_of_init(struct device_node *np,
+			     struct at_dma_slave *atslave)
+{
+	struct of_phandle_args  dma_spec;
+	struct device_node	*dmac_np;
+	struct platform_device	*dmac_pdev;
+	const __be32		*nbcells;
+	int			ret;
+
+	ret = of_parse_phandle_with_args(np, "dma", "#dma-cells", 0, &dma_spec);
+	if (ret || !dma_spec.np) {
+		pr_err("%s: can't parse dma property (%d)\n", np->full_name, ret);
+		goto err0;
+	}
+	dmac_np = dma_spec.np;
+
+	/* check property format */
+	nbcells = of_get_property(dmac_np, "#dma-cells", NULL);
+	if (!nbcells) {
+		pr_err("%s: #dma-cells property is required\n", np->full_name);
+		ret = -EINVAL;
+		goto err1;
+	}
+
+	if (dma_spec.args_count != be32_to_cpup(nbcells)
+	 || dma_spec.args_count != 1) {
+		pr_err("%s: wrong #dma-cells for %s\n",
+		       np->full_name, dmac_np->full_name);
+		ret = -EINVAL;
+		goto err1;
+	}
+
+	/* retreive DMA controller information */
+	dmac_pdev = of_find_device_by_node(dmac_np);
+	if (!dmac_pdev) {
+		pr_err("%s: unable to find pdev from DMA controller\n",
+		       dmac_np->full_name);
+		ret = -EINVAL;
+		goto err1;
+	}
+
+	/* now fill in the at_dma_slave structure */
+	atslave->dma_dev = &dmac_pdev->dev;
+	atslave->cfg = dma_spec.args[0];
+
+err1:
+	of_node_put(dma_spec.np);
+err0:
+	pr_debug("%s exited with status %d\n", __func__, ret);
+	return ret;
+}
+
+static struct mci_platform_data __devinit*
+atmci_of_init(struct platform_device *pdev)
+{
+	struct device_node *np = pdev->dev.of_node;
+	struct device_node *cnp;
+	struct mci_platform_data *pdata;
+	struct at_dma_slave	 *atslave;
+	u32 slot_id;
+
+	if (!np) {
+		dev_err(&pdev->dev, "device node not found\n");
+		return ERR_PTR(-EINVAL);
+	}
+
+	pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
+	if (!pdata) {
+		dev_err(&pdev->dev, "could not allocate memory for pdata\n");
+		return ERR_PTR(-ENOMEM);
+	}
+
+	pdata->dma_slave = devm_kzalloc(&pdev->dev,
+					sizeof(*(pdata->dma_slave)),
+					GFP_KERNEL);
+	if (!pdata->dma_slave) {
+		dev_err(&pdev->dev, "could not allocate memory for dma_slave\n");
+		devm_kfree(&pdev->dev, pdata);
+		return ERR_PTR(-ENOMEM);
+	}
+	atslave = &pdata->dma_slave->sdata;
+
+	/* retrive DMA configuration first */
+	if (atmci_dma_of_init(np, atslave)) {
+		dev_err(&pdev->dev, "could not find DMA parameters\n");
+		devm_kfree(&pdev->dev, pdata->dma_slave);
+		devm_kfree(&pdev->dev, pdata);
+		return ERR_PTR(-EINVAL);
+	}
+
+	for_each_child_of_node(np, cnp) {
+		if (of_property_read_u32(cnp, "reg", &slot_id)) {
+			dev_warn(&pdev->dev, "reg property is missing for %s\n",
+				 cnp->full_name);
+			continue;
+		}
+
+		if (slot_id >= ATMCI_MAX_NR_SLOTS) {
+			dev_warn(&pdev->dev, "can't have more than %d slots\n",
+			         ATMCI_MAX_NR_SLOTS);
+			break;
+		}
+
+		if (of_property_read_u32(cnp, "bus-width",
+		                         &pdata->slot[slot_id].bus_width))
+			pdata->slot[slot_id].bus_width = 1;
+
+		pdata->slot[slot_id].detect_pin =
+			of_get_named_gpio(cnp, "cd-gpios", 0);
+
+		pdata->slot[slot_id].detect_is_active_high =
+			of_property_read_bool(cnp, "cd-inverted");
+
+		pdata->slot[slot_id].wp_pin =
+			of_get_named_gpio(cnp, "wp-gpios", 0);
+	}
+
+	return pdata;
+}
+#else /* CONFIG_OF */
+static inline struct mci_platform_data*
+atmci_of_init(struct platform_device *dev)
+{
+	return ERR_PTR(-EINVAL);
+}
+#endif
+
 static inline unsigned int atmci_get_version(struct atmel_mci *host)
 {
 	return atmci_readl(host, ATMCI_VERSION) & 0x00000fff;
@@ -774,9 +913,8 @@ static void atmci_dma_complete(void *arg)
 
 	dev_vdbg(&host->pdev->dev, "DMA complete\n");
 
-	if (host->caps.has_dma)
-		/* Disable DMA hardware handshaking on MCI */
-		atmci_writel(host, ATMCI_DMA, atmci_readl(host, ATMCI_DMA) & ~ATMCI_DMAEN);
+	/* Disable DMA hardware handshaking on MCI */
+	atmci_writel(host, ATMCI_DMA, atmci_readl(host, ATMCI_DMA) & ~ATMCI_DMAEN);
 
 	atmci_dma_cleanup(host);
 
@@ -1201,6 +1339,9 @@ static void atmci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 		break;
 	case MMC_BUS_WIDTH_4:
 		slot->sdc_reg |= ATMCI_SDCBUS_4BIT;
+		break;
+	case MMC_BUS_WIDTH_8:
+		slot->sdc_reg |= ATMCI_SDCBUS_8BIT;
 		break;
 	}
 
@@ -2046,6 +2187,13 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 	slot->sdc_reg = sdc_reg;
 	slot->sdio_irq = sdio_irq;
 
+	dev_dbg(&mmc->class_dev,
+	        "slot[%u]: bus_width=%u, detect_pin=%d, "
+		"detect_is_active_high=%s, wp_pin=%d\n",
+		id, slot_data->bus_width, slot_data->detect_pin,
+		slot_data->detect_is_active_high ? "true" : "false",
+		slot_data->wp_pin);
+
 	mmc->ops = &atmci_ops;
 	mmc->f_min = DIV_ROUND_UP(host->bus_hz, 512);
 	mmc->f_max = host->bus_hz / 2;
@@ -2078,12 +2226,20 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 	/* Assume card is present initially */
 	set_bit(ATMCI_CARD_PRESENT, &slot->flags);
 	if (gpio_is_valid(slot->detect_pin)) {
-		if (gpio_request(slot->detect_pin, "mmc_detect")) {
-			dev_dbg(&mmc->class_dev, "no detect pin available\n");
+		if (devm_gpio_request(&mmc->class_dev, slot->detect_pin,
+								"mmc_detect")) {
+			dev_dbg(&mmc->class_dev, "can't request detect pin\n");
 			slot->detect_pin = -EBUSY;
-		} else if (gpio_get_value(slot->detect_pin) ^
-				slot->detect_is_active_high) {
-			clear_bit(ATMCI_CARD_PRESENT, &slot->flags);
+		} else {
+			if (gpio_direction_input(slot->detect_pin)) {
+				dev_err(&mmc->class_dev,
+					"can't set detect pin direction\n");
+				devm_gpio_free(&mmc->class_dev, slot->detect_pin);
+				slot->detect_pin = -EBUSY;
+			} else if (gpio_get_value(slot->detect_pin) ^
+					slot->detect_is_active_high) {
+				clear_bit(ATMCI_CARD_PRESENT, &slot->flags);
+			}
 		}
 	}
 
@@ -2091,9 +2247,17 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 		mmc->caps |= MMC_CAP_NEEDS_POLL;
 
 	if (gpio_is_valid(slot->wp_pin)) {
-		if (gpio_request(slot->wp_pin, "mmc_wp")) {
+		if (devm_gpio_request(&mmc->class_dev, slot->wp_pin,
+								"mmc_wp")) {
 			dev_dbg(&mmc->class_dev, "no WP pin available\n");
 			slot->wp_pin = -EBUSY;
+		} else {
+			if (gpio_direction_output(slot->wp_pin, 0)) {
+				dev_err(&mmc->class_dev,
+					"can't set WP pin direction\n");
+				devm_gpio_free(&mmc->class_dev, slot->wp_pin);
+				slot->wp_pin = -EBUSY;
+			}
 		}
 	}
 
@@ -2160,16 +2324,13 @@ static bool atmci_filter(struct dma_chan *chan, void *slave)
 	}
 }
 
-static bool atmci_configure_dma(struct atmel_mci *host)
+static bool atmci_configure_dma(struct atmel_mci *host,
+				struct mci_platform_data *pdata)
 {
-	struct mci_platform_data	*pdata;
-
 	if (host == NULL)
 		return false;
 
-	pdata = host->pdev->dev.platform_data;
-
-	if (pdata && find_slave_dev(pdata->dma_slave)) {
+	if (pdata && pdata->dma_slave && find_slave_dev(pdata->dma_slave)) {
 		dma_cap_mask_t mask;
 
 		/* Try to grab a DMA channel */
@@ -2263,13 +2424,26 @@ static int __init atmci_probe(struct platform_device *pdev)
 	unsigned int			nr_slots;
 	int				irq;
 	int				ret;
+	struct pinctrl			*pinctrl;
 
 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!regs)
 		return -ENXIO;
 	pdata = pdev->dev.platform_data;
-	if (!pdata)
-		return -ENXIO;
+	if (!pdata) {
+		pdata = atmci_of_init(pdev);
+		if (IS_ERR(pdata)) {
+			dev_err(&pdev->dev, "platform data not available\n");
+			return PTR_ERR(pdata);
+		}
+	}
+
+	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		dev_err(&pdev->dev, "Failed to request pinctrl\n");
+		return PTR_ERR(pinctrl);
+	}
+
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0)
 		return irq;
@@ -2308,7 +2482,7 @@ static int __init atmci_probe(struct platform_device *pdev)
 
 	/* Get MCI capabilities and set operations according to it */
 	atmci_get_cap(host);
-	if (host->caps.has_dma && atmci_configure_dma(host)) {
+	if (host->caps.has_dma && atmci_configure_dma(host, pdata)) {
 		host->prepare_data = &atmci_prepare_data_dma;
 		host->submit_data = &atmci_submit_data_dma;
 		host->stop_transfer = &atmci_stop_transfer_dma;
@@ -2487,6 +2661,7 @@ static struct platform_driver atmci_driver = {
 	.driver		= {
 		.name		= "atmel_mci",
 		.pm		= ATMCI_PM_OPS,
+		.of_match_table	= of_match_ptr(atmci_dt_ids),
 	},
 };
 
