@@ -124,11 +124,21 @@ extern void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pin
 
 extern struct platform_device *atmel_default_console_device;
 
+/*
+ * struct atmel_serial_platform_data - Controller configuration parameters
+ * @use_dma: true use dma, false use pdc
+ */
+struct atmel_serial_platform_data {
+	bool use_dma;
+};
+
 struct atmel_uart_data {
 	int			num;		/* port num */
 	short			use_dma_tx;	/* use transmit DMA? */
 	short			use_dma_rx;	/* use receive DMA? */
 	void __iomem		*regs;		/* virt. base address, if any */
+	struct at_dma_slave     *dma_tx_slave;
+	struct at_dma_slave     *dma_rx_slave;
 	struct serial_rs485	rs485;		/* rs485 settings */
 };
 extern void __init at91_add_device_serial(void);
