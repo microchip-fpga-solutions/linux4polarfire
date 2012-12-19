@@ -27,6 +27,8 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
+#include <linux/of.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/platform_device.h>
 #include <linux/rtnetlink.h>
 #include <linux/skbuff.h>
@@ -155,19 +157,20 @@ struct at91_priv {
 	canid_t mb0_id;
 };
 
-static const struct at91_devtype_data at91_devtype_data[] __devinitconst = {
-	[AT91_DEVTYPE_SAM9263] = {
-		.rx_first = 1,
-		.rx_split = 8,
-		.rx_last = 11,
-		.tx_shift = 2,
-	},
-	[AT91_DEVTYPE_SAM9X5] = {
-		.rx_first = 0,
-		.rx_split = 4,
-		.rx_last = 5,
-		.tx_shift = 1,
-	},
+static struct at91_devtype_data at91_at91sam9263_data = {
+	.rx_first = 1,
+	.rx_split = 8,
+	.rx_last = 11,
+	.tx_shift = 2,
+	.type = AT91_DEVTYPE_SAM9263
+};
+
+static struct at91_devtype_data at91_at91sam9x5_data = {
+	.rx_first = 0,
+	.rx_split = 4,
+	.rx_last = 5,
+	.tx_shift = 1,
+	.type = AT91_DEVTYPE_SAM9X5
 };
 
 static const struct can_bittiming_const at91_bittiming_const = {
@@ -1242,19 +1245,55 @@ static struct attribute_group at91_sysfs_attr_group = {
 	.attrs = at91_sysfs_attrs,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id at91_can_dt_ids[] = {
+	{
+		.compatible = "atmel,at91sam9x5-can",
+		.data = &at91_at91sam9x5_data,
+	}, {
+		.compatible = "atmel,at91sam9263-can",
+		.data = &at91_at91sam9263_data,
+	}, {
+		/* sentinel */
+	}
+};
+MODULE_DEVICE_TABLE(of, at91_can_dt_ids);
+#else
+#define at91_can_dt_ids NULL
+#endif
+
+static struct at91_devtype_data * __devinit at91_can_get_driver_data(
+						struct platform_device *pdev)
+{
+	if (pdev->dev.of_node) {
+		const struct of_device_id *match;
+		match = of_match_node(at91_can_dt_ids, pdev->dev.of_node);
+		if (!match) {
+			dev_err(&pdev->dev, "no matching node found in dtb\n");
+			return NULL;
+		}
+		return (struct at91_devtype_data *)match->data;
+	}
+	return (struct at91_devtype_data *)platform_get_device_id(pdev)->driver_data;
+}
+
 static int __devinit at91_can_probe(struct platform_device *pdev)
 {
 	const struct at91_devtype_data *devtype_data;
-	enum at91_devtype devtype;
 	struct net_device *dev;
 	struct at91_priv *priv;
 	struct resource *res;
 	struct clk *clk;
 	void __iomem *addr;
 	int err, irq;
+	struct pinctrl *pinctrl;
 
-	devtype = pdev->id_entry->driver_data;
-	devtype_data = &at91_devtype_data[devtype];
+	devtype_data = at91_can_get_driver_data(pdev);
+	if (!devtype_data) {
+		dev_err(&pdev->dev, "no driver data\n");
+		err = -ENODEV;
+		goto exit;
+	}
 
 	clk = clk_get(&pdev->dev, "can_clk");
 	if (IS_ERR(clk)) {
@@ -1267,6 +1306,13 @@ static int __devinit at91_can_probe(struct platform_device *pdev)
 	irq = platform_get_irq(pdev, 0);
 	if (!res || irq <= 0) {
 		err = -ENODEV;
+		goto exit_put;
+	}
+
+	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		dev_err(&pdev->dev, "Failed to request pinctrl\n");
+		err = PTR_ERR(pinctrl);
 		goto exit_put;
 	}
 
@@ -1303,7 +1349,6 @@ static int __devinit at91_can_probe(struct platform_device *pdev)
 	priv->dev = dev;
 	priv->reg_base = addr;
 	priv->devtype_data = *devtype_data;
-	priv->devtype_data.type = devtype;
 	priv->clk = clk;
 	priv->pdata = pdev->dev.platform_data;
 	priv->mb0_id = 0x7ff;
@@ -1364,10 +1409,10 @@ static int __devexit at91_can_remove(struct platform_device *pdev)
 static const struct platform_device_id at91_can_id_table[] = {
 	{
 		.name = "at91_can",
-		.driver_data = AT91_DEVTYPE_SAM9263,
+		.driver_data = (unsigned long)&at91_at91sam9x5_data,
 	}, {
 		.name = "at91sam9x5_can",
-		.driver_data = AT91_DEVTYPE_SAM9X5,
+		.driver_data = (unsigned long)&at91_at91sam9263_data,
 	}, {
 		/* sentinel */
 	}
@@ -1379,6 +1424,7 @@ static struct platform_driver at91_can_driver = {
 	.driver = {
 		.name = KBUILD_MODNAME,
 		.owner = THIS_MODULE,
+		.of_match_table = at91_can_dt_ids,
 	},
 	.id_table = at91_can_id_table,
 };
