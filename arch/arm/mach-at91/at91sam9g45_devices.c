@@ -18,7 +18,7 @@
 #include <linux/platform_device.h>
 #include <linux/i2c-gpio.h>
 #include <linux/atmel-mci.h>
-#include <linux/platform_data/atmel-aes.h>
+#include <linux/platform_data/atmel-crypto.h>
 
 #include <linux/platform_data/at91_adc.h>
 
@@ -1596,7 +1596,7 @@ static struct atmel_uart_data dbgu_data = {
 static u64 dbgu_dmamask = DMA_BIT_MASK(32);
 
 static struct platform_device at91sam9g45_dbgu_device = {
-	.name		= "atmel_usart",
+	.name		= "at91sam9260-usart",
 	.id		= 0,
 	.dev		= {
 				.dma_mask		= &dbgu_dmamask,
@@ -1634,7 +1634,7 @@ static struct atmel_uart_data uart0_data = {
 static u64 uart0_dmamask = DMA_BIT_MASK(32);
 
 static struct platform_device at91sam9g45_uart0_device = {
-	.name		= "atmel_usart",
+	.name		= "at91sam9260-usart",
 	.id		= 1,
 	.dev		= {
 				.dma_mask		= &uart0_dmamask,
@@ -1677,7 +1677,7 @@ static struct atmel_uart_data uart1_data = {
 static u64 uart1_dmamask = DMA_BIT_MASK(32);
 
 static struct platform_device at91sam9g45_uart1_device = {
-	.name		= "atmel_usart",
+	.name		= "at91sam9260-usart",
 	.id		= 2,
 	.dev		= {
 				.dma_mask		= &uart1_dmamask,
@@ -1720,7 +1720,7 @@ static struct atmel_uart_data uart2_data = {
 static u64 uart2_dmamask = DMA_BIT_MASK(32);
 
 static struct platform_device at91sam9g45_uart2_device = {
-	.name		= "atmel_usart",
+	.name		= "at91sam9260-usart",
 	.id		= 3,
 	.dev		= {
 				.dma_mask		= &uart2_dmamask,
@@ -1763,7 +1763,7 @@ static struct atmel_uart_data uart3_data = {
 static u64 uart3_dmamask = DMA_BIT_MASK(32);
 
 static struct platform_device at91sam9g45_uart3_device = {
-	.name		= "atmel_usart",
+	.name		= "at91sam9260-usart",
 	.id		= 4,
 	.dev		= {
 				.dma_mask		= &uart3_dmamask,
@@ -1939,9 +1939,9 @@ static struct platform_device at91sam9g45_aes_device = {
 static void __init at91_add_device_aes(void)
 {
 	struct at_dma_slave	*atslave;
-	struct aes_dma_data	*alt_atslave;
+	struct crypto_dma_data	*alt_atslave;
 
-	alt_atslave = kzalloc(sizeof(struct aes_dma_data), GFP_KERNEL);
+	alt_atslave = kzalloc(sizeof(struct crypto_dma_data), GFP_KERNEL);
 
 	/* DMA TX slave channel configuration */
 	atslave = &alt_atslave->txdata;

@@ -221,6 +221,7 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("usart", "fffd0000.serial", &usart3_clk),
 	CLKDEV_CON_DEV_ID("usart", "fffd4000.serial", &usart4_clk),
 	CLKDEV_CON_DEV_ID("usart", "fffd8000.serial", &usart5_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fffac000.i2c", &twi_clk),
 	/* more tc lookup table for DT entries */
 	CLKDEV_CON_DEV_ID("t0_clk", "fffa0000.timer", &tc0_clk),
 	CLKDEV_CON_DEV_ID("t1_clk", "fffa0000.timer", &tc1_clk),
@@ -229,6 +230,7 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("t1_clk", "fffdc000.timer", &tc4_clk),
 	CLKDEV_CON_DEV_ID("t2_clk", "fffdc000.timer", &tc5_clk),
 	CLKDEV_CON_DEV_ID("hclk", "500000.ohci", &ohci_clk),
+	CLKDEV_CON_DEV_ID("mci_clk", "fffa8000.mmc", &mmc_clk),
 	/* fake hclk clock */
 	CLKDEV_CON_DEV_ID("hclk", "at91_ohci", &ohci_clk),
 	CLKDEV_CON_ID("pioA", &pioA_clk),
@@ -240,13 +242,13 @@ static struct clk_lookup periph_clocks_lookups[] = {
 };
 
 static struct clk_lookup usart_clocks_lookups[] = {
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.0", &mck),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.1", &usart0_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.2", &usart1_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.3", &usart2_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.4", &usart3_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.5", &usart4_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.6", &usart5_clk),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.0", &mck),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.1", &usart0_clk),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.2", &usart1_clk),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.3", &usart2_clk),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.4", &usart3_clk),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.5", &usart4_clk),
+	CLKDEV_CON_DEV_ID("usart", "at91sam9260-usart.6", &usart5_clk),
 };
 
 /*
