@@ -1470,7 +1470,7 @@ static int atmel_startup(struct uart_port *port)
 
 	if (atmel_use_pdc_rx(port)) {
 		/* set UART timeout */
-		if (port->line == 0) {
+		if (!atmel_port->is_usart) {
 			setup_timer(&atmel_port->uart_timer,
 				    atmel_uart_timer_callback,
 				    (unsigned long)port);
@@ -1486,7 +1486,7 @@ static int atmel_startup(struct uart_port *port)
 		UART_PUT_PTCR(port, ATMEL_PDC_RXTEN);
 	} else if (atmel_use_dma_rx(port)) {
 		/* set UART timeout */
-		if (port->line == 0) {
+		if (!atmel_port->is_usart) {
 			setup_timer(&atmel_port->uart_timer,
 				    atmel_uart_timer_callback,
 				    (unsigned long)port);
@@ -1534,7 +1534,7 @@ static void atmel_shutdown(struct uart_port *port)
 			kfree(pdc->buf);
 		}
 
-		if (port->line == 0)
+		if (!atmel_port->is_usart)
 			del_timer_sync(&atmel_port->uart_timer);
 	}
 	if (atmel_use_pdc_tx(port)) {
@@ -1551,7 +1551,7 @@ static void atmel_shutdown(struct uart_port *port)
 
 	if (atmel_use_dma_rx(port)) {
 		atmel_rx_dma_release(atmel_port);
-		if (port->line == 0)
+		if (!atmel_port->is_usart)
 			del_timer_sync(&atmel_port->uart_timer);
 	}
 
