@@ -42,7 +42,9 @@
 #include <media/soc_camera.h>
 #include <media/atmel-isi.h>
 
+#if !defined(CONFIG_SOC_SAMA5D4)
 #include <mach/sama5d3.h>
+#endif
 
 /*
  * LCD Controller
@@ -404,6 +406,22 @@ static void __init at91_dt_device_init(void)
 	platform_add_devices(devices, ARRAY_SIZE(devices));
 #endif
 }
+
+static const char *sama5d4_dt_board_compat[] __initdata = {
+	"atmel,sama5d4ek",
+	NULL
+};
+
+DT_MACHINE_START(sama5d4_dt, "Atmel SAMA5D4 (Device Tree)")
+	/* Maintainer: Atmel */
+	.timer		= &tcb_timer,
+	.map_io		= at91_map_io,
+	.handle_irq	= at91_aic5_handle_irq,
+	.init_early	= at91_dt_initialize,
+	.init_irq	= at91_dt_init_irq,
+	.init_machine	= at91_dt_device_init,
+	.dt_compat	= sama5d4_dt_board_compat,
+MACHINE_END
 
 static const char *sama5_dt_board_compat[] __initdata = {
 	"atmel,sama5ek",

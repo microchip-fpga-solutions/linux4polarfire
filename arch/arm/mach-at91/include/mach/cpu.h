@@ -84,6 +84,9 @@ enum at91_soc_type {
 	/* SAMA5D3 */
 	AT91_SOC_SAMA5D3,
 
+	/* SAMA5D4 */
+	AT91_SOC_SAMA5D4,
+
 	/* Unknown type */
 	AT91_SOC_NONE
 };
@@ -212,6 +215,12 @@ static inline int at91_soc_is_detected(void)
 #define cpu_is_sama5d32()	(0)
 #define cpu_is_sama5d34()	(0)
 #define cpu_is_sama5d35()	(0)
+#endif
+
+#ifdef CONFIG_SOC_SAMA5D4
+#define cpu_is_sama5d4()	(at91_soc_initdata.type == AT91_SOC_SAMA5D4)
+#else
+#define cpu_is_sama5d4()	(0)
 #endif
 
 /*

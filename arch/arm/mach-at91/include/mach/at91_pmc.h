@@ -19,11 +19,19 @@
 #ifndef __ASSEMBLY__
 extern void __iomem *at91_pmc_base;
 
+#if defined(CONFIG_SOC_SAMA5D4)
+/* No PMC in NWd for SAMA5D4 */
+#define at91_pmc_read(field) 0
+#define at91_pmc_write(field, value) do { } while(0)
+
+#else
+
 #define at91_pmc_read(field) \
 	__raw_readl(at91_pmc_base + field)
 
 #define at91_pmc_write(field, value) \
 	__raw_writel(value, at91_pmc_base + field)
+#endif
 #else
 .extern at91_pmc_base
 #endif

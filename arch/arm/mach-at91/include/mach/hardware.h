@@ -22,6 +22,7 @@
 /* 9263, 9g45 */
 #define AT91_BASE_DBGU1	0xffffee00
 
+#if !defined(CONFIG_SOC_SAMA5D4)
 #if defined(CONFIG_ARCH_AT91X40)
 #include <mach/at91x40.h>
 #else
@@ -77,6 +78,23 @@
 #endif
 
 #define AT91_IO_SIZE		(0xFFFFFFFF - AT91_IO_PHYS_BASE + 1)
+#else
+#include <mach/sama5d4.h>
+
+#define AT91_AIC		SAMA5D4_BASE_AIC
+#define AT91_ID_FIQ		0		/* Fake: no FIQ on FPGA */
+#define AT91_ID_SYS		0		/* Fake: no SYS in SAMA5D4 */
+#define AT91_PMC		0x0		/* Fake: no PMC on FPGA */
+#define AT91_BASE_SYS		0xFC069000
+/*
+ * Remap the peripherals from address 0xFC069000 .. 0xFC070FFF
+ * to 0xFE069000 .. 0xFE070FFF.  (32Kb)
+ */
+#define AT91_IO_PHYS_BASE	AT91_BASE_SYS
+#define AT91_IO_SIZE		SZ_32K
+#define AT91_IO_VIRT_BASE	0xFE069000
+
+#endif /* ## SAMA5D4 ## */
 
  /* Convert a physical IO address to virtual IO address */
 #define AT91_IO_P2V(x)		((x) - AT91_IO_PHYS_BASE + AT91_IO_VIRT_BASE)

@@ -111,6 +111,14 @@ config SOC_SAMA5D3
 	  Select this if you are using one of Atmel's SAMA5D3x family SoC.
 	  This support covers SAMA5D31, SAMA5D33, SAMA5D34, SAMA5D35.
 
+config SOC_SAMA5D4
+	bool "SAMA5D4 or SAMA5D5 families"
+	select SOC_SAMA5
+	select HAVE_AT91_DBGU1
+	help
+	  Select this if you are using one of Atmel's SAMA5D4 or SAMA5D5 SoC families.
+	  This support covers also ISLERO SoC.
+
 choice
 	prompt "Atmel AT91 Processor Devices for non DT boards"
 

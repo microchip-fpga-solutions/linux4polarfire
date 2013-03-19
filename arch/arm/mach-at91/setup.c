@@ -95,10 +95,21 @@ void __init at91_init_sram(int bank, unsigned long base, unsigned int length)
 static struct map_desc at91_io_desc __initdata = {
 	.virtual	= AT91_VA_BASE_SYS,
 	.pfn		= __phys_to_pfn(AT91_BASE_SYS),
+#if defined(CONFIG_SOC_SAMA5D4)
+	.length		= SZ_32K,
+#else
 	.length		= SZ_16K,
+#endif
 	.type		= MT_DEVICE,
 };
 
+#if defined(CONFIG_SOC_SAMA5D4)
+static void __init soc_detect(u32 dbgu_base)
+{
+	at91_soc_initdata.type = AT91_SOC_SAMA5D4;
+	at91_boot_soc = at91sama5d4_soc;
+}
+#else
 static void __init soc_detect(u32 dbgu_base)
 {
 	u32 cidr, socid;
@@ -231,6 +242,7 @@ static void __init soc_detect(u32 dbgu_base)
 		}
 	}
 }
+#endif
 
 static const char *soc_name[] = {
 	[AT91_SOC_RM9200]	= "at91rm9200",
@@ -244,6 +256,7 @@ static const char *soc_name[] = {
 	[AT91_SOC_SAM9X5]	= "at91sam9x5",
 	[AT91_SOC_SAM9N12]	= "at91sam9n12",
 	[AT91_SOC_SAMA5D3]	= "sama5d3",
+	[AT91_SOC_SAMA5D4]	= "sama5d4/islero",
 	[AT91_SOC_NONE]		= "Unknown"
 };
 

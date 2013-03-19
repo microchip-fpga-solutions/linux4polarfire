@@ -863,6 +863,37 @@ static int __init at91_pmc_init(unsigned long main_clock)
 	return 0;
 }
 
+#if defined(CONFIG_SOC_SAMA5D4)
+int __init at91_dt_clock_init(void)
+{
+	unsigned freq;
+	unsigned main_clock;
+
+	/* Initialiaze main clock: 20 MHz */
+	main_clock = 20000000;
+
+	main_clk.rate_hz = main_clock;
+
+	mck.parent = &main_clk;
+	freq = mck.parent->rate_hz;
+	mck.rate_hz = freq;     /* master clock = main clock */
+	freq *= 2;              /* CPU clock = 2 * main clock */
+	at91_clk_add(standard_pmc_clocks[3]); /* add mck to clock list */
+	//list_add_tail(&main_clk.node, &clocks);
+	//list_add_tail(&mck.node, &clocks);
+	/* clk_enable */
+	clk_enable(&mck);
+
+	printk("Clocks: CPU %u MHz, master %u MHz, main %u.%03u MHz\n",
+		freq / 1000000, (unsigned) mck.rate_hz / 1000000,
+		(unsigned) main_clock / 1000000,
+		((unsigned) main_clock % 1000000) / 1000);
+
+	return 0;
+}
+
+#else
+
 #if defined(CONFIG_OF)
 static struct of_device_id pmc_ids[] = {
 	{ .compatible = "atmel,at91rm9200-pmc" },
@@ -901,6 +932,7 @@ int __init at91_dt_clock_init(void)
 
 	return at91_pmc_init(main_clock);
 }
+#endif
 #endif
 
 int __init at91_clock_init(unsigned long main_clock)
