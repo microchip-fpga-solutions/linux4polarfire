@@ -1,0 +1,140 @@
+/*
+ *  Chip-specific setup code for the SAMA5D4 family
+ *
+ *  Copyright (C) 2013 Atmel Corporation,
+ *                     Nicolas Ferre <nicolas.ferre@atmel.com>
+ *
+ * Licensed under GPLv2 or later.
+ */
+
+#include <linux/module.h>
+#include <linux/dma-mapping.h>
+
+#include <asm/irq.h>
+#include <asm/mach/arch.h>
+#include <asm/mach/map.h>
+#include <mach/sama5d4.h>
+#include <mach/at91_pmc.h>
+#include <mach/cpu.h>
+
+#include "soc.h"
+#include "generic.h"
+#include "clock.h"
+#include "sam9_smc.h"
+
+/* --------------------------------------------------------------------
+ *  Clocks
+ * -------------------------------------------------------------------- */
+
+/*
+ * The peripheral clocks.
+ */
+
+static struct clk pioA_clk = {
+	.name		= "pioA_clk",
+	.pid		= SAMA5D4_ID_PIOA,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk pioB_clk = {
+	.name		= "pioB_clk",
+	.pid		= SAMA5D4_ID_PIOB,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk pioC_clk = {
+	.name		= "pioC_clk",
+	.pid		= SAMA5D4_ID_PIOC,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk pioD_clk = {
+	.name		= "pioD_clk",
+	.pid		= SAMA5D4_ID_PIOD,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk pioE_clk = {
+	.name		= "pioE_clk",
+	.pid		= SAMA5D4_ID_PIOE,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk usart0_clk = {
+	.name		= "usart0_clk",
+	.pid		= SAMA5D4_ID_USART0,
+	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
+};
+static struct clk usart3_clk = {
+	.name		= "usart3_clk",
+	.pid		= SAMA5D4_ID_USART3,
+	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
+};
+static struct clk mmc0_clk = {
+	.name		= "mci0_clk",
+	.pid		= SAMA5D4_ID_HSMCI0,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk tcb0_clk = {
+	.name		= "tcb0_clk",
+	.pid		= SAMA5D4_ID_TC0,
+	.type		= CLK_TYPE_PERIPHERAL,
+	.div		= AT91_PMC_PCR_DIV2,
+};
+static struct clk dma1_clk = {
+	.name		= "dma1_clk",
+	.pid		= SAMA5D4_ID_DMA1,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+
+
+
+static struct clk *periph_clocks[] __initdata = {
+	&pioA_clk,
+	&pioB_clk,
+	&pioC_clk,
+	&pioD_clk,
+	&pioE_clk,
+	&usart0_clk,
+	&usart3_clk,
+	&mmc0_clk,
+	&tcb0_clk,
+	&dma1_clk,
+};
+
+static struct clk_lookup periph_clocks_lookups[] = {
+	/* lookup table for DT entries */
+	CLKDEV_CON_DEV_ID("dma_clk", "f0004000.dma-controller", &dma1_clk),
+	CLKDEV_CON_DEV_ID("mci_clk", "f8000000.mmc", &mmc0_clk),
+	CLKDEV_CON_DEV_ID("t0_clk", "f801c000.timer", &tcb0_clk),
+	CLKDEV_CON_DEV_ID("usart", "f802c000.serial", &usart0_clk),
+	CLKDEV_CON_DEV_ID("usart", "fc00c000.serial", &usart3_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fc068000.gpio", &pioD_clk),
+	CLKDEV_CON_DEV_ID("usart", "fc069000.serial", &mck),
+	CLKDEV_CON_DEV_ID(NULL, "fc06a000.gpio", &pioA_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fc06b000.gpio", &pioB_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fc06c000.gpio", &pioC_clk),
+	CLKDEV_CON_DEV_ID(NULL, "fc06d000.gpio", &pioE_clk),
+};
+
+static void __init sama5d4_register_clocks(void)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(periph_clocks); i++)
+		clk_register(periph_clocks[i]);
+
+	clkdev_add_table(periph_clocks_lookups,
+			 ARRAY_SIZE(periph_clocks_lookups));
+}
+
+/* --------------------------------------------------------------------
+ *  AT91SAM9x5 processor initialization
+ * -------------------------------------------------------------------- */
+
+static void __init sama5d4_map_io(void)
+{
+	at91_init_sram(0, SAMA5D4_NS_SRAM_BASE, SAMA5D4_NS_SRAM_SIZE);
+}
+
+AT91_SOC_START(sama5d4)
+	.map_io = sama5d4_map_io,
+	.register_clocks = sama5d4_register_clocks,
+AT91_SOC_END

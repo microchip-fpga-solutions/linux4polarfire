@@ -70,6 +70,22 @@ static void __init sama5_dt_device_init(void)
 	of_platform_populate(NULL, of_default_bus_match_table, NULL, NULL);
 }
 
+static const char *sama5d4_dt_board_compat[] __initdata = {
+	"atmel,sama5d4ek",
+	NULL
+};
+
+DT_MACHINE_START(sama5d4_dt, "Atmel SAMA5D4 (Device Tree)")
+	/* Maintainer: Atmel */
+	.init_time	= tcbmmio_init,
+	.map_io		= at91_map_io,
+	.handle_irq	= at91_aic5_handle_irq,
+	.init_early	= at91_dt_initialize,
+	.init_irq	= at91_dt_init_irq,
+	.init_machine	= sama5_dt_device_init,
+	.dt_compat	= sama5d4_dt_board_compat,
+MACHINE_END
+
 static const char *sama5_dt_board_compat[] __initdata = {
 	"atmel,sama5",
 	NULL

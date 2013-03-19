@@ -31,7 +31,7 @@
 
 void __iomem *at91_uart;
 
-#if !defined(CONFIG_ARCH_AT91X40)
+#if !defined(CONFIG_ARCH_AT91X40) && !defined(CONFIG_SOC_SAMA5D4)
 static const u32 uarts_rm9200[] = {
 	AT91_BASE_DBGU0,
 	AT91RM9200_BASE_US0,
