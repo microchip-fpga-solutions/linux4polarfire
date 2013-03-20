@@ -1,0 +1,157 @@
+/*
+ * sama5d4.dtsi - Device Tree Include file for SAMA5D4 family SoC
+ *                applies to ISLERO SoC
+ *
+ *  Copyright (C) 2013 Atmel,
+ *                2013 Nicolas Ferre <nicolas.ferre@atmel.com>
+ *
+ * Licensed under GPLv2 or later.
+ */
+
+/include/ "skeleton.dtsi"
+
+/ {
+	model = "Atmel SAMA5D4 family SoC";
+	compatible = "atmel,sama5d4";
+	interrupt-parent = <&aic>;
+
+	aliases {
+		serial0 = &usart3;
+		gpio0 = &pioA;
+		gpio1 = &pioB;
+		gpio2 = &pioC;
+		gpio3 = &pioE;
+		tcb0 = &tcb0;
+	};
+	cpus {
+		cpu@0 {
+			compatible = "arm,cortex-a5";
+		};
+	};
+
+	memory {
+		reg = <0x20000000 0x8000000>;
+	};
+
+	ahb {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		apb {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+
+			dma1: dma-controller@f0004000 {
+				compatible = "atmel,at91sam9g45-dma";
+				reg = <0xf0004000 0x200>;
+				interrupts = <50 4 0>;
+				#dma-cells = <1>;
+			};
+
+			mmc0: mmc@f8000000 {
+				compatible = "atmel,hsmci";
+				reg = <0xf8000000 0x600>;
+				interrupts = <35 4 0>;
+				/*pinctrl-names = "default";*/
+				/*pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;*/
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				/*dma = <&dma1 0x10002200>; *//* cfg = ATC_FIFOCFG_HALFFIFO
+								| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
+								| ATC_SRC_PER(AT_DMA_ID_MCI1)
+								| ATC_DST_PER(AT_DMA_ID_MCI1) */
+			};
+
+			tcb0: timer@f801c000 {
+				compatible = "atmel,at91sam9x5-tcb";
+				reg = <0xf801c000 0x100>;
+				interrupts = <40 4 0>;
+			};
+
+			usart3: serial@fc00c000 {
+				compatible = "atmel,at91sam9260-usart";
+				reg = <0xfc00c000 0x100>;
+				interrupts = <30 4 5>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_usart3>;
+				status = "disabled";
+			};
+
+			pinctrl@fc06a000 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "atmel,at91sam9x5-pinctrl", "atmel,at91rm9200-pinctrl", "simple-bus";
+				ranges = <0xfc06a000 0xfc06a000 0x4000>;
+				atmel,mux-mask = <
+					/*   A          B          C  */
+					0xffffffff 0x3ffcfe7c 0x1c010101	/* pioA */
+					0x7fffffff 0xfffccc3a 0x3f00cc3a	/* pioB */
+					0xffffffff 0x3ff83fff 0xff00ffff	/* pioC */
+					0xffffffff 0x7fffffff 0x76fff181	/* pioE (at pioD location) */
+					>;
+
+				pioA: gpio@fc06a000 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfc06a000 0x100>;
+					interrupts = <23 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioB: gpio@fc06b000 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfc06b000 0x100>;
+					interrupts = <24 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioC: gpio@fc06c000 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfc06c000 0x100>;
+					interrupts = <25 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				pioE: gpio@fc06d000 {
+					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
+					reg = <0xfc06d000 0x100>;
+					interrupts = <26 4 1>;
+					#gpio-cells = <2>;
+					gpio-controller;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+
+				/* pinctrl pin settings */
+				usart3 {
+					pinctrl_usart3: usart3-0 {
+						atmel,pins =
+							<3 16 0x2 0x0	/* RXD PE16 periph B */
+							 3 17 0x2 0x1>;	/* TXD PE17 periph B with pullup */
+					};
+				};
+			};
+
+			aic: interrupt-controller@fc06e000 {
+				#interrupt-cells = <3>;
+				compatible = "atmel,sama5d3-aic";
+				interrupt-controller;
+				reg = <0xfc06e000 0x200>;
+				atmel,external-irqs = <56>;
+			};
+		};
+	};
+};
