@@ -1,0 +1,40 @@
+/*
+ * sama5d4ek.dtsi - Device Tree Include file for SAMA5D4 Evaluation Kit
+ *
+ *  Copyright (C) 2013 Atmel,
+ *                2013 Nicolas Ferre <nicolas.ferre@atmel.com>
+ *
+ * Licensed under GPLv2 or later.
+ */
+/dts-v1/;
+/include/ "sama5d4.dtsi"
+
+/ {
+	model = "Atmel SAMA5D4-EK";
+	compatible = "atmel,sama5d4ek", "atmel,sama5d4", "atmel,sama5";
+
+	chosen {
+		bootargs = "console=ttyS0,115200";
+	};
+
+	memory {
+		reg = <0x20000000 0x10000000>;
+	};
+
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		main_clock: clock@0 {
+			compatible = "atmel,osc", "fixed-clock";
+			clock-frequency = <20000000>;
+		};
+	};
+
+	ahb {
+		apb {
+		};
+
+	};
+};
