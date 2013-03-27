@@ -73,6 +73,7 @@ config SOC_SAMA5D4
 	bool "SAMA5D4 or SAMA5D5 families"
 	select SOC_SAMA5
 	select HAVE_AT91_DBGU1
+	select CLKSRC_MMIO
 	help
 	  Select this if you are using one of Atmel's SAMA5D4 or SAMA5D5 SoC families.
 	  This support covers also ISLERO SoC.

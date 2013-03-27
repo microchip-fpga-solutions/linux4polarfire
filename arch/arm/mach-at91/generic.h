@@ -41,6 +41,7 @@ extern void at91rm9200_timer_init(void);
 extern void at91sam926x_ioremap_pit(u32 addr);
 extern void at91sam926x_pit_init(void);
 extern void at91x40_timer_init(void);
+extern void tcbmmio_init(void);
 
  /* Clocks */
 #ifdef CONFIG_AT91_PMC_UNIT
