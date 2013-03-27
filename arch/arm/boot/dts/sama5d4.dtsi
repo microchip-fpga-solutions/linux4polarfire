@@ -68,7 +68,7 @@
 			};
 
 			tcb0: timer@f801c000 {
-				compatible = "atmel,at91sam9x5-tcb";
+				compatible = "atmel,at91sam9x5-tcbmmio";
 				reg = <0xf801c000 0x100>;
 				interrupts = <40 4 0>;
 			};
