@@ -348,6 +348,12 @@ static void __init __maybe_unused at91_aic5_hw_init(unsigned int spu_vector)
 
 	/* No debugging in AIC: Debug (Protect) Control Register */
 	at91_aic_write(AT91_AIC5_DCR, 0);
+	/*
+	 * Debug Control Register: enabled for now...
+	 * BEWARE: it is not compatible with usual working AIC in
+	 *         Linux: only use it for low level debugging!
+	 */
+	/*at91_aic_write(AT91_AIC5_DCR, AT91_AIC_DCR_PROT);*/
 
 	/* Disable and clear all interrupts initially */
 	for (i = 0; i < n_irqs; i++) {
