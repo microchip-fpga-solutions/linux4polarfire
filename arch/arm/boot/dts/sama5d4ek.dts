@@ -14,7 +14,7 @@
 	compatible = "atmel,sama5d4ek", "atmel,sama5d4", "atmel,sama5";
 
 	chosen {
-		bootargs = "console=ttyS0,115200";
+		bootargs = "console=ttyS0,115200 ignore_loglevel earlyprintk";
 	};
 
 	memory {
