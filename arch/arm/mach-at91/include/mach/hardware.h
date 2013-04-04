@@ -93,6 +93,12 @@
 #define AT91_IO_PHYS_BASE	AT91_BASE_SYS
 #define AT91_IO_SIZE		SZ_32K
 #define AT91_IO_VIRT_BASE	0xFE069000
+/*
+ * Additional mapping for USART3
+ * 0xFC00C000 (256b)
+ * to 0xFA00C000
+ */
+#define AT91_DBGU (SAMA5D4_BASE_USART3 + AT91_IO_PHYS_BASE - AT91_IO_VIRT_BASE)
 
 #endif /* ## SAMA5D4 ## */
 

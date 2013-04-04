@@ -34,6 +34,9 @@
 
 	ahb {
 		apb {
+			usart3: serial@fc00c000 {
+				status = "okay";
+			};
 		};
 
 	};

@@ -34,6 +34,7 @@
  * User Peripheral physical base addresses.
  */
 #define SAMA5D4_BASE_AIC	0xfc06e000 /* (AIC non-secure) Base Address */
+#define SAMA5D4_BASE_USART3	0xfc00c000 /* (USART3 non-secure) Base Address */
 //#define SAMA5D4_BASE_TC0	0xf0010000 /* (TC0) Base Address */
 //#define SAMA5D4_BASE_TC1	0xf0010040 /* (TC1) Base Address */
 //#define SAMA5D4_BASE_GMAC	0xf0028000 /* (GMAC) Base Address */
