@@ -14,6 +14,12 @@
 #include <mach/hardware.h>
 #include <mach/at91_dbgu.h>
 
+#if defined(CONFIG_SOC_SAMA5D4)
+	.macro	addruart, rp, rv, tmp
+	ldr	\rp, =SAMA5D4_BASE_USART3		@ System peripherals (phys address)
+	ldr	\rv, =AT91_DBGU				@ System peripherals (virt address)
+	.endm
+#else
 #if defined(CONFIG_AT91_DEBUG_LL_DBGU0)
 #define AT91_DBGU AT91_BASE_DBGU0
 #else
@@ -24,6 +30,7 @@
 	ldr	\rp, =AT91_DBGU				@ System peripherals (phys address)
 	ldr	\rv, =AT91_IO_P2V(AT91_DBGU)		@ System peripherals (virt address)
 	.endm
+#endif
 
 	.macro	senduart,rd,rx
 	strb	\rd, [\rx, #(AT91_DBGU_THR)]		@ Write to Transmitter Holding Register

@@ -92,7 +92,8 @@ void __init at91_init_sram(int bank, unsigned long base, unsigned int length)
 	iotable_init(desc, 1);
 }
 
-static struct map_desc at91_io_desc __initdata = {
+static struct map_desc at91_io_desc[] __initdata = {
+	{
 	.virtual	= AT91_VA_BASE_SYS,
 	.pfn		= __phys_to_pfn(AT91_BASE_SYS),
 #if defined(CONFIG_SOC_SAMA5D4)
@@ -101,6 +102,16 @@ static struct map_desc at91_io_desc __initdata = {
 	.length		= SZ_16K,
 #endif
 	.type		= MT_DEVICE,
+	},
+#if defined(CONFIG_SOC_SAMA5D4)
+	/* Useful for USART3 aka console USART */
+	{
+	.virtual	= AT91_DBGU,
+	.pfn		= __phys_to_pfn(SAMA5D4_BASE_USART3),
+	.length		= SZ_256,
+	.type		= MT_DEVICE,
+	},
+#endif
 };
 
 #if defined(CONFIG_SOC_SAMA5D4)
@@ -295,7 +306,7 @@ EXPORT_SYMBOL(at91_get_soc_subtype);
 void __init at91_map_io(void)
 {
 	/* Map peripherals */
-	iotable_init(&at91_io_desc, 1);
+	iotable_init(at91_io_desc, ARRAY_SIZE(at91_io_desc));
 
 	at91_soc_initdata.type = AT91_SOC_NONE;
 	at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
