@@ -22,6 +22,7 @@
 		gpio2 = &pioC;
 		gpio3 = &pioE;
 		tcb0 = &tcb0;
+		tcb1 = &tcb1;
 	};
 	cpus {
 		cpu@0 {
@@ -80,6 +81,12 @@
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart3>;
 				status = "disabled";
+			};
+
+			tcb1: timer@fc020000 {
+				compatible = "atmel,at91sam9x5-tcbmmio";
+				reg = <0xfc020000 0x100>;
+				interrupts = <41 4 0>;
 			};
 
 			pinctrl@fc06a000 {

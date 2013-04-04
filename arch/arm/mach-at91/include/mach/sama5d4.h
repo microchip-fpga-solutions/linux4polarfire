@@ -28,6 +28,7 @@
 #define SAMA5D4_ID_DMA1		31	/* DMA Controller 1 */
 #define SAMA5D4_ID_HSMCI0	35	/* MCI */
 #define SAMA5D4_ID_TC0		40	/* Timer Counter 0 */
+#define SAMA5D4_ID_TC1		41	/* Timer Counter 1 */
 #define SAMA5D4_ID_DBGU		50	/* debug Unit (usually no special interrupt line) */
 
 /*
