@@ -58,8 +58,8 @@
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
 				interrupts = <35 4 0>;
-				/*pinctrl-names = "default";*/
-				/*pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;*/
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -146,6 +146,25 @@
 				};
 
 				/* pinctrl pin settings */
+
+				/* WARNING: on FPGA P4,
+				 * MCI0 is connected to MCI1 PIOE lines
+				 * ==> change needed for real SAMA5D4 SoC
+				 */
+				mmc0 {
+					pinctrl_mmc0_clk_cmd_dat0: mmc0_clk_cmd_dat0 {
+						atmel,pins =
+							<4 0 0x3 0x0	/* PE0 periph C MCI0_CK */
+							 4 1 0x3 0x1	/* PE1 periph C MCI0_CDA with pullup */
+							 4 2 0x3 0x1>;	/* PE2 periph C MCI0_DA0 with pullup */
+					};
+					pinctrl_mmc0_dat1_3: mmc0_dat1_3 {
+						atmel,pins =
+							<4 3 0x3 0x1	/* PE3 periph C MCI0_DA1 with pullup */
+							 4 4 0x3 0x1	/* PE4 periph C MCI0_DA2 with pullup */
+							 4 5 0x3 0x1>;	/* PE5 periph C MCI0_DA3 with pullup */
+					};
+				};
 				usart3 {
 					pinctrl_usart3: usart3-0 {
 						atmel,pins =

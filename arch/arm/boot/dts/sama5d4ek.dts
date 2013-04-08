@@ -34,6 +34,14 @@
 
 	ahb {
 		apb {
+			mmc0: mmc@f8000000 {
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+				};
+			};
+
 			usart3: serial@fc00c000 {
 				status = "okay";
 			};
