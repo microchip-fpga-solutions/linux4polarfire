@@ -511,9 +511,9 @@ static int pin_check_config(struct at91_pinctrl *info, const char* name,
 	int mux;
 
 	/* check if it's a valid config */
-	if (pin->bank >= info->nbanks) {
-		dev_err(info->dev, "%s: pin conf %d bank_id %d >= nbanks %d\n",
-			name, index, pin->bank, info->nbanks);
+	if (pin->bank >= gpio_banks) {
+		dev_err(info->dev, "%s: pin conf %d bank_id %d >= gpio_banks %d\n",
+			name, index, pin->bank, gpio_banks);
 		return -EINVAL;
 	}
 
@@ -824,12 +824,14 @@ static int __devinit at91_pinctrl_mux_mask(struct at91_pinctrl *info,
 		return -EINVAL;
 	}
 
+	dev_dbg(info->dev, "mux-mask size = %d / %d\n", size, sizeof(*list));
 	size /= sizeof(*list);
-	if (!size || size % info->nbanks) {
-		dev_err(info->dev, "wrong mux mask array should be by %d\n", info->nbanks);
+	dev_dbg(info->dev, "mux-mask size = %d\n", size);
+	if (!size || size % gpio_banks) {
+		dev_err(info->dev, "wrong mux mask array should be by %d\n", gpio_banks);
 		return -EINVAL;
 	}
-	info->nmux = size / info->nbanks;
+	info->nmux = size / gpio_banks;
 
 	info->mux_mask = devm_kzalloc(info->dev, sizeof(u32) * size, GFP_KERNEL);
 	if (!info->mux_mask) {
@@ -966,7 +968,7 @@ static int __devinit at91_pinctrl_probe_dt(struct platform_device *pdev,
 
 	dev_dbg(&pdev->dev, "mux-mask\n");
 	tmp = info->mux_mask;
-	for (i = 0; i < info->nbanks; i++) {
+	for (i = 0; i < gpio_banks; i++) {
 		for (j = 0; j < info->nmux; j++, tmp++) {
 			dev_dbg(&pdev->dev, "%d:%d\t0x%x\n", i, j, tmp[0]);
 		}
@@ -1017,28 +1019,30 @@ static int __devinit at91_pinctrl_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
+#if 0
 	/*
 	 * We need all the GPIO drivers to probe FIRST, or we will not be able
 	 * to obtain references to the struct gpio_chip * for them, and we
 	 * need this to proceed.
 	 */
-	for (i = 0; i < info->nbanks; i++) {
+	for (i = 0; i < gpio_banks; i++) {
 		if (!gpio_chips[i]) {
-			dev_warn(&pdev->dev, "GPIO chip %d not registered yet\n", i);
-			devm_kfree(&pdev->dev, info);
-			return -EPROBE_DEFER;
+			dev_info(&pdev->dev, "GPIO chip %d not registered\n", i);
+			//devm_kfree(&pdev->dev, info);
+			//return -EPROBE_DEFER;
 		}
 	}
+#endif
 
 	at91_pinctrl_desc.name = dev_name(&pdev->dev);
-	at91_pinctrl_desc.npins = info->nbanks * MAX_NB_GPIO_PER_BANK;
+	at91_pinctrl_desc.npins = gpio_banks * MAX_NB_GPIO_PER_BANK;
 	at91_pinctrl_desc.pins = pdesc =
 		devm_kzalloc(&pdev->dev, sizeof(*pdesc) * at91_pinctrl_desc.npins, GFP_KERNEL);
 
 	if (!at91_pinctrl_desc.pins)
 		return -ENOMEM;
 
-	for (i = 0 , k = 0; i < info->nbanks; i++) {
+	for (i = 0 , k = 0; i < gpio_banks; i++) {
 		for (j = 0; j < MAX_NB_GPIO_PER_BANK; j++, k++) {
 			pdesc->number = k;
 			pdesc->name = kasprintf(GFP_KERNEL, "pio%c%d", i + 'A', j);
@@ -1056,8 +1060,11 @@ static int __devinit at91_pinctrl_probe(struct platform_device *pdev)
 	}
 
 	/* We will handle a range of GPIO pins */
-	for (i = 0; i < info->nbanks; i++)
+	for (i = 0; i < gpio_banks; i++) {
+		if (!gpio_chips[i])
+			continue;
 		pinctrl_add_gpio_range(info->pctl, &gpio_chips[i]->range);
+	}
 
 	dev_info(&pdev->dev, "initialized AT91 pinctrl driver\n");
 
@@ -1488,6 +1495,8 @@ static void __devinit at91_gpio_probe_fixup(void)
 
 	for (i = 0; i < gpio_banks; i++) {
 		at91_gpio = gpio_chips[i];
+		if (at91_gpio == NULL)
+			continue;
 
 		/*
 		 * GPIO controller are grouped on some SoC:
@@ -1599,6 +1608,7 @@ static int __devinit at91_gpio_probe(struct platform_device *pdev)
 
 	gpio_chips[alias_idx] = at91_chip;
 	gpio_banks = max(gpio_banks, alias_idx + 1);
+	dev_dbg(&pdev->dev, "gpio_banks = %d\n", gpio_banks);
 
 	at91_gpio_probe_fixup();
 
