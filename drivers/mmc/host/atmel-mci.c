@@ -594,6 +594,7 @@ atmci_of_init(struct platform_device *pdev)
 	}
 	atslave = &pdata->dma_slave->sdata;
 
+#if 0
 	/* retrive DMA configuration first */
 	if (atmci_dma_of_init(np, atslave)) {
 		dev_err(&pdev->dev, "could not find DMA parameters\n");
@@ -601,6 +602,7 @@ atmci_of_init(struct platform_device *pdev)
 		devm_kfree(&pdev->dev, pdata);
 		return ERR_PTR(-EINVAL);
 	}
+#endif
 
 	for_each_child_of_node(np, cnp) {
 		if (of_property_read_u32(cnp, "reg", &slot_id)) {
