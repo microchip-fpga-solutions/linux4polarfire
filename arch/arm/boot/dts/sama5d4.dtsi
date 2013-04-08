@@ -51,6 +51,7 @@
 				reg = <0xf0004000 0x200>;
 				interrupts = <50 4 0>;
 				#dma-cells = <1>;
+				status = "disabled";
 			};
 
 			mmc0: mmc@f8000000 {
