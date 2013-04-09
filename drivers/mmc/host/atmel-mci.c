@@ -40,9 +40,6 @@
 #include <asm/io.h>
 #include <asm/unaligned.h>
 
-#include <mach/cpu.h>
-#include <mach/board.h>
-
 #include "atmel-mci-regs.h"
 
 #define ATMCI_DATA_ERROR_FLAGS	(ATMCI_DCRCE | ATMCI_DTOE | ATMCI_OVRE | ATMCI_UNRE)
