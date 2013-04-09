@@ -118,6 +118,7 @@ static struct map_desc at91_io_desc[] __initdata = {
 static void __init soc_detect(u32 dbgu_base)
 {
 	at91_soc_initdata.type = AT91_SOC_SAMA5D4;
+	at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 	at91_boot_soc = at91sama5d4_soc;
 }
 #else
@@ -136,21 +137,25 @@ static void __init soc_detect(u32 dbgu_base)
 
 	case ARCH_ID_AT91SAM9260:
 		at91_soc_initdata.type = AT91_SOC_SAM9260;
+		at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 		at91_boot_soc = at91sam9260_soc;
 		break;
 
 	case ARCH_ID_AT91SAM9261:
 		at91_soc_initdata.type = AT91_SOC_SAM9261;
+		at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 		at91_boot_soc = at91sam9261_soc;
 		break;
 
 	case ARCH_ID_AT91SAM9263:
 		at91_soc_initdata.type = AT91_SOC_SAM9263;
+		at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 		at91_boot_soc = at91sam9263_soc;
 		break;
 
 	case ARCH_ID_AT91SAM9G20:
 		at91_soc_initdata.type = AT91_SOC_SAM9G20;
+		at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 		at91_boot_soc = at91sam9260_soc;
 		break;
 
@@ -163,6 +168,7 @@ static void __init soc_detect(u32 dbgu_base)
 
 	case ARCH_ID_AT91SAM9RL64:
 		at91_soc_initdata.type = AT91_SOC_SAM9RL;
+		at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 		at91_boot_soc = at91sam9rl_soc;
 		break;
 
@@ -185,6 +191,7 @@ static void __init soc_detect(u32 dbgu_base)
 	/* at91sam9g10 */
 	if ((socid & ~AT91_CIDR_EXT) == ARCH_ID_AT91SAM9G10) {
 		at91_soc_initdata.type = AT91_SOC_SAM9G10;
+		at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
 		at91_boot_soc = at91sam9261_soc;
 	}
 	/* at91sam9xe */
@@ -268,7 +275,7 @@ static const char *soc_name[] = {
 	[AT91_SOC_SAM9N12]	= "at91sam9n12",
 	[AT91_SOC_SAMA5D3]	= "sama5d3",
 	[AT91_SOC_SAMA5D4]	= "sama5d4/islero",
-	[AT91_SOC_NONE]		= "Unknown"
+	[AT91_SOC_UNKNOWN]	= "Unknown",
 };
 
 const char *at91_get_soc_type(struct at91_socinfo *c)
@@ -294,7 +301,8 @@ static const char *soc_subtype_name[] = {
 	[AT91_SOC_SAMA5D33]	= "sama5d33",
 	[AT91_SOC_SAMA5D34]	= "sama5d34",
 	[AT91_SOC_SAMA5D35]	= "sama5d35",
-	[AT91_SOC_SUBTYPE_NONE]	= "Unknown"
+	[AT91_SOC_SUBTYPE_NONE]	= "None",
+	[AT91_SOC_SUBTYPE_UNKNOWN] = "Unknown",
 };
 
 const char *at91_get_soc_subtype(struct at91_socinfo *c)
@@ -308,8 +316,8 @@ void __init at91_map_io(void)
 	/* Map peripherals */
 	iotable_init(at91_io_desc, ARRAY_SIZE(at91_io_desc));
 
-	at91_soc_initdata.type = AT91_SOC_NONE;
-	at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_NONE;
+	at91_soc_initdata.type = AT91_SOC_UNKNOWN;
+	at91_soc_initdata.subtype = AT91_SOC_SUBTYPE_UNKNOWN;
 
 	soc_detect(AT91_BASE_DBGU0);
 	if (!at91_soc_is_detected())
@@ -320,8 +328,9 @@ void __init at91_map_io(void)
 
 	pr_info("AT91: Detected soc type: %s\n",
 		at91_get_soc_type(&at91_soc_initdata));
-	pr_info("AT91: Detected soc subtype: %s\n",
-		at91_get_soc_subtype(&at91_soc_initdata));
+	if (at91_soc_initdata.subtype != AT91_SOC_SUBTYPE_NONE)
+		pr_info("AT91: Detected soc subtype: %s\n",
+			at91_get_soc_subtype(&at91_soc_initdata));
 
 	if (!at91_soc_is_enabled())
 		panic("AT91: Soc not enabled");
