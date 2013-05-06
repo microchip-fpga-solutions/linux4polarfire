@@ -80,8 +80,8 @@ struct atmel_nand_data {
  /* Serial */
 struct atmel_uart_data {
 	int			num;		/* port num */
-	short			use_dma_tx;	/* use transmit DMA? */
-	short			use_dma_rx;	/* use receive DMA? */
+	short			use_pdc_tx;	/* use transmit PDC? */
+	short			use_pdc_rx;	/* use receive PDC? */
 	void __iomem		*regs;		/* virt. base address, if any */
 	struct serial_rs485	rs485;		/* rs485 settings */
 };
