@@ -25,8 +25,13 @@
 		tcb1 = &tcb1;
 	};
 	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
 		cpu@0 {
 			compatible = "arm,cortex-a5";
+			reg = <0>;
+			next-level-cache = <&L2>;
 		};
 	};
 
@@ -49,6 +54,16 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges;
+
+			L2: cache-controller@00a00000 {
+				compatible = "arm,pl310-cache";
+				reg = <0x00a00000 0x1000>;
+				interrupts = <0 67 4>;
+				cache-unified;
+				cache-level = <2>;
+				/*arm,data-latency = <1 1 1>;*/
+				/*arm,tag-latency = <1 1 1>;*/
+			};
 
 			dma1: dma-controller@f0004000 {
 				compatible = "atmel,at91sam9g45-dma";
