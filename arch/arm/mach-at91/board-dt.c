@@ -22,6 +22,8 @@
 
 #include <asm/setup.h>
 #include <asm/irq.h>
+#include <asm/firmware.h>
+#include <asm/hardware/cache-l2x0.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
 #include <asm/mach/irq.h>
@@ -329,10 +331,33 @@ static int ksz9021rn_phy_fixup(struct phy_device *phy)
 	return 0;
 }
 
+#ifdef CONFIG_CACHE_L2X0
+static void __init at91_init_l2cache(void)
+{
+	struct device_node *np;
+
+	np = of_find_compatible_node(NULL, NULL, "arm,pl310-cache");
+	if (!np)
+		return;
+	of_node_put(np);
+
+	call_firmware_op(l2x0_init);
+
+	outer_cache.disable = firmware_ops->l2x0_disable;
+
+	l2x0_of_init(0, ~0UL);
+}
+#else
+static inline void at91_init_l2cache(void) {}
+#endif
+
+
 static void __init at91_dt_device_init(void)
 {
 	char mb_rev = 255;
 	int ret;
+
+	at91_init_l2cache();
 
 	if (of_machine_is_compatible("atmel,sama5ek")) {
 		struct device_node *np;
