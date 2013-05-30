@@ -503,6 +503,8 @@ end:
 
 void __init at91_dt_initialize(void)
 {
+	atmel_firmware_init();
+
 	if (!cpu_is_sama5d4()) {
 		at91_dt_rstc();
 		at91_dt_ramc();
