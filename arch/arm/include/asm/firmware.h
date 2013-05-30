@@ -37,6 +37,10 @@ struct firmware_ops {
 	 * Initializes L2 cache
 	 */
 	int (*l2x0_init)(void);
+	/*
+	 * Disables L2 cache
+	 */
+	void (*l2x0_disable)(void);
 };
 
 /* Global pointer for current firmware_ops structure, can't be NULL. */
