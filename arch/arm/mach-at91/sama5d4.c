@@ -59,13 +59,11 @@ static struct clk usart0_clk = {
 	.name		= "usart0_clk",
 	.pid		= SAMA5D4_ID_USART0,
 	.type		= CLK_TYPE_PERIPHERAL,
-	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk usart3_clk = {
 	.name		= "usart3_clk",
 	.pid		= SAMA5D4_ID_USART3,
 	.type		= CLK_TYPE_PERIPHERAL,
-	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk mmc0_clk = {
 	.name		= "mci0_clk",
@@ -76,13 +74,11 @@ static struct clk tcb0_clk = {
 	.name		= "tcb0_clk",
 	.pid		= SAMA5D4_ID_TC0,
 	.type		= CLK_TYPE_PERIPHERAL,
-	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk tcb1_clk = {
 	.name		= "tcb1_clk",
 	.pid		= SAMA5D4_ID_TC1,
 	.type		= CLK_TYPE_PERIPHERAL,
-	.div		= AT91_PMC_PCR_DIV2,
 };
 static struct clk dma1_clk = {
 	.name		= "dma1_clk",
