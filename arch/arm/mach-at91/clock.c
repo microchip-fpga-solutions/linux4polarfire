@@ -881,6 +881,17 @@ static int __init at91_pmc_init(unsigned long main_clock)
 	return 0;
 }
 
+#if defined(CONFIG_OF)
+static struct of_device_id __maybe_unused pmc_ids[] = {
+	{ .compatible = "atmel,at91rm9200-pmc" },
+	{ /*sentinel*/ }
+};
+
+static struct of_device_id osc_ids[] = {
+	{ .compatible = "atmel,osc" },
+	{ /*sentinel*/ }
+};
+
 #if defined(CONFIG_SOC_SAMA5D4)
 int __init at91_dt_clock_init(void)
 {
@@ -911,17 +922,6 @@ int __init at91_dt_clock_init(void)
 }
 
 #else
-
-#if defined(CONFIG_OF)
-static struct of_device_id pmc_ids[] = {
-	{ .compatible = "atmel,at91rm9200-pmc" },
-	{ /*sentinel*/ }
-};
-
-static struct of_device_id osc_ids[] = {
-	{ .compatible = "atmel,osc" },
-	{ /*sentinel*/ }
-};
 
 int __init at91_dt_clock_init(void)
 {
