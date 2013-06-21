@@ -22,7 +22,7 @@
 
 #ifndef __ASSEMBLY__
 
-extern void atmel_smc(u32 cmd, u32 arg1, u32 arg2, u32 arg3);
+extern int atmel_smc(u32 cmd, u32 arg1, u32 arg2, u32 arg3);
 
 #endif
 #endif
