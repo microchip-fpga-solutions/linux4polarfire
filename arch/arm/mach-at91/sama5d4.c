@@ -83,7 +83,7 @@ static struct clk tcb1_clk = {
 static struct clk dma1_clk = {
 	.name		= "dma1_clk",
 	.pid		= SAMA5D4_ID_DMA1,
-	.type		= CLK_TYPE_PERIPHERAL,
+	.type		= CLK_TYPE_PERIPHERAL | CLK_TYPE_PERIPH_H64MX,
 };
 
 
