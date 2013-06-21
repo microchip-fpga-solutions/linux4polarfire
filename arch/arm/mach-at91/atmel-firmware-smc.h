@@ -15,6 +15,9 @@
 /*#define SMC_CMD_INIT		(-1)*/
 /*#define SMC_CMD_INFO		(-2)*/
 /* For Power Management */
+#define SMC_CMD_PMC_READ		0x24
+#define SMC_CMD_PMC_PERIPH_CLK		0x25
+#define SMC_CMD_PMC_SYS_CLK		0x26
 /* For CP15 Access */
 /* For L2 Cache Access */
 #define SMC_CMD_L2CC_ENABLE		0x42

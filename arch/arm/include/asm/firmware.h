@@ -41,6 +41,12 @@ struct firmware_ops {
 	 * Disables L2 cache
 	 */
 	void (*l2x0_disable)(void);
+	/*
+	 * PMC
+	 */
+	int (*pmc_read_reg)(u32 *reg_value, u32 reg_offset);
+	int (*pmc_periph_clk)(u32 periph_id, u32 is_on);
+	int (*pmc_sys_clk)(u32 sys_clk_mask, u32 is_on);
 };
 
 /* Global pointer for current firmware_ops structure, can't be NULL. */
