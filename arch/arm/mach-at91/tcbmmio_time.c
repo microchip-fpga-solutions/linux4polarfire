@@ -30,10 +30,9 @@
 #include <asm/mach/time.h>
 
 static void __iomem *tcaddr;
-//static struct clk *tcclk;
+static struct clk *tcclk;
 static int tcirq;
-#define FPGA_CLK 20000000
-#define DIV128_IDX 3
+#define CLK32K_IDX 4
 
 static u32 notrace tcbmmio_sched_read(void)
 {
@@ -78,13 +77,11 @@ static int __init tcbmmio_setup(void)
 	if (!tcirq)
 		goto ioremap_err;
 
-#if 0
-	tcclk = clk_get(NULL, "t0_clk");
+	tcclk = clk_get(NULL, "tcb0_clk");
 	if (IS_ERR(tcclk)) {
 		pr_crit("AT91: TCBMMIO: Unable to get clk\n");
 		goto ioremap_err;
 	}
-#endif
 
 	of_node_put(np);
 
@@ -103,15 +100,13 @@ static int __init tcbmmio_start(unsigned long *hz)
 	int best_divisor_idx = -1;
 	int i;
 
-	//if (!hz || !tcclk)
-	if (!hz)
+	if (!hz || !tcclk)
 		return -EINVAL;
 
-	//clk_enable(tcclk);
+	clk_enable(tcclk);
 
 	/* How fast will we be counting?  Pick something over 5 MHz.  */
-	//rate = (u32) clk_get_rate(tcclk);
-	rate = FPGA_CLK;
+	rate = (u32) clk_get_rate(tcclk);
 	for (i = 0 ; i < 5 ; i++) {
 		unsigned divisor = atmel_tc_divisors[i];
 		unsigned tmp;
@@ -134,8 +129,6 @@ static int __init tcbmmio_start(unsigned long *hz)
 			divided_rate / 1000000,
 			(divided_rate % 1000000) / 1000);
 	*hz = divided_rate;
-//	tcbmmio_timer_clk = divided_rate;
-//	tcbmmio_divisor_idx = best_divisor_idx;
 
 	tcb_setup_single_chan(best_divisor_idx);
 
@@ -149,10 +142,10 @@ static void tcbmmio_clkevt_mode(enum clock_event_mode m, struct clock_event_devi
 		__raw_writel(0xff, tcaddr + ATMEL_TC_REG(2, IDR));
 		__raw_writel(ATMEL_TC_CLKDIS, tcaddr + ATMEL_TC_REG(2, CCR));
 
-		/* count up to RC, then irq and restart */
-		__raw_writel(DIV128_IDX | ATMEL_TC_WAVE | ATMEL_TC_WAVESEL_UP_AUTO,
+		/* slow clock, count up to RC, then irq and restart */
+		__raw_writel(CLK32K_IDX | ATMEL_TC_WAVE | ATMEL_TC_WAVESEL_UP_AUTO,
 				tcaddr + ATMEL_TC_REG(2, CMR));
-		__raw_writel(((FPGA_CLK/atmel_tc_divisors[DIV128_IDX]) + HZ/2) / HZ, tcaddr + ATMEL_TC_REG(2, RC));
+		__raw_writel((32768 + HZ/2) / HZ, tcaddr + ATMEL_TC_REG(2, RC));
 
 		/* Enable clock and interrupts on RC compare */
 		__raw_writel(ATMEL_TC_CPCS, tcaddr + ATMEL_TC_REG(2, IER));
@@ -166,8 +159,8 @@ static void tcbmmio_clkevt_mode(enum clock_event_mode m, struct clock_event_devi
 		__raw_writel(0xff, tcaddr + ATMEL_TC_REG(2, IDR));
 		__raw_writel(ATMEL_TC_CLKDIS, tcaddr + ATMEL_TC_REG(2, CCR));
 
-		/* count up to RC, then irq and stop */
-		__raw_writel(DIV128_IDX | ATMEL_TC_CPCSTOP
+		/* slow clock, count up to RC, then irq and stop */
+		__raw_writel(CLK32K_IDX | ATMEL_TC_CPCSTOP
 				| ATMEL_TC_WAVE | ATMEL_TC_WAVESEL_UP_AUTO,
 				tcaddr + ATMEL_TC_REG(2, CMR));
 		__raw_writel(ATMEL_TC_CPCS, tcaddr + ATMEL_TC_REG(2, IER));
@@ -254,6 +247,6 @@ void __init tcbmmio_init(void)
 	setup_irq(tcirq, &tcbmmio_irqaction);
 	tcbmmio_clkevt.cpumask = cpumask_of(0);
 	clockevents_config_and_register(&tcbmmio_clkevt,
-					FPGA_CLK/atmel_tc_divisors[DIV128_IDX], 1, 0xfffffffe);
+					32768, 1, 0xfffffffe);
 	return;
 }
