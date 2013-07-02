@@ -7,7 +7,7 @@
  * Licensed under GPLv2 or later.
  */
 /dts-v1/;
-/include/ "sama5d4.dtsi"
+#include "sama5d4.dtsi"
 
 / {
 	model = "Atmel SAMA5D4-EK";
@@ -53,7 +53,7 @@
 				board {
 					pinctrl_mmc0_cd: mmc0_cd {
 						atmel,pins =
-							<4 5 0x0 0x5>; /* PE5 GPIO with pullup deglitch */
+							<AT91_PIOE 5 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;
 					};
 				};
 			};

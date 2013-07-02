@@ -8,7 +8,11 @@
  * Licensed under GPLv2 or later.
  */
 
-/include/ "skeleton.dtsi"
+#include "skeleton.dtsi"
+#include <dt-bindings/dma/at91.h>
+#include <dt-bindings/pinctrl/at91.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	model = "Atmel SAMA5D4 family SoC";
@@ -68,7 +72,7 @@
 			dma1: dma-controller@f0004000 {
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xf0004000 0x200>;
-				interrupts = <50 4 0>;
+				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
 				#dma-cells = <1>;
 				status = "disabled";
 			};
@@ -76,7 +80,7 @@
 			mmc0: mmc@f8000000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
-				interrupts = <35 4 0>;
+				interrupts = <35 IRQ_TYPE_LEVEL_HIGH 0>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;
 				status = "disabled";
@@ -91,13 +95,13 @@
 			tcb0: timer@f801c000 {
 				compatible = "atmel,at91sam9x5-tcbmmio";
 				reg = <0xf801c000 0x100>;
-				interrupts = <40 4 0>;
+				interrupts = <40 IRQ_TYPE_LEVEL_HIGH 0>;
 			};
 
 			usart3: serial@fc00c000 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc00c000 0x100>;
-				interrupts = <30 4 5>;
+				interrupts = <30 IRQ_TYPE_LEVEL_HIGH 5>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart3>;
 				status = "disabled";
@@ -106,7 +110,7 @@
 			tcb1: timer@fc020000 {
 				compatible = "atmel,at91sam9x5-tcbmmio";
 				reg = <0xfc020000 0x100>;
-				interrupts = <41 4 0>;
+				interrupts = <41 IRQ_TYPE_LEVEL_HIGH 0>;
 			};
 
 			pinctrl@fc06a000 {
@@ -127,7 +131,7 @@
 				pioA: gpio@fc06a000 {
 					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 					reg = <0xfc06a000 0x100>;
-					interrupts = <23 4 1>;
+					interrupts = <23 IRQ_TYPE_LEVEL_HIGH 1>;
 					#gpio-cells = <2>;
 					gpio-controller;
 					interrupt-controller;
@@ -137,7 +141,7 @@
 				pioB: gpio@fc06b000 {
 					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 					reg = <0xfc06b000 0x100>;
-					interrupts = <24 4 1>;
+					interrupts = <24 IRQ_TYPE_LEVEL_HIGH 1>;
 					#gpio-cells = <2>;
 					gpio-controller;
 					interrupt-controller;
@@ -147,7 +151,7 @@
 				pioC: gpio@fc06c000 {
 					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 					reg = <0xfc06c000 0x100>;
-					interrupts = <25 4 1>;
+					interrupts = <25 IRQ_TYPE_LEVEL_HIGH 1>;
 					#gpio-cells = <2>;
 					gpio-controller;
 					interrupt-controller;
@@ -157,7 +161,7 @@
 				pioE: gpio@fc06d000 {
 					compatible = "atmel,at91sam9x5-gpio", "atmel,at91rm9200-gpio";
 					reg = <0xfc06d000 0x100>;
-					interrupts = <26 4 1>;
+					interrupts = <26 IRQ_TYPE_LEVEL_HIGH 1>;
 					#gpio-cells = <2>;
 					gpio-controller;
 					interrupt-controller;
@@ -169,22 +173,25 @@
 				mmc0 {
 					pinctrl_mmc0_clk_cmd_dat0: mmc0_clk_cmd_dat0 {
 						atmel,pins =
-							<2 4 0x2 0x0	/* PC4 periph B MCI0_CK */
-							 4 0 0x2 0x1	/* PE0 periph B MCI0_CDB with pullup */
-							 4 1 0x2 0x1>;	/* PE1 periph B MCI0_DB0 with pullup */
+							<AT91_PIOC 4 AT91_PERIPH_B AT91_PINCTRL_NONE	/* MCI0_CK */
+							 AT91_PIOE 0 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* MCI0_CDB */
+							 AT91_PIOE 1 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* MCI0_DB0 */
+							>;
 					};
 					pinctrl_mmc0_dat1_3: mmc0_dat1_3 {
 						atmel,pins =
-							<4 2 0x2 0x1	/* PE2 periph B MCI0_DB1 with pullup */
-							 4 3 0x2 0x1	/* PE3 periph B MCI0_DB2 with pullup */
-							 4 4 0x2 0x1>;	/* PE4 periph B MCI0_DB3 with pullup */
+							<AT91_PIOE 2 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* MCI0_DB1 */
+							 AT91_PIOE 3 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* MCI0_DB2 */
+							 AT91_PIOE 4 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* MCI0_DB3 */
+							>;
 					};
 				};
 				usart3 {
 					pinctrl_usart3: usart3-0 {
 						atmel,pins =
-							<4 16 0x2 0x0	/* RXD PE16 periph B */
-							 4 17 0x2 0x1>;	/* TXD PE17 periph B with pullup */
+							<AT91_PIOE 16 AT91_PERIPH_B AT91_PINCTRL_NONE		/* RXD */
+							 AT91_PIOE 17 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* TXD */
+							>;
 					};
 				};
 			};
