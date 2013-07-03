@@ -16,20 +16,71 @@
 /*
  * Peripheral identifiers/interrupts.
  */
-//#define AT91_ID_FIQ		 0	/* Advanced Interrupt Controller (FIQ) */
-//#define AT91_ID_SYS		 1	/* System Peripherals */
-#define SAMA5D4_ID_PIOD		 5	/* PIOD */
-#define SAMA5D4_ID_USART0	 6	/* USART0 */
-#define SAMA5D4_ID_PIOA		23	/* PIOA */
-#define SAMA5D4_ID_PIOB		24	/* PIOB */
-#define SAMA5D4_ID_PIOC		25	/* PIOC */
-#define SAMA5D4_ID_PIOE		26	/* PIOE */
-#define SAMA5D4_ID_USART3	30	/* USART3 */
-#define SAMA5D4_ID_DMA1		31	/* DMA Controller 1 */
-#define SAMA5D4_ID_HSMCI0	35	/* MCI */
-#define SAMA5D4_ID_TC0		40	/* Timer Counter 0 */
-#define SAMA5D4_ID_TC1		41	/* Timer Counter 1 */
-#define SAMA5D4_ID_DBGU		50	/* debug Unit (usually no special interrupt line) */
+#define SAMA5D4_ID_PIT		 3
+#define SAMA5D4_ID_WDT		 4
+#define SAMA5D4_ID_PIOD		 5
+#define SAMA5D4_ID_USART0	 6
+#define SAMA5D4_ID_USART1	 7
+#define SAMA5D4_ID_DMA0		 8
+#define SAMA5D4_ID_ICM		 9
+#define SAMA5D4_ID_PKCC		10
+#define SAMA5D4_ID_SCI		11
+#define SAMA5D4_ID_AES		12
+#define SAMA5D4_ID_AESB		13
+#define SAMA5D4_ID_TDES		14
+#define SAMA5D4_ID_SHA		15
+#define SAMA5D4_ID_MPDDRC	16
+#define SAMA5D4_ID_MATRIX1	17
+#define SAMA5D4_ID_MATRIX0	18
+#define SAMA5D4_ID_VDEC		19
+#define SAMA5D4_ID_SECUMOD	20
+#define SAMA5D4_ID_MSADCC	21
+#define SAMA5D4_ID_HSMC		22
+#define SAMA5D4_ID_PIOA		23
+#define SAMA5D4_ID_PIOB		24
+#define SAMA5D4_ID_PIOC		25
+#define SAMA5D4_ID_PIOE		26
+#define SAMA5D4_ID_UART0	27
+#define SAMA5D4_ID_UART1	28
+#define SAMA5D4_ID_USART2	29
+#define SAMA5D4_ID_USART3	30
+#define SAMA5D4_ID_USART4	31
+#define SAMA5D4_ID_TWI0		32
+#define SAMA5D4_ID_TWI1		33
+#define SAMA5D4_ID_TWI2		34
+#define SAMA5D4_ID_HSMCI0	35
+#define SAMA5D4_ID_HSMCI1	36
+#define SAMA5D4_ID_SPI0		37
+#define SAMA5D4_ID_SPI1		38
+#define SAMA5D4_ID_SPI2		39
+#define SAMA5D4_ID_TC0		40
+#define SAMA5D4_ID_TC1		41
+#define SAMA5D4_ID_TC2		42
+#define SAMA5D4_ID_PWM		43
+#define SAMA5D4_ID_ADC		44
+#define SAMA5D4_ID_DBGU		45
+#define SAMA5D4_ID_UHPHS	46
+#define SAMA5D4_ID_UDPHS	47
+#define SAMA5D4_ID_SSC0		48
+#define SAMA5D4_ID_SSC1		49
+#define SAMA5D4_ID_DMA1		50
+#define SAMA5D4_ID_LCDC		51
+#define SAMA5D4_ID_ISI		52
+#define SAMA5D4_ID_TRNG		53
+#define SAMA5D4_ID_GMAC		54
+#define SAMA5D4_ID_IRQ		56
+#define SAMA5D4_ID_IRQ		56
+#define SAMA5D4_ID_SFC		57
+#define SAMA5D4_ID_SECURAM	59
+#define SAMA5D4_ID_CTB		60
+#define SAMA5D4_ID_SMD		61
+#define SAMA5D4_ID_TWI3		62
+#define SAMA5D4_ID_CATB		63
+#define SAMA5D4_ID_SFR		64
+#define SAMA5D4_ID_AIC		65
+#define SAMA5D4_ID_SAIC		66
+#define SAMA5D4_ID_L2CC		67
+
 
 /*
  * User Peripheral physical base addresses.
