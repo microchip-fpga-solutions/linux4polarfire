@@ -18,6 +18,8 @@
 #define SMC_CMD_PMC_READ		0x24
 #define SMC_CMD_PMC_PERIPH_CLK		0x25
 #define SMC_CMD_PMC_SYS_CLK		0x26
+#define SMC_CMD_PMC_UCKR_CLK		0x27
+#define SMC_CMD_PMC_USB_SETUP		0x28
 /* For CP15 Access */
 /* For L2 Cache Access */
 #define SMC_CMD_L2CC_ENABLE		0x42

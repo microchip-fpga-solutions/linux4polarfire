@@ -47,6 +47,8 @@ struct firmware_ops {
 	int (*pmc_read_reg)(u32 *reg_value, u32 reg_offset);
 	int (*pmc_periph_clk)(u32 periph_id, u32 is_on);
 	int (*pmc_sys_clk)(u32 sys_clk_mask, u32 is_on);
+	int (*pmc_uckr_clk)(u32 is_on);
+	int (*pmc_usb_setup)(void);
 };
 
 /* Global pointer for current firmware_ops structure, can't be NULL. */

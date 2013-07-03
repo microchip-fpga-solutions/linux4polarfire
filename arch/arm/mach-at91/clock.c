@@ -196,6 +196,16 @@ static void pmc_sys_mode(struct clk *clk, int is_on)
 }
 #endif
 
+#if defined(CONFIG_SOC_SAMA5D4)
+static void pmc_uckr_mode(struct clk *clk, int is_on)
+{
+	int ret;
+
+	ret = call_firmware_op(pmc_uckr_clk, is_on);
+	WARN_ONCE(ret != 0,
+		  "PMC: error when trying to enable utmi pll clock\n");
+}
+#else
 static void pmc_uckr_mode(struct clk *clk, int is_on)
 {
 	unsigned int uckr = at91_pmc_read(AT91_CKGR_UCKR);
@@ -210,6 +220,7 @@ static void pmc_uckr_mode(struct clk *clk, int is_on)
 		cpu_relax();
 	} while ((at91_pmc_read(AT91_PMC_SR) & AT91_PMC_LOCKU) != is_on);
 }
+#endif
 
 /* USB function clocks (PLLB must be 48 MHz) */
 static struct clk udpck = {
@@ -780,6 +791,21 @@ static void __init at91_pllb_usbfs_clock_init(unsigned long main_clock)
 	uhpck.rate_hz = at91_usb_rate(&pllb, pllb.rate_hz, reg);
 }
 
+static void __init at91_nwd_usbfs_clock_init(void)
+{
+	unsigned int usbr;
+
+	usbr = call_firmware_op(pmc_usb_setup);
+	if (usbr == -1) {
+		pr_err("PMC: error when trying to enable usb clock\n");
+	} else {
+		/* Now set uhpck values */
+		uhpck.parent = &utmi_clk;
+		uhpck.pmc_mask = AT91SAM926x_PMC_UHP;
+		uhpck.rate_hz = at91_usb_rate(&utmi_clk, utmi_clk.rate_hz, usbr);
+	}
+}
+
 /* UPLL generated USB full speed clock init */
 static void __init at91_upll_usbfs_clock_init(unsigned long main_clock)
 {
@@ -1018,14 +1044,11 @@ int __init at91_dt_clock_init(void)
 			utmi_clk.pmc_mask |= AT91_PMC_BIASEN;
 	}
 
-#if 0 /*TODO for USB*/
 	/*
 	 * USB FS clock init
 	 */
 	if (cpu_has_upll())
-		/* assumes that we choose UPLL for USB and not PLLA */
-		at91_upll_usbfs_clock_init(main_clock);
-#endif
+		at91_nwd_usbfs_clock_init();
 
 	/*
 	 * MCK and CPU derive from one of those primary clocks.
@@ -1050,13 +1073,11 @@ int __init at91_dt_clock_init(void)
 	for (i = 0; i < ARRAY_SIZE(standard_pmc_clocks); i++)
 		at91_clk_add(standard_pmc_clocks[i]);
 
-#if 0 /*TODO*/
 	if (cpu_has_uhp())
 		at91_clk_add(&uhpck);
 
 	if (cpu_has_utmi())
 		at91_clk_add(&utmi_clk);
-#endif
 
 	/* MCK and CPU clock are "always on" */
 	clk_enable(&mck);

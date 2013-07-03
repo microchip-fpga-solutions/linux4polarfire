@@ -61,12 +61,24 @@ static int atmel_nwd_pmc_sys_clk(u32 sys_clk_mask, u32 is_on)
 	return atmel_smc(SMC_CMD_PMC_SYS_CLK, sys_clk_mask, is_on, 0);
 }
 
+static int atmel_nwd_pmc_uckr_clk(u32 is_on)
+{
+	return atmel_smc(SMC_CMD_PMC_UCKR_CLK, is_on, 0, 0);
+}
+
+static int atmel_nwd_pmc_usb_setup(void)
+{
+	return atmel_smc(SMC_CMD_PMC_USB_SETUP, 0, 0, 0);
+}
+
 static const struct firmware_ops atmel_firmware_ops = {
 	.l2x0_init		= atmel_nwd_l2cache_enable,
 	.l2x0_disable		= atmel_nwd_l2cache_disable,
 	.pmc_read_reg		= atmel_nwd_pmc_read_reg,
 	.pmc_periph_clk		= atmel_nwd_pmc_periph_clk,
 	.pmc_sys_clk		= atmel_nwd_pmc_sys_clk,
+	.pmc_uckr_clk		= atmel_nwd_pmc_uckr_clk,
+	.pmc_usb_setup		= atmel_nwd_pmc_usb_setup,
 };
 
 void atmel_firmware_init(void)
