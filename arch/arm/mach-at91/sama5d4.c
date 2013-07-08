@@ -95,6 +95,11 @@ static struct clk udphs_clk = {
 	.pid		= SAMA5D4_ID_UDPHS,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk lcdc_clk = {
+	.name		= "lcdc_clk",
+	.pid		= SAMA5D4_ID_LCDC,
+	.type		= CLK_TYPE_PERIPHERAL | CLK_TYPE_PERIPH_H64MX,
+};
 
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
@@ -110,6 +115,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&dma1_clk,
 	&uhphs_clk,
 	&udphs_clk,
+	&lcdc_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
