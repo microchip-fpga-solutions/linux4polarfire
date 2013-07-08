@@ -76,6 +76,7 @@ config SOC_SAMA5D4
 	select CLKSRC_MMIO
 	select CACHE_L2X0
 	select CACHE_PL310
+	select HAVE_FB_ATMEL
 	help
 	  Select this if you are using one of Atmel's SAMA5D4 or SAMA5D5 SoC families.
 	  This support covers also ISLERO SoC.

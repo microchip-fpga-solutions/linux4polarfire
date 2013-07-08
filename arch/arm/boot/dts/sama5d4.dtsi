@@ -59,6 +59,46 @@
 			#size-cells = <1>;
 			ranges;
 
+			lcd_bus@f0000000 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "atmel,at91sam9x5-lcd-bus", "simple-bus";
+				ranges = <0xf0000000 0xf0000000 0x2000>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_lcd>;
+				status = "disabled";
+
+				lcd@f0000000 {
+					compatible = "atmel,at91sam9x5-lcd";
+					reg = <0xf0000000 0xff
+					       0xf0000600 0x3ff>;
+					interrupts = <51 IRQ_TYPE_LEVEL_HIGH 3>;
+					status = "disabled";
+				};
+
+				lcdovl1@f0000140 {
+					compatible = "atmel,at91sam9x5-lcd";
+					reg = <0xf0000140 0xff
+					       0xf0000a00 0x3ff>;
+					status = "disabled";
+				};
+
+				lcdovl2@f0000240 {
+					compatible = "atmel,at91sam9x5-lcd";
+					reg = <0xf0000240 0xff
+					       0xf0000e00 0x3ff>;
+					status = "disabled";
+				};
+
+				lcdheo1@f0000340 {
+					compatible = "atmel,sama5d3-heo";
+					reg = <0xf0000340 0xff
+					       0xf0001200 0x3ff>;
+					interrupts = <51 IRQ_TYPE_LEVEL_HIGH 3>;
+					status = "disabled";
+				};
+			};
+
 			L2: cache-controller@00a00000 {
 				compatible = "arm,pl310-cache";
 				reg = <0x00a00000 0x1000>;
@@ -169,6 +209,43 @@
 				};
 
 				/* pinctrl pin settings */
+
+				lcd {
+					pinctrl_lcd: lcd-0 {
+						atmel,pins = <
+							/* AT91_PIOA 0 AT91_PERIPH_A AT91_PINCTRL_NONE */ /* LCDDAT0, conflicts with TMS */
+							 AT91_PIOA 1 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT1 */
+							 AT91_PIOA 2 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT2 */
+							 AT91_PIOA 3 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT3 */
+							 AT91_PIOA 4 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT4 */
+							 AT91_PIOA 5 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT5 */
+							 AT91_PIOA 6 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT6 */
+							 AT91_PIOA 7 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT7 */
+							/* AT91_PIOA 8 AT91_PERIPH_A AT91_PINCTRL_NONE */ /* LCDDAT8, conflicts with TCK */
+							 AT91_PIOA 9 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT9 */
+							 AT91_PIOA 10 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT10 */
+							 AT91_PIOA 11 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT11 */
+							 AT91_PIOA 12 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT12 */
+							 AT91_PIOA 13 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT13 */
+							 AT91_PIOA 14 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT14 */
+							 AT91_PIOA 15 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT15 */
+							/* AT91_PIOA 16 AT91_PERIPH_A AT91_PINCTRL_NONE */ /* LCDDAT16, conflicts with NTRST */
+							 AT91_PIOA 17 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT17 */
+							 AT91_PIOA 18 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT18 */
+							 AT91_PIOA 19 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT19 */
+							 AT91_PIOA 20 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT20 */
+							 AT91_PIOA 21 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT21 */
+							 AT91_PIOA 22 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT22 */
+							 AT91_PIOA 23 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDAT23 */
+							 AT91_PIOA 29 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDEN, conflicts with PWML1 */
+							 AT91_PIOA 25 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDISP, conflicts with TD0 */
+							 AT91_PIOA 27 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDHSYNC, conflicts with PWML0 and SPI1_NPCS2 */
+							 AT91_PIOA 28 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDPCK, conflicts with PWMH1 and SPI1_NPCS3 */
+							 /*AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE*/ /* LCDPWM, conflicts with PCK0 */
+							 AT91_PIOA 26 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDVSYNC, conflicts with PWMH0 and SPI1_NPCS1 */
+							>;
+					};
+				};
 
 				mmc0 {
 					pinctrl_mmc0_clk_cmd_dat0: mmc0_clk_cmd_dat0 {
