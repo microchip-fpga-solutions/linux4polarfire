@@ -8,7 +8,7 @@ ifeq ($(CONFIG_ARCH_AT91SAM9G45),y)
 params_phys-y	:= 0x70000100
 initrd_phys-y	:= 0x70410000
 else
-   zreladdr-y	+= 0x20008000
-params_phys-y	:= 0x20000100
-initrd_phys-y	:= 0x20410000
+   zreladdr-y	+= 0x21008000
+params_phys-y	:= 0x21000100
+initrd_phys-y	:= 0x21410000
 endif

@@ -99,7 +99,7 @@ static struct map_desc at91_io_desc[] __initdata __maybe_unused = {
 #endif
 	.type		= MT_DEVICE,
 	},
-#if defined(CONFIG_SOC_SAMA5D4)
+#if defined(CONFIG_SOC_SAMA5D4) && defined(CONFIG_EARLY_PRINTK)
 	/* Useful for USART3 aka console USART */
 	{
 	.virtual	= AT91_DBGU,

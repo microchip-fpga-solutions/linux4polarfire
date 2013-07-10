@@ -20,7 +20,11 @@
 /* rm9200, 9260/9g20, 9261/9g10, 9rl */
 #define AT91_BASE_DBGU0	0xfffff200
 /* 9263, 9g45 */
+#if !defined(CONFIG_SOC_SAMA5D4)
 #define AT91_BASE_DBGU1	0xffffee00
+#else
+#define AT91_BASE_DBGU1	0xFC00C000	/* USART3 */
+#endif
 
 #if !defined(CONFIG_SOC_SAMA5D4)
 #if defined(CONFIG_ARCH_AT91X40)
@@ -93,12 +97,6 @@
 #define AT91_IO_PHYS_BASE	AT91_BASE_SYS
 #define AT91_IO_SIZE		SZ_32K
 #define AT91_IO_VIRT_BASE	0xFE069000
-/*
- * Additional mapping for USART3
- * 0xFC00C000 (256b)
- * to 0xFA00C000
- */
-#define AT91_DBGU (SAMA5D4_BASE_USART3 + AT91_IO_PHYS_BASE - AT91_IO_VIRT_BASE)
 
 #endif /* ## SAMA5D4 ## */
 

@@ -166,7 +166,7 @@ static inline void arch_decomp_setup(void)
 #if defined(CONFIG_SOC_SAMA5D4)
 static inline void arch_decomp_setup(void)
 {
-	at91_uart = (void __iomem *)SAMA5D4_BASE_USART3;
+	at91_uart = NULL;
 }
 #else
 static inline void arch_decomp_setup(void)
