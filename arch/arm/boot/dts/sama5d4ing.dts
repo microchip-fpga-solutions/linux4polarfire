@@ -14,8 +14,8 @@
 	compatible = "atmel,sama5d4ek", "atmel,sama5d4", "atmel,sama5";
 
 	chosen {
-		bootargs = "console=ttyS0,115200 root=/dev/ram0 ignore_loglevel earlyprintk initrd=0x24000000,14548913 rdinit=/sbin/init";
-		/* bootargs = "console=ttyS0,115200 root=/dev/sda rootdelay=20 ignore_loglevel earlyprintk"; */
+		/* bootargs = "console=ttyS0,115200 root=/dev/ram0 ignore_loglevel earlyprintk initrd=0x24000000,14548913 rdinit=/sbin/init"; */
+		bootargs = "console=ttyS0,115200 root=/dev/sda rootdelay=20 ignore_loglevel earlyprintk";
 	};
 
 	memory {
@@ -35,6 +35,26 @@
 
 	ahb {
 		apb {
+			lcd_bus@f0000000 {
+				status = "okay";
+
+				lcd@f0000000 {
+					status = "okay";
+				};
+
+				lcdovl1@f0000140 {
+					status = "okay";
+				};
+
+				lcdovl2@f0000240 {
+					status = "okay";
+				};
+
+				lcdheo1@f0000340 {
+					status = "okay";
+				};
+			};
+
 			mmc0: mmc@f8000000 {
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3 &pinctrl_mmc0_cd>;
@@ -54,35 +74,34 @@
 				board {
 					pinctrl_mmc0_cd: mmc0_cd {
 						atmel,pins =
- 							<AT91_PIOE 5 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;
- 					};
- 					pinctrl_usba_vbus: usba_vbus {
- 						atmel,pins =
- 							<AT91_PIOE 31 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
+							<AT91_PIOE 5 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;
+					};
+					pinctrl_usba_vbus: usba_vbus {
+						atmel,pins =
+							<AT91_PIOE 31 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
 					};
 				};
 			};
 		};
- 		usb0: gadget@00400000 {
- 			/*atmel,vbus-gpio = <&pioE 31 GPIO_ACTIVE_HIGH>;*/
- 			/*pinctrl-names = "default";*/
- 			/*pinctrl-0 = <&pinctrl_usba_vbus>;*/
- 			status = "okay";
- 		};
- 
- 		usb1: ohci@00500000 {
- 			num-ports = <3>;
- 			atmel,vbus-gpio = <0 /* &pioE 10 GPIO_ACTIVE_LOW */
- 					   &pioA 17 GPIO_ACTIVE_HIGH
- 					   0 /* &pioE 12 GPIO_ACTIVE_LOW */
- 					  >;
- 			status = "okay";
- 		};
- 
- 		usb2: ehci@00600000 {
- 			status = "okay";
- 		};
+		usb0: gadget@00400000 {
+			/*atmel,vbus-gpio = <&pioE 31 GPIO_ACTIVE_HIGH>;*/
+			/*pinctrl-names = "default";*/
+			/*pinctrl-0 = <&pinctrl_usba_vbus>;*/
+			status = "okay";
+		};
 
+		usb1: ohci@00500000 {
+			num-ports = <3>;
+			atmel,vbus-gpio = <0 /* &pioE 10 GPIO_ACTIVE_LOW */
+					   &pioA 17 GPIO_ACTIVE_HIGH
+					   0 /* &pioE 12 GPIO_ACTIVE_LOW */
+					  >;
+			status = "okay";
+		};
+
+		usb2: ehci@00600000 {
+			status = "okay";
+		};
 	};
 };
 
