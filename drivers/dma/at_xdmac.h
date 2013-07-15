@@ -134,6 +134,9 @@
 
 #define AT_XDMAC_MAX_CHAN	0x20
 
+enum atc_status {
+	AT_XDMAC_CHAN_IS_CYCLIC = 0,
+};
 
 /* ----- Channels ----- */
 struct at_xdmac_chan {
@@ -188,6 +191,7 @@ struct at_xdmac_lld {
 struct at_xdmac_desc {
 	struct at_xdmac_lld		lld;
 	bool				active_xfer;
+	unsigned int			xfer_size;
 	enum dma_transfer_direction	direction;
 	struct dma_async_tx_descriptor	tx_dma_desc;
 	struct list_head		descs_list;		/* only used by the first descriptor */
@@ -240,6 +244,11 @@ static inline u32 at_xdmac_convert_bus_width(enum dma_slave_buswidth width)
 	default:
 		return AT_XDMAC_CC_DWIDTH_BYTE;
 	}
+}
+
+static inline int at_xdmac_chan_is_cyclic(struct at_xdmac_chan *atchan)
+{
+	return test_bit(AT_XDMAC_CHAN_IS_CYCLIC, &atchan->status);
 }
 
 #endif /* __AT_XDMAC_H__ */
