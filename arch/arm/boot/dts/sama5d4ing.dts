@@ -15,7 +15,8 @@
 
 	chosen {
 		/* bootargs = "console=ttyS0,115200 root=/dev/ram0 ignore_loglevel earlyprintk initrd=0x24000000,14548913 rdinit=/sbin/init"; */
-		bootargs = "console=ttyS0,115200 root=/dev/sda rootdelay=20 ignore_loglevel earlyprintk";
+		/* bootargs = "console=ttyS0,115200 root=/dev/sda rootdelay=20 ignore_loglevel earlyprintk"; */
+		bootargs = "console=ttyS0,115200 root=/dev/mmcblk0 rootwait ignore_loglevel earlyprintk";
 	};
 
 	memory {
@@ -54,7 +55,17 @@
 					status = "okay";
 				};
 			};
+			mmc1: mmc@fc000000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3 >;
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+				};
+			};
 
+/*
 			mmc0: mmc@f8000000 {
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3 &pinctrl_mmc0_cd>;
@@ -65,7 +76,7 @@
 					cd-gpios = <&pioE 5 0>;
 				};
 			};
-
+*/
 			usart3: serial@fc00c000 {
 				status = "okay";
 			};
