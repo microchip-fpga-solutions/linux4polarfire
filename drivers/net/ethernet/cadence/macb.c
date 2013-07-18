@@ -7,6 +7,8 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
+#define DEBUG	12
+#define VERBOSE_DEBUG 12
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 #include <linux/clk.h>
@@ -226,8 +228,10 @@ static void macb_handle_link_change(struct net_device *dev)
 				reg |= MACB_BIT(FD);
 			if (phydev->speed == SPEED_100)
 				reg |= MACB_BIT(SPD);
+			/*
 			if (phydev->speed == SPEED_1000)
 				reg |= GEM_BIT(GBE);
+			*/
 
 			macb_or_gem_writel(bp, NCFGR, reg);
 
@@ -296,9 +300,11 @@ static int macb_mii_probe(struct net_device *dev)
 	}
 
 	/* mask with MAC supported features */
+	/*
 	if (macb_is_gem(bp))
 		phydev->supported &= PHY_GBIT_FEATURES;
 	else
+	*/
 		phydev->supported &= PHY_BASIC_FEATURES;
 
 	phydev->advertising = phydev->supported;
@@ -1280,7 +1286,7 @@ static void macb_configure_dma(struct macb *bp)
 		dmacfg = gem_readl(bp, DMACFG) & ~GEM_BF(RXBS, -1L);
 		dmacfg |= GEM_BF(RXBS, bp->rx_buffer_size / RX_BUFFER_MULTIPLE);
 		dmacfg |= GEM_BF(FBLDO, 16);
-		dmacfg |= GEM_BIT(TXPBMS) | GEM_BF(RXBMS, -1L);
+/*		dmacfg |= GEM_BIT(TXPBMS) | GEM_BF(RXBMS, -1L);*/
 		dmacfg &= ~GEM_BIT(ENDIA);
 		gem_writel(bp, DMACFG, dmacfg);
 	}
@@ -1862,6 +1868,8 @@ static int __init macb_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, dev);
 
 	netif_carrier_off(dev);
+
+	netdev_info(dev, "Cadence rev 0x%08lx\n", macb_readl(bp, MID));
 
 	netdev_info(dev, "Cadence %s at 0x%08lx irq %d (%pM)\n",
 		    macb_is_gem(bp) ? "GEM" : "MACB", dev->base_addr,
