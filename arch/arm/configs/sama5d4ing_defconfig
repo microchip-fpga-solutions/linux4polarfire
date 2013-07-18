@@ -1,3 +1,4 @@
+CONFIG_CROSS_COMPILE="/opt/arm-islero-linux-gnueabi/bin/arm-islero-linux-gnueabi-"
 # CONFIG_LOCALVERSION_AUTO is not set
 # CONFIG_SWAP is not set
 CONFIG_SYSVIPC=y
