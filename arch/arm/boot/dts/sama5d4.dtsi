@@ -139,6 +139,15 @@
 				interrupts = <40 IRQ_TYPE_LEVEL_HIGH 0>;
 			};
 
+			macb0: ethernet@f8020000 {
+				compatible = "cdns,pc302-gem", "cdns,gem";
+				reg = <0xf8020000 0x100>;
+				interrupts = <54 IRQ_TYPE_LEVEL_HIGH 3>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_macb0_rmii>;
+				status = "disabled";
+			};
+
 			usart3: serial@fc00c000 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc00c000 0x100>;
@@ -244,6 +253,23 @@
 							 AT91_PIOA 28 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDPCK, conflicts with PWMH1 and SPI1_NPCS3 */
 							 AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDPWM, conflicts with PCK0 */
 							 AT91_PIOA 26 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDVSYNC, conflicts with PWMH0 and SPI1_NPCS1 */
+							>;
+					};
+				};
+
+				macb0 {
+					pinctrl_macb0_rmii: macb0_rmii-0 {
+						atmel,pins =
+							<AT91_PIOB 12 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_TX0 */
+							 AT91_PIOB 13 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_TX1 */
+							 AT91_PIOB  8 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_RX0 */
+							 AT91_PIOB  9 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_RX1 */
+							 AT91_PIOB  6 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_RXDV */
+							 AT91_PIOB  7 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_RXER */
+							 AT91_PIOB  2 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_TXEN */
+							 AT91_PIOB  0 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_TXCK */
+							 AT91_PIOB 16 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_MDC */
+							 AT91_PIOB 17 AT91_PERIPH_A AT91_PINCTRL_NONE	/* G0_MDIO */
 							>;
 					};
 				};
