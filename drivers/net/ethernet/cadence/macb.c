@@ -1285,7 +1285,7 @@ static void macb_configure_dma(struct macb *bp)
 	if (macb_is_gem(bp)) {
 		dmacfg = gem_readl(bp, DMACFG) & ~GEM_BF(RXBS, -1L);
 		dmacfg |= GEM_BF(RXBS, bp->rx_buffer_size / RX_BUFFER_MULTIPLE);
-		dmacfg |= GEM_BF(FBLDO, 16);
+		dmacfg |= GEM_BF(FBLDO, 4);
 /*		dmacfg |= GEM_BIT(TXPBMS) | GEM_BF(RXBMS, -1L);*/
 		dmacfg &= ~GEM_BIT(ENDIA);
 		gem_writel(bp, DMACFG, dmacfg);
