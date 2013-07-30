@@ -81,6 +81,11 @@
 				};
 			};
 
+			macb0: ethernet@f8020000 {
+				phy-mode = "rmii";
+				status = "okay";
+			};
+
 			usart3: serial@fc00c000 {
 				status = "okay";
 			};

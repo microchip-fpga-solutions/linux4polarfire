@@ -67,7 +67,7 @@
 #define SAMA5D4_ID_LCDC		51
 #define SAMA5D4_ID_ISI		52
 #define SAMA5D4_ID_TRNG		53
-#define SAMA5D4_ID_GMAC		54
+#define SAMA5D4_ID_GMAC0	54
 #define SAMA5D4_ID_IRQ		56
 #define SAMA5D4_ID_IRQ		56
 #define SAMA5D4_ID_SFC		57
