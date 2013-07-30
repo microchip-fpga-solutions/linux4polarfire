@@ -110,7 +110,7 @@
 
 		nand0: nand@80000000 {
 			nand-bus-width = <8>;
-			nand-ecc-mode = "soft";
+			nand-ecc-mode = "soft_bch";
 			nand-on-flash-bbt;
 			status = "okay";
 
