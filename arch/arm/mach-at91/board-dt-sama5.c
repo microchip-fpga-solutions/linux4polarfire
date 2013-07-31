@@ -128,6 +128,22 @@ static int ksz9021rn_phy_fixup(struct phy_device *phy)
 	return 0;
 }
 
+static int ksz8081_phy_reset(struct phy_device *phy)
+{
+	int value;
+
+	/*
+	 * As disconnect the hardware reset, so use software reset
+	 *
+	 * The basic control (register 0) bit 15 is software reset
+	 */
+	value = phy_read(phy, 0);
+	value |= (1 << 15);
+	phy_write(phy, 0, value);
+
+	return 0;
+}
+
 #ifdef CONFIG_CACHE_L2X0
 static void __init at91_init_l2cache(void)
 {
@@ -156,6 +172,10 @@ static void __init sama5_dt_device_init(void)
 	    IS_ENABLED(CONFIG_PHYLIB))
 		phy_register_fixup_for_uid(PHY_ID_KSZ9021, MICREL_PHY_ID_MASK,
 			ksz9021rn_phy_fixup);
+	if (of_machine_is_compatible("atmel,sama5d4ek") &&
+	    IS_ENABLED(CONFIG_PHYLIB))
+		phy_register_fixup_for_uid(PHY_ID_KSZ8081, MICREL_PHY_ID_MASK,
+			ksz8081_phy_reset);
 
 	of_platform_populate(NULL, of_default_bus_match_table, at91_auxdata_lookup, NULL);
 }
