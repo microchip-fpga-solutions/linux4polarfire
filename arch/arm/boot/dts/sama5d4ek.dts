@@ -84,6 +84,10 @@
 				status = "okay";
 			};
 
+			usart4: serial@fc010000 {
+				status = "okay";
+			};
+
 			pinctrl@fc06a000 {
 				board {
 					pinctrl_mmc0_cd: mmc0_cd {
