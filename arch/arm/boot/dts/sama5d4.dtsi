@@ -165,6 +165,9 @@
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc00c000 0x100>;
 				interrupts = <30 IRQ_TYPE_LEVEL_HIGH 5>;
+				dmas = <&dma1 (AT91_XDMAC_DT_PERID(18) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1 (AT91_XDMAC_DT_PERID(19) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart3>;
 				status = "disabled";
