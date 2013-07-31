@@ -832,7 +832,7 @@ static void atmel_rx_from_dma(struct uart_port *port)
 	struct dma_chan *chan = atmel_port->chan_rx;
 	struct dma_tx_state state;
 	enum dma_status dmastat;
-	size_t pending, count;
+	size_t pending, count = 0;
 
 
 	/* Reset the UART timeout early so that we don't miss one */
@@ -856,8 +856,11 @@ static void atmel_rx_from_dma(struct uart_port *port)
 	 * ring->head will record the transfer size, only new bytes come
 	 * will insert into the framework.
 	 */
-	if (pending > ring->head) {
-		count = pending - ring->head;
+	if (pending != ring->head) {
+		if (pending > ring->head)
+			count = pending - ring->head;
+		if (pending < ring->head)
+			count = ATMEL_SERIAL_RINGSIZE - ring->head;
 
 		atmel_rx_dma_flip_buffer(port, ring->buf + ring->head, count);
 
