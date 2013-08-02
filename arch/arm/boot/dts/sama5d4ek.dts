@@ -70,6 +70,16 @@
 				status = "okay";
 			};
 
+			i2c2: i2c@f8024000 {
+				status = "okay";
+
+				24c256@50 {
+					compatible = "24c256";
+					reg = <0x50>;
+					pagesize = <64>;
+				};
+			};
+
 			usart3: serial@fc00c000 {
 				status = "okay";
 			};
