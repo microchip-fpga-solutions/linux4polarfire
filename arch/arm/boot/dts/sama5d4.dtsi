@@ -172,6 +172,15 @@
 				status = "disabled";
 			};
 
+			usart4: serial@fc010000 {
+				compatible = "atmel,at91sam9260-usart";
+				reg = <0xfc010000 0x100>;
+				interrupts = <31 IRQ_TYPE_LEVEL_HIGH 5>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_usart4>;
+				status = "disabled";
+			};
+
 			tcb1: timer@fc020000 {
 				compatible = "atmel,at91sam9x5-tcbmmio";
 				reg = <0xfc020000 0x100>;
@@ -326,6 +335,14 @@
 						atmel,pins =
 							<AT91_PIOE 16 AT91_PERIPH_B AT91_PINCTRL_NONE		/* RXD */
 							 AT91_PIOE 17 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* TXD */
+							>;
+					};
+				};
+				usart4 {
+					pinctrl_usart4: usart4-0 {
+						atmel,pins =
+							<AT91_PIOE 26 AT91_PERIPH_B AT91_PINCTRL_NONE		/* RXD */
+							 AT91_PIOE 27 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* TXD */
 							>;
 					};
 				};

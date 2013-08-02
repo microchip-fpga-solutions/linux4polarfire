@@ -86,7 +86,11 @@
 				status = "okay";
 			};
 
-			usart3: serial@fc00c000 {
+			/* usart3: serial@fc00c000 {
+				status = "okay";
+			}; */
+
+			usart4: serial@fc010000 {
 				status = "okay";
 			};
 
