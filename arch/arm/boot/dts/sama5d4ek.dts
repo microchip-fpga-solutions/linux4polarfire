@@ -127,5 +127,10 @@
 		usb2: ehci@00600000 {
 			status = "okay";
 		};
+
+		vdec0: vdec@00300000 {
+			status = "okay";
+		};
+
 	};
 };

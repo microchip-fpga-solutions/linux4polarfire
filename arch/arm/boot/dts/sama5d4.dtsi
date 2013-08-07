@@ -497,5 +497,12 @@
 			interrupts = <46 IRQ_TYPE_LEVEL_HIGH 2>;
 			status = "disabled";
 		};
+
+		vdec0: vdec@00300000 {
+			compatible = "on2,g1";
+			reg = <0x00300000 0x1000>;
+			interrupts = <19 IRQ_TYPE_LEVEL_HIGH 4>;
+			status = "disabled";
+		};
 	};
 };
