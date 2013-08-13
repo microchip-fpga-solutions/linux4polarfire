@@ -111,41 +111,36 @@
 			};
 
 			dma1: dma-controller@f0004000 {
-				compatible = "atmel,at91sam9g45-dma";
+				compatible = "atmel,islero-dma";
 				reg = <0xf0004000 0x200>;
 				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
 				#dma-cells = <1>;
-				status = "disabled";
 			};
 
 			mmc0: mmc@f8000000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
 				interrupts = <35 IRQ_TYPE_LEVEL_HIGH 0>;
+				dmas = <&dma1 (AT91_XDMAC_DT_PERID(35) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
-				/*dma = <&dma1 0x10002200>; *//* cfg = ATC_FIFOCFG_HALFFIFO
-								| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
-								| ATC_SRC_PER(AT_DMA_ID_MCI1)
-								| ATC_DST_PER(AT_DMA_ID_MCI1) */
 			};
 
 			mmc1: mmc@fc000000 {
 				compatible = "atmel,hsmci";
 				reg = <0xfC000000 0x600>;
 				interrupts = <36 IRQ_TYPE_LEVEL_HIGH 0>;
+				dmas = <&dma1 (AT91_XDMAC_DT_PERID(36) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
-				/*dma = <&dma1 0x10002200>; *//* cfg = ATC_FIFOCFG_HALFFIFO
-								| ATC_SRC_H2SEL_HW | ATC_DST_H2SEL_HW;
-								| ATC_SRC_PER(AT_DMA_ID_MCI1)
-								| ATC_DST_PER(AT_DMA_ID_MCI1) */
 			};
 
 			tcb0: timer@f801c000 {
@@ -318,15 +313,15 @@
 					pinctrl_mmc1_clk_cmd_dat0: mmc1_clk_cmd_dat0 {
 						atmel,pins =
 							<AT91_PIOE 18 AT91_PERIPH_C AT91_PINCTRL_NONE	/* MCI1_CK */
-							 AT91_PIOE 19 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_CDB */
-							 AT91_PIOE 20 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DB0 */
+							 AT91_PIOE 19 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_CDA */
+							 AT91_PIOE 20 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DA0 */
 							>;
 					};
 					pinctrl_mmc1_dat1_3: mmc1_dat1_3 {
 						atmel,pins =
-							<AT91_PIOE 21 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DB1 */
-							 AT91_PIOE 22 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DB2 */
-							 AT91_PIOE 23 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DB3 */
+							<AT91_PIOE 21 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DA1 */
+							 AT91_PIOE 22 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DA2 */
+							 AT91_PIOE 23 AT91_PERIPH_C AT91_PINCTRL_PULL_UP	/* MCI1_DA3 */
 							>;
 					};
 				};
