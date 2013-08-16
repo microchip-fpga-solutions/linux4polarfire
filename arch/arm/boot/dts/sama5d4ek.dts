@@ -34,6 +34,8 @@
 
 	leds {
 		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_led_gpio>;
 
 		power_led {
 			label = "power_red";
@@ -103,6 +105,12 @@
 					pinctrl_usba_vbus: usba_vbus {
 						atmel,pins =
 							<AT91_PIOE 31 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
+					};
+					pinctrl_led_gpio: led_gpios {
+						atmel,pins = <
+							AT91_PIOE 8 AT91_PERIPH_GPIO AT91_PINCTRL_NONE
+							AT91_PIOE 9 AT91_PERIPH_GPIO AT91_PINCTRL_NONE
+							>;
 					};
 				};
 			};
