@@ -121,7 +121,7 @@
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
 				interrupts = <35 IRQ_TYPE_LEVEL_HIGH 0>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(35) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dmas = <&dma1 (AT91_XDMAC_DT_PERID(0) | AT91_XDMAC_DT_DWIDTH(0x2))>;
 				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;
@@ -134,7 +134,7 @@
 				compatible = "atmel,hsmci";
 				reg = <0xfC000000 0x600>;
 				interrupts = <36 IRQ_TYPE_LEVEL_HIGH 0>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(36) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dmas = <&dma1 (AT91_XDMAC_DT_PERID(1) | AT91_XDMAC_DT_DWIDTH(0x2))>;
 				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
