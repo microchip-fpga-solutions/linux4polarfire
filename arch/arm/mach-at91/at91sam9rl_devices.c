@@ -954,8 +954,8 @@ static struct resource dbgu_resources[] = {
 };
 
 static struct atmel_uart_data dbgu_data = {
-	.use_dma_tx	= 0,
-	.use_dma_rx	= 0,		/* DBGU not capable of receive DMA */
+	.use_pdc_tx	= 0,
+	.use_pdc_rx	= 0,		/* DBGU not capable of receive PDC */
 };
 
 static u64 dbgu_dmamask = DMA_BIT_MASK(32);
@@ -992,8 +992,8 @@ static struct resource uart0_resources[] = {
 };
 
 static struct atmel_uart_data uart0_data = {
-	.use_dma_tx	= 1,
-	.use_dma_rx	= 1,
+	.use_pdc_tx	= 1,
+	.use_pdc_rx	= 1,
 };
 
 static u64 uart0_dmamask = DMA_BIT_MASK(32);
@@ -1043,8 +1043,8 @@ static struct resource uart1_resources[] = {
 };
 
 static struct atmel_uart_data uart1_data = {
-	.use_dma_tx	= 1,
-	.use_dma_rx	= 1,
+	.use_pdc_tx	= 1,
+	.use_pdc_rx	= 1,
 };
 
 static u64 uart1_dmamask = DMA_BIT_MASK(32);
@@ -1086,8 +1086,8 @@ static struct resource uart2_resources[] = {
 };
 
 static struct atmel_uart_data uart2_data = {
-	.use_dma_tx	= 1,
-	.use_dma_rx	= 1,
+	.use_pdc_tx	= 1,
+	.use_pdc_rx	= 1,
 };
 
 static u64 uart2_dmamask = DMA_BIT_MASK(32);
@@ -1129,8 +1129,8 @@ static struct resource uart3_resources[] = {
 };
 
 static struct atmel_uart_data uart3_data = {
-	.use_dma_tx	= 1,
-	.use_dma_rx	= 1,
+	.use_pdc_tx	= 1,
+	.use_pdc_rx	= 1,
 };
 
 static u64 uart3_dmamask = DMA_BIT_MASK(32);
