@@ -23,6 +23,11 @@
 		reg = <0x21000000 0x1F000000>;
 	};
 
+	aliases {
+		serial0 = &usart3;
+		serial1 = &usart4; /* carte d'extension */
+	};
+
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <1>;

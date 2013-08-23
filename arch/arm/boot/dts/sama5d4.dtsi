@@ -20,8 +20,6 @@
 	interrupt-parent = <&aic>;
 
 	aliases {
-		serial0 = &usart3;
-		serial1 = &usart4;
 		gpio0 = &pioA;
 		gpio1 = &pioB;
 		gpio2 = &pioC;

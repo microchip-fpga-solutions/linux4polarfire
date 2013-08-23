@@ -21,6 +21,11 @@
 		reg = <0x20000000 0x20000000>;
 	};
 
+	aliases {
+		serial0 = &usart4;
+		serial1 = &usart3;
+	};
+
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <1>;
