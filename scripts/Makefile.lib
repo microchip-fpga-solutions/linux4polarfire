@@ -311,6 +311,28 @@ cmd_lzo = (cat $(filter-out FORCE,$^) | \
 	lzop -9 && $(call size_append, $(filter-out FORCE,$^))) > $@ || \
 	(rm -f $@ ; false)
 
+# Telium related
+# ---------------------------------------------------------------------------
+
+$(obj)/%.dtb.dgn: $(obj)/%.dtb FORCE
+	$(call cmd,telium_sign_dtb)
+
+$(obj)/%.dgn: $(obj)/zImage FORCE
+	$(call cmd,telium_sign_zimage)
+
+TELIUM_SIGN := $(HOME)/telium3/tools/sign-mockup/t2.py
+
+TIMAGE_NAME ?= 'Linux-$(KERNELRELEASE)'
+TIMAGE_OUT ?= $(@D)/$(shell echo $(patsubst %.dtb.dgn,%.dgn,$(@F)) | tr '[:lower:]' '[:upper:]')
+
+quiet_cmd_telium_sign_zimage = TELIUM  $(TIMAGE_OUT)
+      cmd_telium_sign_zimage = $(TELIUM_SIGN) $< -o $(TIMAGE_OUT) \
+			-d $(TIMAGE_NAME) --coad 0x230000E0 -f 'ZIMAGE' -t driver --apptype=3 >/dev/null
+
+quiet_cmd_telium_sign_dtb = TELIUM  $(TIMAGE_OUT)
+      cmd_telium_sign_dtb = $(TELIUM_SIGN) $< -o $(TIMAGE_OUT) \
+			-d $(TIMAGE_NAME) --coad 0x220000E0 -f 'DTB' -t driver --apptype=2 >/dev/null
+
 # U-Boot mkimage
 # ---------------------------------------------------------------------------
 
