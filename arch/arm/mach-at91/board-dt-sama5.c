@@ -24,6 +24,7 @@
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
 #include <asm/mach/irq.h>
+#include <asm/system_misc.h>
 
 #include "at91_aic.h"
 #include "generic.h"
@@ -164,6 +165,11 @@ static void __init at91_init_l2cache(void)
 static inline void at91_init_l2cache(void) {}
 #endif
 
+static inline void sama5d4ing_alt_idle(void)
+{
+	call_firmware_op(do_idle);
+}
+
 static void __init sama5_dt_device_init(void)
 {
 	at91_init_l2cache();
@@ -177,8 +183,12 @@ static void __init sama5_dt_device_init(void)
 		phy_register_fixup_for_uid(PHY_ID_KSZ8081, MICREL_PHY_ID_MASK,
 			ksz8081_phy_reset);
 
+	if (of_machine_is_compatible("atmel,sama5d4ing")){
+		arm_pm_idle=sama5d4ing_alt_idle;
+	}
 	of_platform_populate(NULL, of_default_bus_match_table, at91_auxdata_lookup, NULL);
 }
+
 
 static const char *sama5d4_dt_board_compat[] __initdata = {
 	"atmel,sama5d4ek",

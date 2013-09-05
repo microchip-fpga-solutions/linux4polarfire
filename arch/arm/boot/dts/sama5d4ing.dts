@@ -11,7 +11,7 @@
 
 / {
 	model = "Ingenico islero";
-	compatible = "atmel,sama5d4ek", "atmel,sama5d4", "atmel,sama5";
+	compatible = "atmel,sama5d4ing", "atmel,sama5d4ek", "atmel,sama5d4", "atmel,sama5";
 
 	chosen {
 		/* bootargs = "console=ttyS0,115200 root=/dev/ram0 ignore_loglevel earlyprintk initrd=0x24000000,14548913 rdinit=/sbin/init"; */
