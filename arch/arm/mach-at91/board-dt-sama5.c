@@ -192,6 +192,7 @@ static void __init sama5_dt_device_init(void)
 
 static const char *sama5d4_dt_board_compat[] __initdata = {
 	"atmel,sama5d4ek",
+	"atmel,sama5d4ing",
 	NULL
 };
 
