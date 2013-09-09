@@ -145,35 +145,16 @@
 			nand-ecc-mode = "soft_bch";
 			nand-on-flash-bbt;
 			status = "okay";
-
-			at91bootstrap@0 {
-				label = "at91bootstrap";
-				reg = <0x0 0x40000>;
+			/* Hynix NAND 128MiB 3,3V 8-bit */
+			/* 16 MiB */
+			partition@0 {
+				label = "secure world";
+				reg = <0x0 0x1000000>;
 			};
-
-			bootloader@40000 {
-				label = "bootloader";
-				reg = <0x40000 0x80000>;
-			};
-
-			bootloaderenv@c0000 {
-				label = "bootloader env";
-				reg = <0xc0000 0xc0000>;
-			};
-
-			dtb@180000 {
-				label = "device tree";
-				reg = <0x180000 0x80000>;
-			};
-
-			kernel@200000 {
-				label = "kernel";
-				reg = <0x200000 0x600000>;
-			};
-
-			rootfs@800000 {
+			/* 112 MiB */
+			partition@1000000 {
 				label = "rootfs";
-				reg = <0x800000 0x0f800000>;
+				reg = <0x1000000 0x07000000>;
 			};
 		};
 	};
