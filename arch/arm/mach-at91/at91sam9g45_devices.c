@@ -32,6 +32,7 @@
 #include <mach/at91sam9_smc.h>
 #include <linux/platform_data/dma-atmel.h>
 #include <mach/atmel-mci.h>
+#include <mach/atmel_lcdc.h>
 
 #include <media/atmel-isi.h>
 
@@ -970,10 +971,15 @@ static struct atmel_lcdfb_info lcdc_data;
 static struct resource lcdc_resources[] = {
 	[0] = {
 		.start	= AT91SAM9G45_LCDC_BASE,
-		.end	= AT91SAM9G45_LCDC_BASE + SZ_4K - 1,
+		.end	= AT91SAM9G45_LCDC_BASE + 0x900 - 1,
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
+		.start	= AT91SAM9G45_LCDC_BASE + ATMEL_LCDC_LUT,
+		.end	= AT91SAM9G45_LCDC_BASE + ATMEL_LCDC_LUT + SZ_1K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[2] = {
 		.start	= NR_IRQS_LEGACY + AT91SAM9G45_ID_LCDC,
 		.end	= NR_IRQS_LEGACY + AT91SAM9G45_ID_LCDC,
 		.flags	= IORESOURCE_IRQ,
@@ -1240,6 +1246,8 @@ static struct at91_adc_reg_desc at91_adc_register_g45 = {
 	.drdy_mask = AT91_ADC_DRDY,
 	.status_register = AT91_ADC_SR,
 	.trigger_register = 0x08,
+	.mr_prescal_mask = AT91_ADC_PRESCAL_9G45,
+	.mr_startup_mask = AT91_ADC_STARTUP_9G45,
 };
 
 void __init at91_add_device_adc(struct at91_adc_data *data)

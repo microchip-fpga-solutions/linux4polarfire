@@ -97,6 +97,9 @@
 				interrupts = <38 IRQ_TYPE_LEVEL_HIGH 4>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_ssc0_tx &pinctrl_ssc0_rx>;
+				dmas = <&dma0 2 AT91_DMA_CFG_PER_ID(13)>,
+				       <&dma0 2 AT91_DMA_CFG_PER_ID(14)>;
+				dma-names = "tx", "rx";
 				status = "disabled";
 			};
 
@@ -119,9 +122,6 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf0014000 0x4000>;
 				interrupts = <18 IRQ_TYPE_LEVEL_HIGH 6>;
-				dmas = <&dma0 2 AT91_DMA_CFG_PER_ID(7)>,
-				       <&dma0 2 AT91_DMA_CFG_PER_ID(8)>;
-				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_i2c0>;
 				#address-cells = <1>;
@@ -261,6 +261,9 @@
 				compatible = "atmel,at91sam9g45-ssc";
 				reg = <0xf800c000 0x4000>;
 				interrupts = <39 IRQ_TYPE_LEVEL_HIGH 4>;
+				dmas = <&dma1 2 AT91_DMA_CFG_PER_ID(3)>,
+				       <&dma1 2 AT91_DMA_CFG_PER_ID(4)>;
+				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_ssc1_tx &pinctrl_ssc1_rx>;
 				status = "disabled";
@@ -281,7 +284,7 @@
 			};
 
 			adc0: adc@f8018000 {
-				compatible = "atmel,at91sam9260-adc";
+				compatible = "atmel,at91sam9x5-adc";
 				reg = <0xf8018000 0x100>;
 				interrupts = <29 IRQ_TYPE_LEVEL_HIGH 5>;
 				pinctrl-names = "default";
@@ -300,16 +303,12 @@
 					&pinctrl_adc0_ad10
 					&pinctrl_adc0_ad11
 					>;
-				atmel,adc-channel-base = <0x50>;
 				atmel,adc-channels-used = <0xfff>;
-				atmel,adc-drdy-mask = <0x1000000>;
-				atmel,adc-num-channels = <12>;
 				atmel,adc-startup-time = <40>;
-				atmel,adc-status-register = <0x30>;
-				atmel,adc-trigger-register = <0xc0>;
 				atmel,adc-use-external;
 				atmel,adc-vref = <3000>;
 				atmel,adc-res = <10 12>;
+				atmel,adc-sample-hold-time = <11>;
 				atmel,adc-res-names = "lowres", "highres";
 				status = "disabled";
 
@@ -332,18 +331,6 @@
 					trigger-name = "continuous";
 					trigger-value = <0x6>;
 				};
-			};
-
-			tsadcc: tsadcc@f8018000 {
-				compatible = "atmel,at91sam9x5-tsadcc";
-				reg = <0xf8018000 0x4000>;
-				interrupts = <29 IRQ_TYPE_LEVEL_HIGH 5>;
-				atmel,tsadcc_clock = <300000>;
-				atmel,filtering_average = <0x03>;
-				atmel,pendet_debounce = <0x08>;
-				atmel,pendet_sensitivity = <0x02>;
-				atmel,ts_sample_hold_time = <0x0a>;
-				status = "disabled";
 			};
 
 			i2c2: i2c@f801c000 {
