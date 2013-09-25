@@ -49,6 +49,10 @@ struct firmware_ops {
 	int (*pmc_sys_clk)(u32 sys_clk_mask, u32 is_on);
 	int (*pmc_uckr_clk)(u32 is_on);
 	int (*pmc_usb_setup)(void);
+	/*
+	 * Restart SoC
+	 */
+	int (*pm_restart)(void);
 };
 
 /* Global pointer for current firmware_ops structure, can't be NULL. */
