@@ -1,0 +1,105 @@
+/*
+ * sama5d4ing-bootstrap.dts - Device Tree file for SAMA5D4 Ingenico devices
+ *
+ *  Copyright (C) 2013 Ingenico
+ *
+ * Licensed under GPLv2 or later.
+ */
+/dts-v1/;
+#include "sama5d4.dtsi"
+
+/ {
+	model = "Ingenico islero";
+	compatible = "atmel,sama5d4ing", "atmel,sama5d4", "atmel,sama5";
+
+	chosen {
+     bootargs = "console=ttyS0,115200 root=/dev/ram0 initrd=0x24000000,18970547 rdinit=/preinit single ro";
+	};
+
+	memory {
+		reg = <0x21000000 0x1F000000>;
+	};
+
+	aliases {
+		serial0 = &usart3;
+	};
+
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		main_clock: clock@0 {
+			compatible = "atmel,osc", "fixed-clock";
+			clock-frequency = <12000000>;
+		};
+	};
+
+	ahb {
+		apb {
+			mmc1: mmc@fc000000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3 >;
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+				};
+			};
+
+			usart3: serial@fc00c000 {
+				status = "okay";
+			};
+
+			pinctrl@fc06a000 {
+				board {
+					pinctrl_mmc0_cd: mmc0_cd {
+						atmel,pins =
+							<AT91_PIOE 5 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;
+					};
+					pinctrl_usba_vbus: usba_vbus {
+						atmel,pins =
+							<AT91_PIOE 31 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
+					};
+				};
+			};
+		};
+		usb0: gadget@00400000 {
+			/*atmel,vbus-gpio = <&pioE 31 GPIO_ACTIVE_HIGH>;*/
+			/*pinctrl-names = "default";*/
+			/*pinctrl-0 = <&pinctrl_usba_vbus>;*/
+			status = "okay";
+		};
+
+		usb1: ohci@00500000 {
+			num-ports = <3>;
+			atmel,vbus-gpio = <0 /* &pioE 10 GPIO_ACTIVE_LOW */
+					   &pioA 17 GPIO_ACTIVE_HIGH
+					   0 /* &pioE 12 GPIO_ACTIVE_LOW */
+					  >;
+			status = "okay";
+		};
+
+		usb2: ehci@00600000 {
+			status = "okay";
+		};
+
+		nand0: nand@80000000 {
+			nand-bus-width = <8>;
+			nand-ecc-mode = "soft_bch";
+			nand-on-flash-bbt;
+			status = "okay";
+			/* Hynix NAND 128MiB 3,3V 8-bit */
+			/* 16 MiB */
+			partition@0 {
+				label = "secure world";
+				reg = <0x0 0x1000000>;
+			};
+			/* 112 MiB */
+			partition@1000000 {
+				label = "rootfs";
+				reg = <0x1000000 0x07000000>;
+			};
+		};
+	};
+};
