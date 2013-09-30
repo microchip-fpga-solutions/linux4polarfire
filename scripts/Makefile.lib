@@ -314,6 +314,9 @@ cmd_lzo = (cat $(filter-out FORCE,$^) | \
 # Telium related
 # ---------------------------------------------------------------------------
 
+%.cpio.gz.dgn: %.cpio.gz FORCE
+	$(call cmd,telium_sign_cpio)
+
 $(obj)/%.dtb.dgn: $(obj)/%.dtb FORCE
 	$(call cmd,telium_sign_dtb)
 
@@ -323,7 +326,12 @@ $(obj)/%.dgn: $(obj)/zImage FORCE
 TELIUM_SIGN := $(HOME)/telium3/tools/sign-mockup/t2.py
 
 TIMAGE_NAME ?= 'Linux-$(KERNELRELEASE)'
-TIMAGE_OUT ?= $(@D)/$(shell echo $(patsubst %.dtb.dgn,%.dgn,$(@F)) | tr '[:lower:]' '[:upper:]')
+TIMAGE_OUT ?= $(srctree)/$(shell echo $(patsubst %.dtb.dgn,%.dgn,$(@F)) | tr '[:lower:]' '[:upper:]')
+TIMAGE_OUT2 ?= $(srctree)/$(shell echo $(patsubst %.cpio.gz.dgn,%.dgn,$(@F)) | tr '[:lower:]' '[:upper:]')
+
+quiet_cmd_telium_sign_cpio = TELIUM  $(TIMAGE_OUT2)
+      cmd_telium_sign_cpio = $(TELIUM_SIGN) $< -o $(TIMAGE_OUT2) \
+			-d $(TIMAGE_NAME) --coad 0x240000E0 -f 'CPIO.GZ' -t driver --apptype=4 >/dev/null
 
 quiet_cmd_telium_sign_zimage = TELIUM  $(TIMAGE_OUT)
       cmd_telium_sign_zimage = $(TELIUM_SIGN) $< -o $(TIMAGE_OUT) \
