@@ -40,14 +40,15 @@
  */
 static struct fb_videomode at91_tft_vga_modes[] = {
 	{
-		.name		= "LG",
-		.refresh	= 60,
-		.xres		= 800,		.yres		= 480,
-		.pixclock	= KHZ2PICOS(33260),
+      .name		= "ingenico",
+      .refresh	= 60,
+      .xres		= 320,		
+      .yres		= 480,
+      .pixclock	= KHZ2PICOS(11125),
 
-		.left_margin	= 88,		.right_margin	= 168,
-		.upper_margin	= 8,		.lower_margin	= 37,
-		.hsync_len	= 128,		.vsync_len	= 2,
+		.left_margin	= 10, .right_margin	= 40,
+		.upper_margin	= 2,  .lower_margin	= 4,
+		.hsync_len     = 10, .vsync_len     = 2,
 
 		.sync		= 0,
 		.vmode		= FB_VMODE_NONINTERLACED,
@@ -55,44 +56,71 @@ static struct fb_videomode at91_tft_vga_modes[] = {
 };
 
 static struct fb_monspecs at91fb_default_monspecs = {
-	.manufacturer	= "LG",
-	.monitor	= "LB043WQ1",
+	.manufacturer	= "ILI",
+	.monitor	= "ILI9481",
 
 	.modedb		= at91_tft_vga_modes,
 	.modedb_len	= ARRAY_SIZE(at91_tft_vga_modes),
 	.hfmin		= 15000,
-	.hfmax		= 17640,
-	.vfmin		= 57,
-	.vfmax		= 67,
+   .hfmax		= 35000,
+   .vfmin		= 55,
+   .vfmax		= 65,
 };
 
 /* Default output mode is TFT 24 bit */
 #define BPP_OUT_DEFAULT_LCDCFG5	(LCDC_LCDCFG5_MODE_OUTPUT_24BPP)
 
 /* Driver datas */
-static struct atmel_lcdfb_info __initdata ek_lcdc_data = {
-	.lcdcon_is_backlight		= true,
-	.alpha_enabled			= false,
-	.default_bpp			= 16,
-	/* Reserve enough memory for 32bpp */
-	.smem_len			= 800 * 480 * 4,
-	/* default_lcdcon2 is used for LCDCFG5 */
-	.default_lcdcon2		= BPP_OUT_DEFAULT_LCDCFG5,
-	.default_monspecs		= &at91fb_default_monspecs,
-	.guard_time			= 9,
-	.lcd_wiring_mode		= ATMEL_LCDC_WIRING_RGB,
+static struct atmel_lcdfb_info __initdata ek_lcdc_primary_dev_data = {
+   .lcdcon_is_backlight    = true,
+   .alpha_enabled          = false,
+   .default_bpp            = 32,
+	/* Reserve enough memory for 32bpp and full res, with at least, some auxiliary back buffer (directfb) */
+	.smem_len			      = (320 * 480 * 4) + (320 * 480 * 4),
+   /* default_lcdcon2 is used for LCDCFG5 */
+   .default_lcdcon2		= BPP_OUT_DEFAULT_LCDCFG5,
+   .default_monspecs		= &at91fb_default_monspecs,
+   .guard_time          = 30,
+   .lcd_wiring_mode		= ATMEL_LCDC_WIRING_RGB,
+};
+
+static struct atmel_lcdfb_info __initdata ek_lcdc_overlay_dev_data = {
+	.lcdcon_is_backlight    = true,
+	.alpha_enabled          = false,
+	.default_bpp            = 32,
+	/* Reserve enough memory for 32bpp and full res and that's it (for now) */
+	.smem_len			      = (320 * 480 * 4),
+	/* In sama5 default_lcdcon2 is used for LCDCFG5 */
+	.default_lcdcon2		   = BPP_OUT_DEFAULT_LCDCFG5,
+	.default_monspecs		   = &at91fb_default_monspecs,
+	.guard_time			      = 30,
+	.lcd_wiring_mode		   = ATMEL_LCDC_WIRING_RGB,
+};
+
+static struct atmel_lcdfb_info __initdata ek_lcdc_heo_dev_data = {
+	.lcdcon_is_backlight    = true,
+	.alpha_enabled          = false,
+	.default_bpp            = 32,
+	/* Reserve enough memory for 32bpp and full res and that's it (for now) */
+	.smem_len			      = (320 * 480 * 4),
+	/* In sama5 default_lcdcon2 is used for LCDCFG5 */
+	.default_lcdcon2		   = BPP_OUT_DEFAULT_LCDCFG5,
+	.default_monspecs		   = &at91fb_default_monspecs,
+	.guard_time			      = 30,
+	.lcd_wiring_mode		   = ATMEL_LCDC_WIRING_RGB,
 };
 
 
 struct of_dev_auxdata at91_auxdata_lookup[] __initdata = {
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038000, "atmel_hlcdfb_base", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038100, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030000, "atmel_hlcdfb_base", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030140, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030240, "atmel_hlcdfb_ovl2", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0000000, "atmel_hlcdfb_base", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0000140, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
-	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0000240, "atmel_hlcdfb_ovl2", &ek_lcdc_data),
+	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038000, "atmel_hlcdfb_base", &ek_lcdc_data), /*ingenico: don't need those alt CS*/
+	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038100, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
+	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030000, "atmel_hlcdfb_base", &ek_lcdc_data),
+	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030140, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
+	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030240, "atmel_hlcdfb_ovl2", &ek_lcdc_data),
+	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000000, "atmel_hlcd_base", &ek_lcdc_primary_dev_data),
+	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000140, "atmel_hlcd_ovl1", &ek_lcdc_overlay_dev_data),
+	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000240, "atmel_hlcd_ovl2", &ek_lcdc_overlay_dev_data),
+   OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0030340, "atmel_hlcd_heo",  &ek_lcdc_heo_dev_data),
 	{ /* sentinel */ }
 };
 

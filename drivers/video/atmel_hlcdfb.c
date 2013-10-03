@@ -23,7 +23,7 @@
 #include <mach/atmel_hlcdc.h>
 #include <mach/atmel_hlcdc_ovl.h>
 
-#include <video/atmel_lcdfb.h>
+#include <video/atmel_lcdfb.h> 
 
 #define	ATMEL_LCDFB_FBINFO_DEFAULT	(FBINFO_DEFAULT \
 					 | FBINFO_PARTIAL_PAN_OK \
@@ -161,8 +161,6 @@ static const struct backlight_ops atmel_hlcdc_bl_ops = {
 
 void atmel_hlcdfb_start(struct atmel_lcdfb_info *sinfo)
 {
-	u32 value;
-
 	lcdc_writel(sinfo, ATMEL_LCDC_LCDEN, LCDC_LCDEN_CLKEN);
 	while (!(lcdc_readl(sinfo, ATMEL_LCDC_LCDSR) & LCDC_LCDSR_CLKSTS))
 		msleep(1);
@@ -494,9 +492,9 @@ static struct atmel_lcdfb_devdata dev_data_ovl = {
 };
 
 static const struct platform_device_id atmelfb_dev_table[] = {
-	{ "atmel_hlcdfb_base", (kernel_ulong_t)&dev_data_base },
-	{ "atmel_hlcdfb_ovl1", (kernel_ulong_t)&dev_data_ovl },
-	{ "atmel_hlcdfb_ovl2", (kernel_ulong_t)&dev_data_ovl },
+	{ "atmel_hlcd_base", (kernel_ulong_t)&dev_data_base },
+	{ "atmel_hlcd_ovl1", (kernel_ulong_t)&dev_data_ovl },
+	{ "atmel_hlcd_ovl2", (kernel_ulong_t)&dev_data_ovl },
 }
 MODULE_DEVICE_TABLE(platform, atmelfb_dev_table);
 

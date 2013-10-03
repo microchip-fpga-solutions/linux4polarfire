@@ -36,6 +36,10 @@
 
 #define ATMEL_LCDC_STOP_NOWAIT (1 << 0)
 
+#define ATMEL_LCDC_DESCRIPTOR_POOL_SIZE 2
+
+
+
 struct atmel_lcdfb_info;
 
 struct atmel_lcdfb_devdata {
@@ -46,6 +50,9 @@ struct atmel_lcdfb_devdata {
 	void (*update_dma)(struct fb_info *info, struct fb_var_screeninfo *var);
 	void (*init_contrast)(struct atmel_lcdfb_info *sinfo);
 	void (*limit_screeninfo)(struct fb_var_screeninfo *var);
+#ifdef CONFIG_INGENICO_MULTIPLE_FBDEV_MOD
+   int (*graphics_control)( struct atmel_lcdfb_info *sinfo, unsigned int cmd, unsigned long arg );
+#endif
 	const struct backlight_ops *bl_ops;
 	int fbinfo_flags;
 	int dma_desc_size;
@@ -57,44 +64,116 @@ extern int __atmel_lcdfb_probe(struct platform_device *pdev,
 				struct atmel_lcdfb_devdata *devdata);
 extern int __atmel_lcdfb_remove(struct platform_device *pdev);
 
+
+
+#ifndef CONFIG_INGENICO_MULTIPLE_FBDEV_MOD
  /* LCD Controller info data structure, stored in device platform_data */
 struct atmel_lcdfb_info {
-	spinlock_t		lock;
-	struct fb_info		*info;
-	void __iomem		*mmio;
-	void __iomem		*clut;
-	int			irq_base;
-	struct atmel_lcdfb_devdata *dev_data;
-	struct work_struct	task;
+   spinlock_t                    lock;
+   struct fb_info*               info;
+	void __iomem*                 mmio;
+	void __iomem*                 clut;
+	int                           irq_base;
+	struct atmel_lcdfb_devdata*   dev_data;
+	struct work_struct            task;
 
-	void			*dma_desc;
-	dma_addr_t		dma_desc_phys;
+	void*                         dma_desc;
+	dma_addr_t                    dma_desc_phys;
 
-	unsigned int		guard_time;
-	unsigned int 		smem_len;
-	struct platform_device	*pdev;
-	struct clk		*bus_clk;
-	struct clk		*lcdc_clk;
+	unsigned int                  guard_time;
+	unsigned int                  smem_len;
+	struct platform_device*       pdev;
+	struct clk*                   bus_clk;
+	struct clk*                   lcdc_clk;
 
 #ifdef CONFIG_BACKLIGHT_ATMEL_LCDC
-	struct backlight_device	*backlight;
-	u8			bl_power;
+	struct backlight_device*      backlight;
+	u8                            bl_power;
 #endif
-	bool			lcdcon_is_backlight;
-	bool			lcdcon_pol_negative;
-	bool			alpha_enabled;
-	u8			saved_lcdcon;
+	bool                          lcdcon_is_backlight;
+	bool                          lcdcon_pol_negative;
+	bool                          alpha_enabled;
+	u8                            saved_lcdcon;
 
-	u8			default_bpp;
-	u8			lcd_wiring_mode;
-	unsigned int		default_lcdcon2;
-	unsigned int		default_dmacon;
-	void (*atmel_lcdfb_power_control)(int on);
-	struct fb_monspecs	*default_monspecs;
-	u32			pseudo_palette[16];
+	u8                            default_bpp;
+	u8                            lcd_wiring_mode;
+	unsigned int                  default_lcdcon2;
+	unsigned int                  default_dmacon;
+	void (*atmel_lcdfb_power_control)   (int on);
+	struct fb_monspecs*           default_monspecs;
+	u32                           pseudo_palette[16];
 };
 
-#define lcdc_readl(sinfo, reg)		__raw_readl((sinfo)->mmio+(reg))
+#define lcdc_readl(sinfo, reg)         __raw_readl((sinfo)->mmio+(reg))
 #define lcdc_writel(sinfo, reg, val)	__raw_writel((val), (sinfo)->mmio+(reg))
+
+#else
+
+struct atmel_lcdfb_info {
+	spinlock_t                       lock;
+	struct fb_info*                  info;
+	void __iomem*                    mmio;
+   unsigned long                    reg_lcdc_attr_phy; 
+   void __iomem*                    reg_lcdc_attr;
+	void __iomem*                    clut;
+	int                              irq_base;
+	struct atmel_lcdfb_devdata*      dev_data;
+	struct work_struct               task;
+
+	int                              dma_running;
+   int                              dma_desc_index;
+   void*                            dma_desc[ATMEL_LCDC_DESCRIPTOR_POOL_SIZE];
+   dma_addr_t                       dma_desc_phys[ATMEL_LCDC_DESCRIPTOR_POOL_SIZE];
+
+	unsigned int                     guard_time;
+	unsigned int                     smem_len;
+	struct platform_device*          pdev;
+	struct clk*                      bus_clk;
+	struct clk*                      lcdc_clk;
+
+#ifdef CONFIG_BACKLIGHT_ATMEL_LCDC
+	struct backlight_device*         backlight;
+	u8                               bl_power;
+#endif
+
+	bool                             lcdcon_is_backlight;
+	bool                             lcdcon_pol_negative;
+	bool                             alpha_enabled;
+	u8                               saved_lcdcon;
+	u8                               default_bpp;
+	u8                               lcd_wiring_mode;
+	unsigned int                     default_lcdcon2;
+	unsigned int                     default_dmacon;
+	void                             (*atmel_lcdfb_power_control)( int on );
+	struct fb_monspecs*              default_monspecs;
+	u32                              pseudo_palette[16];
+};
+
+#ifndef CONFIG_IMFBDEV_MOD_TRUSTZONE_MODE
+
+#define lcdc_open(sinfo)  
+#define lcdc_close(sinfo)  
+#define lcdc_readl(sinfo, reg)            __raw_readl((sinfo)->mmio+(reg))
+#define lcdc_writel(sinfo, reg, val)      __raw_writel((val), (sinfo)->mmio+(reg))
+#define lcdc_writel_attr(sinfo, val)      __raw_writel((val), (sinfo)->reg_lcdc_attr)
+
+#else
+
+int   secure_lcdc_open( void );
+void  secure_lcdc_close( void );
+int   secure_lcdc_readl( int reg );
+void  secure_lcdc_writel( int reg, int val ); 
+
+#define lcdc_open(sinfo)                  secure_lcdc_open() 
+#define lcdc_close(sinfo)                 secure_lcdc_close() 
+#define lcdc_readl(sinfo, reg)            secure_lcdc_readl( (sinfo)->info->fix.mmio_start + (reg) )
+#define lcdc_writel(sinfo, reg, val)      secure_lcdc_writel( (sinfo)->info->fix.mmio_start + (reg), (val) )
+#define lcdc_writel_attr(sinfo, val)      secure_lcdc_writel( (sinfo)->reg_lcdc_attr_phy, (val) )
+
+#endif
+
+#endif //CONFIG_INGENICO_MULTIPLE_FBDEV_MOD
+
+
 
 #endif /* __ATMEL_LCDC_H__ */

@@ -14,6 +14,7 @@
 #include <linux/pinctrl/consumer.h>
 #include <linux/dma-mapping.h>
 #include <linux/interrupt.h>
+#include <linux/backlight.h>
 #include <linux/clk.h>
 #include <linux/fb.h>
 #include <linux/init.h>
