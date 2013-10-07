@@ -77,7 +77,10 @@ static int __init tcbmmio_setup(void)
 	if (!tcirq)
 		goto ioremap_err;
 
-	tcclk = clk_get(NULL, "tcb0_clk");
+	if (of_machine_is_compatible("ingenico,sama5d4ing"))
+		tcclk = clk_get(NULL, "tcb2_clk");
+	else
+		tcclk = clk_get(NULL, "tcb0_clk");
 	if (IS_ERR(tcclk)) {
 		pr_crit("AT91: TCBMMIO: Unable to get clk\n");
 		goto ioremap_err;
