@@ -13,7 +13,7 @@
 	compatible = "atmel,sama5d4ing", "atmel,sama5d4", "atmel,sama5";
 
 	chosen {
-     bootargs = "console=ttyS0,115200 root=/dev/ram0 initrd=0x24000000,18970547 rdinit=/preinit single ro";
+     bootargs = "console=ttyS0,115200 root=/dev/ram0 ip=off initrd=0x24000000,18970547 rdinit=/preinit single ro";
 	};
 
 	memory {
