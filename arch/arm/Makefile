@@ -293,13 +293,13 @@ zinstall uinstall install: vmlinux
 	$(Q)$(MAKE) $(build)=$(boot)/dts MACHINE=$(MACHINE) $(boot)/dts/$@
 
 %.cpio.gz.dgn: scripts
-	$(Q)$(MAKE) $(build)=$(boot) MACHINE=$(MACHINE) $@
+	$(Q)$(MAKE) $(build)=$(boot) DGN=$(DGN) MACHINE=$(MACHINE) $@
 
 %.dtb.dgn: scripts
-	$(Q)$(MAKE) $(build)=$(boot)/dts MACHINE=$(MACHINE) $(boot)/dts/$@
+	$(Q)$(MAKE) $(build)=$(boot)/dts DGN=$(DGN) MACHINE=$(MACHINE) $(boot)/dts/$@
 
-%.dgn: scripts
-	$(Q)$(MAKE) $(build)=$(boot) MACHINE=$(MACHINE) $(boot)/$@
+zimage.dgn: scripts
+	$(Q)$(MAKE) $(build)=$(boot) DGN=$(DGN) MACHINE=$(MACHINE) $(boot)/$@
 
 dtbs: scripts
 	$(Q)$(MAKE) $(build)=$(boot)/dts MACHINE=$(MACHINE) dtbs

@@ -324,8 +324,15 @@ $(obj)/%.dgn: $(obj)/zImage FORCE
 	$(call cmd,telium_sign_zimage)
 
 TELIUM_SIGN := $(HOME)/telium3/tools/sign-mockup/t2.py
-
 TIMAGE_NAME ?= 'Linux-$(KERNELRELEASE)'
+
+ifeq ("$(origin DGN)", "command line")
+ifneq ($(DGN),)
+TIMAGE_OUT = $(DGN)
+TIMAGE_OUT2 = $(DGN)
+endif
+endif
+
 TIMAGE_OUT ?= $(srctree)/$(shell echo $(patsubst %.dtb.dgn,%.dgn,$(@F)) | tr '[:lower:]' '[:upper:]')
 TIMAGE_OUT2 ?= $(srctree)/$(shell echo $(patsubst %.cpio.gz.dgn,%.dgn,$(@F)) | tr '[:lower:]' '[:upper:]')
 
