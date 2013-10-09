@@ -22,9 +22,10 @@
  */
 struct firmware_ops {
 	/*
-	 * Enters CPU idle mode
+	 * CPU idle & reboot states
 	 */
 	int (*do_idle)(void);
+	int (*do_restart)(void);
 	/*
 	 * Sets boot address of specified physical CPU
 	 */

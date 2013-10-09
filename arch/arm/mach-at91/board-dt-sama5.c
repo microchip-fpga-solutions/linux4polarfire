@@ -30,7 +30,7 @@
 #include "generic.h"
 
 /************************************/
-/* TEMPORARY NON-DT STUFF FOR MIURA */
+/* TEMPORARY NON-DT STUFF FOR ISLERO */
 /************************************/
 #include <linux/fb.h>
 #include <video/atmel_lcdfb.h>
@@ -42,7 +42,7 @@ static struct fb_videomode at91_tft_vga_modes[] = {
 	{
       .name		= "ingenico",
       .refresh	= 60,
-      .xres		= 320,		
+      .xres		= 320,
       .yres		= 480,
       .pixclock	= KHZ2PICOS(11125),
 
@@ -193,9 +193,15 @@ static void __init at91_init_l2cache(void)
 static inline void at91_init_l2cache(void) {}
 #endif
 
-static inline void sama5d4ing_alt_idle(void)
+static void sama5d4ing_alt_idle(void)
 {
 	call_firmware_op(do_idle);
+}
+
+/* Hardware reset is performed by Secure OS (TrustZone) */
+static void sama5d4ing_alt_restart(char mode, const char *cmd)
+{
+	call_firmware_op(do_restart);
 }
 
 static void __init sama5_dt_device_init(void)
@@ -212,7 +218,8 @@ static void __init sama5_dt_device_init(void)
 			ksz8081_phy_reset);
 
 	if (of_machine_is_compatible("atmel,sama5d4ing")){
-		arm_pm_idle=sama5d4ing_alt_idle;
+		arm_pm_idle = sama5d4ing_alt_idle;
+		arm_pm_restart = sama5d4ing_alt_restart;
 	}
 	of_platform_populate(NULL, of_default_bus_match_table, at91_auxdata_lookup, NULL);
 }

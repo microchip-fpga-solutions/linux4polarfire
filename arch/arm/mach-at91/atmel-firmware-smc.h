@@ -25,6 +25,8 @@
 #define SMC_CMD_L2CC_ENABLE		0x42
 #define SMC_CMD_L2CC_DISABLE		0x43
 
+#define SMC_CMD_REBOOT			0x80000030
+
 #ifndef __ASSEMBLY__
 
 extern int atmel_smc(u32 cmd, u32 arg1, u32 arg2, u32 arg3);
