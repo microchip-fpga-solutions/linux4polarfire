@@ -77,7 +77,7 @@ static int __init tcbmmio_setup(void)
 	if (!tcirq)
 		goto ioremap_err;
 
-	if (of_machine_is_compatible("ingenico,sama5d4ing"))
+	if (of_machine_is_compatible("atmel,sama5d4ing"))
 		tcclk = clk_get(NULL, "tcb2_clk");
 	else
 		tcclk = clk_get(NULL, "tcb0_clk");
