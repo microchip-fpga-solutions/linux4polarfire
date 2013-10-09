@@ -14,7 +14,7 @@
 
 	chosen {
 		bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootwait=1 noinitrd rw";
-		/* bootargs = "console=ttyS0,115200 consoleblank=0 root=/dev/nfs rw nfsroot=10.23.7.56:/home/lcruau/sw/telium3/nfsroot ip=dhcp rootwait ing_security_mod=enable:0"; */
+		/* bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=/dev/nfs rw nfsroot=10.23.7.56:/home/lcruau/sw/telium3/nfsroot ip=dhcp rootwait ing_security_mod=enable:0"; */
 	};
 
 	memory {
