@@ -124,7 +124,8 @@
 				board {
 					pinctrl_usba_vbus: usba_vbus {
 						atmel,pins =
-							<AT91_PIOA 24 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
+							<AT91_PIOA 17 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH
+							 AT91_PIOA 24 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
 					};
 				};
 			};
