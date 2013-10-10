@@ -13,7 +13,7 @@
 	compatible = "atmel,sama5d4ing", "atmel,sama5d4", "atmel,sama5";
 
 	chosen {
-     bootargs = "console=ttyS0,115200 root=/dev/ram0 ip=off initrd=0x24000000,18970547 rdinit=/preinit single ro";
+     bootargs = "console=ttyS0,115200 root=/dev/ram0 ip=off initrd=0x240000E0,20588596 rdinit=/preinit single ro ing_security_mod=enable:0";
 	};
 
 	memory {
@@ -50,7 +50,19 @@
 			usart3: serial@fc00c000 {
 				status = "okay";
 			};
-
+       /* While TCB0 & TCB1 are used by SECURE-OS,
+			   present only TCB2 for System tick usage */
+			tcb0: timer@f801c000 {
+				compatible = "nil";
+			};
+			tcb1: timer@fc020000 {
+				compatible = "nil";
+			};
+			tcb2: timer@fc024000 {
+				compatible = "atmel,at91sam9x5-tcbmmio";
+				reg = <0xfc024000 0x100>;
+				interrupts = <42 IRQ_TYPE_LEVEL_HIGH 0>;
+			};
 			pinctrl@fc06a000 {
 				board {
 					pinctrl_mmc0_cd: mmc0_cd {
