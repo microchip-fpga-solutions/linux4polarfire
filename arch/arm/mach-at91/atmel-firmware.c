@@ -71,6 +71,11 @@ static int atmel_nwd_pmc_usb_setup(void)
 	return atmel_smc(SMC_CMD_PMC_USB_SETUP, 0, 0, 0);
 }
 
+static int atmel_nwd_pmc_smd_setup(u32 reg_value)
+{
+	return atmel_smc(SMC_CMD_PMC_SMD_SETUP, reg_value, 0, 0);
+}
+
 /*
  * RSTC
  */
@@ -89,6 +94,7 @@ static const struct firmware_ops atmel_firmware_ops = {
 	.pmc_sys_clk		= atmel_nwd_pmc_sys_clk,
 	.pmc_uckr_clk		= atmel_nwd_pmc_uckr_clk,
 	.pmc_usb_setup		= atmel_nwd_pmc_usb_setup,
+	.pmc_smd_setup		= atmel_nwd_pmc_smd_setup,
 	.pm_restart		= atmel_nwd_pm_restart,
 };
 
