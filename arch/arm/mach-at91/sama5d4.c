@@ -115,6 +115,11 @@ static struct clk twi2_clk = {
 	.pid		= SAMA5D4_ID_TWI2,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk smd_clk = {
+	.name		= "smd_clk",
+	.pid		= SAMA5D4_ID_SMD,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
@@ -134,6 +139,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&lcdc_clk,
 	&macb0_clk,
 	&twi2_clk,
+	&smd_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {

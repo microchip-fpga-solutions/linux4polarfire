@@ -117,6 +117,10 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
 #define cpu_has_pcr()		(cpu_is_sama5d3() \
 				|| cpu_is_sama5d4())
 
+#define cpu_has_smd()		(cpu_is_at91sam9x5() \
+				|| cpu_is_sama5d3() \
+				|| cpu_is_sama5d4())
+
 static LIST_HEAD(clocks);
 static DEFINE_SPINLOCK(clk_lock);
 
@@ -239,6 +243,13 @@ static struct clk uhpck = {
 	.name		= "uhpck",
 	/*.parent		= ... we choose parent at runtime */
 	.mode		= pmc_sys_mode,
+};
+struct clk sys_smd_clk = {
+	.name		= "sys_smd_clk",
+	/*.parent		= ... we choose parent at runtime */
+	.pmc_mask	= AT91_PMC_SYS_SMD,
+	.mode		= pmc_sys_mode,
+	.type		= CLK_TYPE_SYSTEM,
 };
 
 
@@ -949,6 +960,9 @@ static int __init at91_pmc_init(unsigned long main_clock)
 
 	if (cpu_has_utmi())
 		at91_clk_add(&utmi_clk);
+
+	if (cpu_has_smd())
+		at91_clk_add(&sys_smd_clk);
 
 	/* MCK and CPU clock are "always on" */
 	clk_enable(&mck);
