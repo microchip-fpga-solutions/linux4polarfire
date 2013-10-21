@@ -80,6 +80,21 @@
 				};
 			};
 */
+			pinctrl@fc06a000 {
+				pioA: gpio@fc06a000 {
+					secure-pio;
+				};
+				pioB: gpio@fc06b000 {
+					secure-pio;
+				};
+				pioC: gpio@fc06c000 {
+					secure-pio;
+				};
+				pioE: gpio@fc06d000 {
+					secure-pio;
+				};
+			};
+			
 			/* While TCB0 & TCB1 are used by SECURE-OS,
 			   present only TCB2 for System tick usage */
 			tcb0: timer@f801c000 {
@@ -124,8 +139,7 @@
 				board {
 					pinctrl_usba_vbus: usba_vbus {
 						atmel,pins =
-							<AT91_PIOA 17 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH
-							 AT91_PIOA 24 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
+							<AT91_PIOA 24 AT91_PERIPH_GPIO AT91_PINCTRL_DEGLITCH>;
 					};
 				};
 			};
@@ -140,8 +154,8 @@
 		usb1: ohci@00500000 {
 			num-ports = <3>;
 			atmel,vbus-gpio = <0 /* &pioE 10 GPIO_ACTIVE_LOW */
-					   &pioA 17 GPIO_ACTIVE_HIGH
-					   &pioA 17 GPIO_ACTIVE_HIGH
+					   0 /* &pioA 17 GPIO_ACTIVE_HIGH */
+					   0 /* &pioA 17 GPIO_ACTIVE_HIGH */
 					  >;
 			status = "okay";
 		};

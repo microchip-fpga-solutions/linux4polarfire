@@ -19,7 +19,7 @@
 
 #include <asm/firmware.h>
 
-#include "atmel-firmware-smc.h"
+#include <mach/atmel-firmware-smc.h>
 
 /*
  * L2CC

@@ -30,6 +30,7 @@
 
 #include <mach/hardware.h>
 #include <mach/at91_pio.h>
+#include <mach/atmel-firmware-smc.h>
 
 #include "core.h"
 
@@ -175,6 +176,56 @@ struct at91_pinctrl {
 
 	struct at91_pinctrl_mux_ops *ops;
 };
+
+#ifdef CONFIG_SOC_SAMA5D4
+#warning PIO used under firmware control
+static inline void __firmware_writel(u32 val, volatile void __iomem *addr)
+{
+	if ( addr < (void *)AT91_VA_BASE_SYS ) {
+		asm volatile(	"mov r2, %[val] " "\n\t"
+				"mov r1, %[addr]" "\n\t"
+				"mov r0, %[code]" "\n\t"
+				"bl  atmel_smc  "
+				: :	[code] "I" (SMC_CMD_PIO_WRITE),
+					[addr] "r" (addr),
+					[val] "r" (val)
+				: "r0", "r1", "r2", "lr");
+	} else {
+		asm volatile("str %1, %0"
+			     : "+Qo" (*(volatile u32 __force *)AT91_IO_P2V(addr))
+			     : "r" (val));
+	}
+}
+
+static inline u32 __firmware_readl(const volatile void __iomem *addr)
+{
+	u32 val;
+	if ( addr < (void *)AT91_VA_BASE_SYS ) {
+		asm volatile(	"mov r1, %[addr]" "\n\t"
+				"mov r0, %[code]" "\n\t"
+				"bl  atmel_smc  " "\n\t"
+				"mov %[val], r2 "
+				:	[val] "=r" (val)
+				:	[code] "I" (SMC_CMD_PIO_READ),
+					[addr] "r" (addr)
+				: "r0", "r1", "r2", "lr");
+	} else {
+		asm volatile("ldr %1, %0"
+			     : "+Qo" (*(volatile u32 __force *)AT91_IO_P2V(addr)),
+			       "=r" (val));
+	}
+	return val;
+}
+
+#undef readl_relaxed
+#define readl_relaxed(c) ({ u32 __r = le32_to_cpu((__force __le32) \
+					__firmware_readl(c)); __r; })
+#undef writel_relaxed
+#define writel_relaxed(v,c)	__firmware_writel((__force u32) cpu_to_le32(v),c)
+#else /* !CONFIG_SOC_SAMA5D4 */
+#define __firmware_writel	__raw_writel
+#define __firmware_readl	__raw_readl
+#endif /* CONFIG_SOC_SAMA5D4 */
 
 static const inline struct at91_pin_group *at91_pinctrl_find_group_by_name(
 				const struct at91_pinctrl *info,
@@ -409,58 +460,58 @@ static enum at91_mux at91_mux_get_periph(void __iomem *pio, unsigned mask)
 
 static bool at91_mux_get_deglitch(void __iomem *pio, unsigned pin)
 {
-	return (__raw_readl(pio + PIO_IFSR) >> pin) & 0x1;
+	return (__firmware_readl(pio + PIO_IFSR) >> pin) & 0x1;
 }
 
 static void at91_mux_set_deglitch(void __iomem *pio, unsigned mask, bool is_on)
 {
-	__raw_writel(mask, pio + (is_on ? PIO_IFER : PIO_IFDR));
+	__firmware_writel(mask, pio + (is_on ? PIO_IFER : PIO_IFDR));
 }
 
 static void at91_mux_pio3_set_deglitch(void __iomem *pio, unsigned mask, bool is_on)
 {
 	if (is_on)
-		__raw_writel(mask, pio + PIO_IFSCDR);
+		__firmware_writel(mask, pio + PIO_IFSCDR);
 	at91_mux_set_deglitch(pio, mask, is_on);
 }
 
 static bool at91_mux_pio3_get_debounce(void __iomem *pio, unsigned pin, u32 *div)
 {
-	*div = __raw_readl(pio + PIO_SCDR);
+	*div = __firmware_readl(pio + PIO_SCDR);
 
-	return (__raw_readl(pio + PIO_IFSCSR) >> pin) & 0x1;
+	return (__firmware_readl(pio + PIO_IFSCSR) >> pin) & 0x1;
 }
 
 static void at91_mux_pio3_set_debounce(void __iomem *pio, unsigned mask,
 				bool is_on, u32 div)
 {
 	if (is_on) {
-		__raw_writel(mask, pio + PIO_IFSCER);
-		__raw_writel(div & PIO_SCDR_DIV, pio + PIO_SCDR);
-		__raw_writel(mask, pio + PIO_IFER);
+		__firmware_writel(mask, pio + PIO_IFSCER);
+		__firmware_writel(div & PIO_SCDR_DIV, pio + PIO_SCDR);
+		__firmware_writel(mask, pio + PIO_IFER);
 	} else {
-		__raw_writel(mask, pio + PIO_IFDR);
+		__firmware_writel(mask, pio + PIO_IFDR);
 	}
 }
 
 static bool at91_mux_pio3_get_pulldown(void __iomem *pio, unsigned pin)
 {
-	return (__raw_readl(pio + PIO_PPDSR) >> pin) & 0x1;
+	return (__firmware_readl(pio + PIO_PPDSR) >> pin) & 0x1;
 }
 
 static void at91_mux_pio3_set_pulldown(void __iomem *pio, unsigned mask, bool is_on)
 {
-	__raw_writel(mask, pio + (is_on ? PIO_PPDER : PIO_PPDDR));
+	__firmware_writel(mask, pio + (is_on ? PIO_PPDER : PIO_PPDDR));
 }
 
 static void at91_mux_pio3_disable_schmitt_trig(void __iomem *pio, unsigned mask)
 {
-	__raw_writel(__raw_readl(pio + PIO_SCHMITT) | mask, pio + PIO_SCHMITT);
+	__firmware_writel(__firmware_readl(pio + PIO_SCHMITT) | mask, pio + PIO_SCHMITT);
 }
 
 static bool at91_mux_pio3_get_schmitt_trig(void __iomem *pio, unsigned pin)
 {
-	return (__raw_readl(pio + PIO_SCHMITT) >> pin) & 0x1;
+	return (__firmware_readl(pio + PIO_SCHMITT) >> pin) & 0x1;
 }
 
 static struct at91_pinctrl_mux_ops at91rm9200_ops = {
@@ -1323,9 +1374,9 @@ void at91_pinctrl_gpio_suspend(void)
 
 		pio = gpio_chips[i]->regbase;
 
-		backups[i] = __raw_readl(pio + PIO_IMR);
-		__raw_writel(backups[i], pio + PIO_IDR);
-		__raw_writel(wakeups[i], pio + PIO_IER);
+		backups[i] = __firmware_readl(pio + PIO_IMR);
+		__firmware_writel(backups[i], pio + PIO_IDR);
+		__firmware_writel(wakeups[i], pio + PIO_IER);
 
 		if (!wakeups[i]) {
 			clk_unprepare(gpio_chips[i]->clock);
@@ -1354,8 +1405,8 @@ void at91_pinctrl_gpio_resume(void)
 				clk_enable(gpio_chips[i]->clock);
 		}
 
-		__raw_writel(wakeups[i], pio + PIO_IDR);
-		__raw_writel(backups[i], pio + PIO_IER);
+		__firmware_writel(wakeups[i], pio + PIO_IDR);
+		__firmware_writel(backups[i], pio + PIO_IER);
 	}
 }
 
@@ -1553,6 +1604,7 @@ static int at91_gpio_probe(struct platform_device *pdev)
 	struct gpio_chip *chip;
 	struct pinctrl_gpio_range *range;
 	int ret = 0;
+	int secure = 0;
 	int irq, i;
 	int alias_idx = of_alias_get_id(np, "gpio");
 	uint32_t ngpio;
@@ -1582,10 +1634,18 @@ static int at91_gpio_probe(struct platform_device *pdev)
 		goto err;
 	}
 
-	at91_chip->regbase = devm_ioremap_resource(&pdev->dev, res);
-	if (IS_ERR(at91_chip->regbase)) {
-		ret = PTR_ERR(at91_chip->regbase);
-		goto err;
+	if (of_find_property(np, "secure-pio", NULL)) {
+		/* Propagate physical address to firmware
+		 * No remap required is this case
+		 */
+		at91_chip->regbase = (void *)res->start;
+		secure = 1;
+	} else {
+		at91_chip->regbase = devm_ioremap_resource(&pdev->dev, res);
+		if (IS_ERR(at91_chip->regbase)) {
+			ret = PTR_ERR(at91_chip->regbase);
+			goto err;
+		}
 	}
 
 	at91_chip->ops = (struct at91_pinctrl_mux_ops *)
@@ -1658,7 +1718,10 @@ static int at91_gpio_probe(struct platform_device *pdev)
 
 	at91_gpio_of_irq_setup(np, at91_chip);
 
-	dev_info(&pdev->dev, "at address %p\n", at91_chip->regbase);
+	dev_info(&pdev->dev, "at phys/virt address %p/%p (%ssecure)\n",
+			(void *)res->start,
+			at91_chip->regbase,
+			secure ? "" : "not ");
 
 	return 0;
 
