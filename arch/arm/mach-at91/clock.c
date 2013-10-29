@@ -526,6 +526,31 @@ static void __init init_programmable_clock(struct clk *clk)
 }
 
 #endif	/* CONFIG_AT91_PROGRAMMABLE_CLOCKS */
+#else
+int clk_set_smd_parent(struct clk *clk, struct clk *parent)
+{
+	unsigned long	flags;
+
+	if (clk != &sys_smd_clk)
+		return -EINVAL;
+	if (clk->users)
+		return -EBUSY;
+	if (!clk_is_primary(parent))
+		return -EINVAL;
+
+	spin_lock_irqsave(&clk_lock, flags);
+
+	clk->rate_hz = parent->rate_hz;
+	clk->parent = parent;
+	if (parent == &utmi_clk)
+		clk->id = 1;
+	else
+		clk->id = 0;
+
+	spin_unlock_irqrestore(&clk_lock, flags);
+	return 0;
+}
+EXPORT_SYMBOL(clk_set_smd_parent);
 #endif
 
 /*------------------------------------------------------------------------*/
