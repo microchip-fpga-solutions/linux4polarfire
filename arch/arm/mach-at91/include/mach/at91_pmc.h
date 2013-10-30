@@ -19,6 +19,8 @@
 #ifndef __ASSEMBLY__
 extern void __iomem *at91_pmc_base;
 
+extern int clk_set_smd_parent(struct clk *clk, struct clk *parent);
+
 #if defined(CONFIG_SOC_SAMA5D4)
 /* No PMC in NWd for SAMA5D4 */
 #define at91_pmc_read(field) 0
