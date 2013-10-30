@@ -535,8 +535,6 @@ int clk_set_smd_parent(struct clk *clk, struct clk *parent)
 		return -EINVAL;
 	if (clk->users)
 		return -EBUSY;
-	if (!clk_is_primary(parent))
-		return -EINVAL;
 
 	spin_lock_irqsave(&clk_lock, flags);
 
