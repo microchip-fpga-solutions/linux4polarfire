@@ -141,6 +141,7 @@ struct atmel_lcdfb_info {
 	bool                             alpha_enabled;
 	u8                               saved_lcdcon;
 	u8                               default_bpp;
+   u8                               layer_index;
 	u8                               lcd_wiring_mode;
 	unsigned int                     default_lcdcon2;
 	unsigned int                     default_dmacon;
