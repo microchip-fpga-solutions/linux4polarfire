@@ -86,7 +86,7 @@ static int atmel_nwd_pm_restart(void)
 	return 0;
 }
 
-static const struct firmware_ops atmel_firmware_ops = {
+const struct firmware_ops atmel_firmware_ops = {
 	.l2x0_init		= atmel_nwd_l2cache_enable,
 	.l2x0_disable		= atmel_nwd_l2cache_disable,
 	.pmc_read_reg		= atmel_nwd_pmc_read_reg,
@@ -97,6 +97,8 @@ static const struct firmware_ops atmel_firmware_ops = {
 	.pmc_smd_setup		= atmel_nwd_pmc_smd_setup,
 	.pm_restart		= atmel_nwd_pm_restart,
 };
+
+EXPORT_SYMBOL(firmware_ops);
 
 void atmel_firmware_init(void)
 {
