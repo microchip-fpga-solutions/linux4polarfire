@@ -92,10 +92,10 @@
 				};
 
 				lcdheo1@f0000340 {
-					compatible = "atmel,sama5d3-heo";
+					compatible = "atmel,at91sam9x5-lcd";
 					reg = <0xf0000340 0xff
 					       0xf0001200 0x3ff>;
-					interrupts = <51 IRQ_TYPE_LEVEL_HIGH 3>;
+					/*interrupts = <51 IRQ_TYPE_LEVEL_HIGH 3>;*/
 					status = "disabled";
 				};
 			};

@@ -129,15 +129,10 @@ static struct atmel_lcdfb_info __initdata ek_lcdc_heo_dev_data = {
 
 
 struct of_dev_auxdata at91_auxdata_lookup[] __initdata = {
-	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038000, "atmel_hlcdfb_base", &ek_lcdc_data), /*ingenico: don't need those alt CS*/
-	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf8038100, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
-	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030000, "atmel_hlcdfb_base", &ek_lcdc_data),
-	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030140, "atmel_hlcdfb_ovl1", &ek_lcdc_data),
-	//OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xf0030240, "atmel_hlcdfb_ovl2", &ek_lcdc_data),
 	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000000, "atmel_hlcd_base", &ek_lcdc_primary_dev_data),
 	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000140, "atmel_hlcd_ovl1", &ek_lcdc_overlay1_dev_data),
 	OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000240, "atmel_hlcd_ovl2", &ek_lcdc_overlay2_dev_data),
-   OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0030340, "atmel_hlcd_heo",  &ek_lcdc_heo_dev_data),
+   OF_DEV_AUXDATA("atmel,at91sam9x5-lcd", 0xF0000340, "atmel_hlcd_heo",  &ek_lcdc_heo_dev_data),
 	{ /* sentinel */ }
 };
 
