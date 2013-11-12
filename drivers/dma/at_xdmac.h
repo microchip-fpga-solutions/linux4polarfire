@@ -129,8 +129,8 @@
 #define AT_XDMAC_MBR_UBC_NDEN	(0x1 << 26)
 #define AT_XDMAC_MBR_UBC_NDV1	(0x1 << 27)
 
-#define AT_XDMAC_MEM_IF		0x0
-#define AT_XDMAC_PER_IF		0x1
+#define AT_XDMAC_PER_IF		0x0
+#define AT_XDMAC_MEM_IF		0x1
 
 #define AT_XDMAC_MAX_CHAN	0x20
 
