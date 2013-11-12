@@ -1116,6 +1116,9 @@ int __init at91_dt_clock_init(void)
 	if (cpu_has_utmi())
 		at91_clk_add(&utmi_clk);
 
+	if (cpu_has_smd())
+		at91_clk_add(&sys_smd_clk);
+
 	/* MCK and CPU clock are "always on" */
 	clk_enable(&mck);
 	clk_enable(&h32mx_clk);
