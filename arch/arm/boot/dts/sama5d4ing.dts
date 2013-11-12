@@ -13,7 +13,13 @@
 	compatible = "atmel,sama5d4ing", "atmel,sama5d4", "atmel,sama5";
 
 	chosen {
+	    /* default cmdline for PROD FLASH version - Console is disable, kernel traces are 'quiet' */
+		/* bootargs = "consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw ing_security_mod=enable:1 lpj=1155072 quiet"; */
+	
+	    /* default cmdline for debug FLASH version - Console and kernel traces still presents */
 		/* bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1155072"; */
+
+   	    /* default cmdline for debug NFS version */
 		bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=/dev/nfs rw nfsroot=10.23.7.56:/home/lcruau/sw/telium3/nfsroot ip=dhcp rootwait ing_security_mod=enable:0";
 	};
 

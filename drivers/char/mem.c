@@ -946,4 +946,6 @@ static int __init chr_dev_init(void)
 	return tty_init();
 }
 
+//*** **    BMI Test
 fs_initcall(chr_dev_init);
+//*** **    BMI Test

@@ -37,6 +37,8 @@ struct atmel_hlcd_dma_desc {
 	u32	next;
 };
 
+#error  BMI_ERROR
+
 static void atmel_hlcdfb_update_dma_base(struct fb_info *info,
 
 			       struct fb_var_screeninfo *var)
@@ -45,7 +47,7 @@ static void atmel_hlcdfb_update_dma_base(struct fb_info *info,
 	struct fb_fix_screeninfo *fix = &info->fix;
 	unsigned long dma_addr;
 	struct atmel_hlcd_dma_desc *desc;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	dma_addr = (fix->smem_start + var->yoffset * fix->line_length
 		    + var->xoffset * var->bits_per_pixel / 8);
 
@@ -73,7 +75,7 @@ static void atmel_hlcdfb_update_dma_ovl(struct fb_info *info,
 	struct fb_fix_screeninfo *fix = &info->fix;
 	unsigned long dma_addr;
 	struct atmel_hlcd_dma_desc *desc;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	dma_addr = (fix->smem_start + var->yoffset * fix->line_length
 		    + var->xoffset * var->bits_per_pixel / 8);
 
@@ -102,7 +104,7 @@ static int atmel_bl_update_status(struct backlight_device *bl)
 	int power = sinfo->bl_power;
 	int brightness = bl->props.brightness;
 	u32 reg;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	/* REVISIT there may be a meaningful difference between
 	 * fb_blank and power ... there seem to be some cases
 	 * this doesn't handle correctly.
@@ -130,12 +132,13 @@ static int atmel_bl_update_status(struct backlight_device *bl)
 static int atmel_bl_get_brightness(struct backlight_device *bl)
 {
 	struct atmel_lcdfb_info *sinfo = bl_get_data(bl);
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return lcdc_readl(sinfo, ATMEL_LCDC_LCDCFG6) >> LCDC_LCDCFG6_PWMCVAL_OFFSET;
 }
 
 static void atmel_hlcdfb_init_contrast(struct atmel_lcdfb_info *sinfo)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	/* have some default contrast/backlight settings */
 	lcdc_writel(sinfo, ATMEL_LCDC_LCDCFG6, LCDC_LCDCFG6_PWMPOL |
 		(ATMEL_LCDC_CVAL_DEFAULT << LCDC_LCDCFG6_PWMCVAL_OFFSET));
@@ -143,11 +146,13 @@ static void atmel_hlcdfb_init_contrast(struct atmel_lcdfb_info *sinfo)
 #else
 static int atmel_bl_update_status(struct backlight_device *bl)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return 0;
 }
 
 static int atmel_bl_get_brightness(struct backlight_device *bl)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return ATMEL_LCDC_CVAL_DEFAULT;
 }
 
@@ -161,6 +166,7 @@ static const struct backlight_ops atmel_hlcdc_bl_ops = {
 
 void atmel_hlcdfb_start(struct atmel_lcdfb_info *sinfo)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	lcdc_writel(sinfo, ATMEL_LCDC_LCDEN, LCDC_LCDEN_CLKEN);
 	while (!(lcdc_readl(sinfo, ATMEL_LCDC_LCDSR) & LCDC_LCDSR_CLKSTS))
 		msleep(1);
@@ -177,6 +183,7 @@ void atmel_hlcdfb_start(struct atmel_lcdfb_info *sinfo)
 
 static void atmel_hlcdfb_stop(struct atmel_lcdfb_info *sinfo, u32 flags)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	/* Disable DISP signal */
 	lcdc_writel(sinfo, ATMEL_LCDC_LCDDIS, LCDC_LCDDIS_DISPDIS);
 	while ((lcdc_readl(sinfo, ATMEL_LCDC_LCDSR) & LCDC_LCDSR_DISPSTS))
@@ -204,7 +211,7 @@ static void atmel_hlcdfb_stop(struct atmel_lcdfb_info *sinfo, u32 flags)
 static u32 atmel_hlcdfb_get_rgbmode(struct fb_info *info)
 {
 	u32 value = 0;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	switch (info->var.bits_per_pixel) {
 	case 1:
 		value = LCDC_BASECFG1_CLUTMODE_1BPP | LCDC_BASECFG1_CLUTEN;
@@ -250,7 +257,7 @@ static int atmel_hlcdfb_setup_core_base(struct fb_info *info)
 	struct atmel_lcdfb_info *sinfo = info->par;
 	unsigned long value;
 	unsigned long clk_value_khz;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	dev_dbg(info->device, "%s:\n", __func__);
 	/* Set pixel clock */
 	clk_value_khz = clk_get_rate(sinfo->lcdc_clk) / 1000;
@@ -332,7 +339,7 @@ static int atmel_hlcdfb_setup_core_ovl(struct fb_info *info)
 {
 	struct atmel_lcdfb_info *sinfo = info->par;
 	u32 xpos, ypos, xres, yres, cfg9;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (info->var.nonstd >> 31) {
 		xpos = (info->var.nonstd >> 10) & 0x3ff;
 		ypos = info->var.nonstd & 0x3ff;
@@ -364,7 +371,7 @@ static int atmel_hlcdfb_setup_core_ovl(struct fb_info *info)
 static void atmelfb_limit_screeninfo(struct fb_var_screeninfo *var)
 {
 	u32 hbpw, hfpw;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (cpu_is_at91sam9x5()) {
 		hbpw = LCDC_LCDCFG3_HBPW;
 		hfpw = LCDC_LCDCFG3_HFPW;
@@ -394,7 +401,7 @@ static irqreturn_t atmel_hlcdfb_interrupt(int irq, void *dev_id)
 	struct fb_info *info = dev_id;
 	struct atmel_lcdfb_info *sinfo = info->par;
 	u32 status, baselayer_status;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	/* Check for error status via interrupt.*/
 	status = lcdc_readl(sinfo, ATMEL_LCDC_LCDISR);
 	if (status & LCDC_LCDISR_HEO)
@@ -423,7 +430,7 @@ static int atmel_hlcdfb_suspend(struct platform_device *pdev, pm_message_t mesg)
 	const struct platform_device_id *id = platform_get_device_id(pdev);
 	struct fb_info *info = platform_get_drvdata(pdev);
 	struct atmel_lcdfb_info *sinfo = info->par;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (strcmp(id->name, "atmel_hlcdfb_base"))
 		return 0;
 
@@ -448,7 +455,7 @@ static int atmel_hlcdfb_resume(struct platform_device *pdev)
 	const struct platform_device_id *id = platform_get_device_id(pdev);
 	struct fb_info *info = platform_get_drvdata(pdev);
 	struct atmel_lcdfb_info *sinfo = info->par;
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (strcmp(id->name, "atmel_hlcdfb_base"))
 		return 0;
 
@@ -501,11 +508,12 @@ MODULE_DEVICE_TABLE(platform, atmelfb_dev_table);
 static int __init atmel_hlcdfb_probe(struct platform_device *pdev)
 {
 	const struct platform_device_id *id = platform_get_device_id(pdev);
-
+printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return __atmel_lcdfb_probe(pdev, (struct atmel_lcdfb_devdata *)id->driver_data);
 }
 static int __exit atmel_hlcdfb_remove(struct platform_device *pdev)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return __atmel_lcdfb_remove(pdev);
 }
 
@@ -523,12 +531,14 @@ static struct platform_driver atmel_hlcdfb_driver = {
 
 static int __init atmel_hlcdfb_init(void)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return platform_driver_probe(&atmel_hlcdfb_driver, atmel_hlcdfb_probe);
 }
 module_init(atmel_hlcdfb_init);
 
 static void __exit atmel_hlcdfb_exit(void)
 {
+    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	platform_driver_unregister(&atmel_hlcdfb_driver);
 }
 module_exit(atmel_hlcdfb_exit);
