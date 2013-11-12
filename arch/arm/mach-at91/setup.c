@@ -19,11 +19,11 @@
 #include <mach/hardware.h>
 #include <mach/cpu.h>
 #include <mach/at91_dbgu.h>
-#include <mach/at91_pmc.h>
 
 #include "at91_shdwc.h"
 #include "soc.h"
 #include "generic.h"
+#include <mach/at91_pmc.h>
 
 struct at91_init_soc __initdata at91_boot_soc;
 
