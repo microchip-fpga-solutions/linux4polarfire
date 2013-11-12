@@ -13,13 +13,13 @@
 #include <asm/irq.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
+#include "clock.h"
 #include <mach/sama5d4.h>
 #include <mach/at91_pmc.h>
 #include <mach/cpu.h>
 
 #include "soc.h"
 #include "generic.h"
-#include "clock.h"
 #include "sam9_smc.h"
 
 /* --------------------------------------------------------------------
@@ -58,6 +58,11 @@ static struct clk pioE_clk = {
 static struct clk usart0_clk = {
 	.name		= "usart0_clk",
 	.pid		= SAMA5D4_ID_USART0,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk usart2_clk = {
+	.name		= "usart2_clk",
+	.pid		= SAMA5D4_ID_USART2,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk usart3_clk = {
@@ -128,6 +133,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&pioD_clk,
 	&pioE_clk,
 	&usart0_clk,
+	&usart2_clk,
 	&usart3_clk,
 	&usart4_clk,
 	&mmc0_clk,
@@ -156,6 +162,7 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("hclk", "f8020000.ethernet", &macb0_clk),
 	CLKDEV_CON_DEV_ID("pclk", "f8020000.ethernet", &macb0_clk),
 	CLKDEV_CON_DEV_ID("usart", "f802c000.serial", &usart0_clk),
+	CLKDEV_CON_DEV_ID("usart", "fc008000.serial", &usart2_clk),
 	CLKDEV_CON_DEV_ID("usart", "fc00c000.serial", &usart3_clk),
 	CLKDEV_CON_DEV_ID("usart", "fc010000.serial", &usart4_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "fc020000.timer", &tcb1_clk),
