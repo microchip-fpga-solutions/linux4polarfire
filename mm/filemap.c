@@ -1096,10 +1096,6 @@ static void shrink_readahead_size_eio(struct file *filp,
  * This is really ugly. But the goto's actually try to clarify some
  * of the logic when it comes to error handling etc.
  */
-#ifdef CONFIG_INGENICO_SECURE_MOD
-extern int sec_mod_fct_auth_filep(struct file *, const struct page *);
-#endif
-
 static void do_generic_file_read(struct file *filp, loff_t *ppos,
 		read_descriptor_t *desc, read_actor_t actor)
 {
@@ -1182,14 +1178,6 @@ page_ok:
 			}
 		}
 		nr = nr - offset;
-
-#ifdef CONFIG_INGENICO_SECURE_MOD
-		/* Check if access granted */
-		if(sec_mod_fct_auth_filep(filp, page) < 0) {
-			error = -EPERM;
-			goto readpage_error;
-		}
-#endif
 
 		/* If users can be writing to this page using arbitrary
 		 * virtual addresses, take care about potential aliasing

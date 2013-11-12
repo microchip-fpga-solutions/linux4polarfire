@@ -35,9 +35,6 @@
 #include <linux/ipc_namespace.h>
 #include <linux/user_namespace.h>
 #include <linux/slab.h>
-#include <linux/xattr.h>
-#include <linux/posix_acl.h>
-#include <linux/generic_acl.h>
 
 #include <net/sock.h>
 #include "util.h"
@@ -89,9 +86,6 @@ struct mqueue_inode_info {
 };
 
 static const struct inode_operations mqueue_dir_inode_operations;
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-static const struct inode_operations mqueue_inode_operations;
-#endif
 static const struct file_operations mqueue_file_operations;
 static const struct super_operations mqueue_super_ops;
 static void remove_notification(struct mqueue_inode_info *info);
@@ -99,14 +93,6 @@ static void remove_notification(struct mqueue_inode_info *info);
 static struct kmem_cache *mqueue_inode_cachep;
 
 static struct ctl_table_header * mq_sysctl_table;
-
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-static const struct xattr_handler *mqueue_xattr_handlers[] = {
-      &generic_acl_access_handler,
-      &generic_acl_default_handler,
-      NULL
-};
-#endif
 
 static inline struct mqueue_inode_info *MQUEUE_I(struct inode *inode)
 {
@@ -245,16 +231,9 @@ static struct inode *mqueue_get_inode(struct super_block *sb,
 	inode->i_gid = current_fsgid();
 	inode->i_mtime = inode->i_ctime = inode->i_atime = CURRENT_TIME;
 
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-      cache_no_acl(inode);
-#endif
-
 	if (S_ISREG(mode)) {
 		struct mqueue_inode_info *info;
 		unsigned long mq_bytes, mq_treesize;
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-      inode->i_op = &mqueue_inode_operations;
-#endif
 
 		inode->i_fop = &mqueue_file_operations;
 		inode->i_size = FILENT_SIZE;
@@ -336,10 +315,6 @@ static int mqueue_fill_super(struct super_block *sb, void *data, int silent)
 	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
 	sb->s_magic = MQUEUE_MAGIC;
 	sb->s_op = &mqueue_super_ops;
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-   sb->s_xattr = mqueue_xattr_handlers;
-   sb->s_flags |= MS_POSIXACL;
-#endif
 
 	inode = mqueue_get_inode(sb, ns, S_IFDIR | S_ISVTX | S_IRWXUGO, NULL);
 	if (IS_ERR(inode))
@@ -475,16 +450,6 @@ static int mqueue_create(struct inode *dir, struct dentry *dentry,
 		goto out_unlock;
 	}
 
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-   error = generic_acl_init(inode, dir);
-   if (error) {
-      iput(inode);
-      spin_lock(&mq_lock);
-      ipc_ns->mq_queues_count--;
-      goto out_unlock;
-   }
-#endif
-   
 	put_ipc_ns(ipc_ns);
 	dir->i_size += DIRENT_SIZE;
 	dir->i_ctime = dir->i_mtime = dir->i_atime = CURRENT_TIME;
@@ -1403,45 +1368,10 @@ out:
 	return ret;
 }
 
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-static int mqueue_setattr(struct dentry *dentry, struct iattr *attr)
-{
-   struct inode *inode = dentry->d_inode;
-   int error;
-   error = simple_setattr(dentry, attr);
-   if (error)
-      return error;
-   
-   if (attr->ia_valid & ATTR_MODE)
-      error = generic_acl_chmod(inode);
-      
-   return error;
-}
-#endif
-   
 static const struct inode_operations mqueue_dir_inode_operations = {
 	.lookup = simple_lookup,
 	.create = mqueue_create,
 	.unlink = mqueue_unlink,
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-   .setxattr    = generic_setxattr,
-   .getxattr    = generic_getxattr,
-   .listxattr   = generic_listxattr,
-   .removexattr = generic_removexattr,
-   //.check_acl   = generic_check_acl,
-   .setattr     = mqueue_setattr,
-#endif
-};
-
-static const struct inode_operations mqueue_inode_operations = {
-#ifdef CONFIG_MQUEUE_POSIX_ACL
-   .setxattr    = generic_setxattr,
-   .getxattr    = generic_getxattr,
-   .listxattr   = generic_listxattr,
-   .removexattr = generic_removexattr,
-   //.check_acl   = generic_check_acl,
-   .setattr     = mqueue_setattr,
-#endif
 };
 
 static const struct file_operations mqueue_file_operations = {

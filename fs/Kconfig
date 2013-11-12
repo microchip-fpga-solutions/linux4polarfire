@@ -152,15 +152,6 @@ config TMPFS_XATTR
 
 	  If unsure, say N.
 
-config MQUEUE_POSIX_ACL
-      bool "Mqueue POSIX Access Control Lists support"
-      default y
-      depends on POSIX_MQUEUE
-      select GENERIC_ACL
-      help
-         Mqueue is a file system which is used to suport POSIX msg queue.
-         Say y to get Access Control Lists support for mqueue file system.
-
 config HUGETLBFS
 	bool "HugeTLB file system support"
 	depends on X86 || IA64 || SPARC64 || (S390 && 64BIT) || \

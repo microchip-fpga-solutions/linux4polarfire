@@ -29,8 +29,6 @@
 
 #include <video/atmel_lcdfb.h>
 
-#error  BMI_ERROR
-
 /* configurable parameters */
 #define ATMEL_LCDC_CVAL_DEFAULT		0xc8
 
@@ -40,7 +38,7 @@ static void init_backlight(struct atmel_lcdfb_info *sinfo)
 {
 	struct backlight_properties props;
 	struct backlight_device	*bl;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	sinfo->bl_power = FB_BLANK_UNBLANK;
 
 	if (sinfo->backlight || !sinfo->dev_data->bl_ops)
@@ -65,7 +63,6 @@ printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 
 static void exit_backlight(struct atmel_lcdfb_info *sinfo)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (sinfo->backlight)
 		backlight_device_unregister(sinfo->backlight);
 }
@@ -74,13 +71,11 @@ static void exit_backlight(struct atmel_lcdfb_info *sinfo)
 
 static void init_backlight(struct atmel_lcdfb_info *sinfo)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	dev_warn(&sinfo->pdev->dev, "backlight control is not available\n");
 }
 
 static void exit_backlight(struct atmel_lcdfb_info *sinfo)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 }
 
 #endif
@@ -97,7 +92,7 @@ static struct fb_fix_screeninfo atmel_lcdfb_fix = {
 static inline void atmel_lcdfb_free_video_memory(struct atmel_lcdfb_info *sinfo)
 {
 	struct fb_info *info = sinfo->info;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	dma_free_writecombine(info->device, info->fix.smem_len,
 				info->screen_base, info->fix.smem_start);
 
@@ -118,7 +113,7 @@ static int atmel_lcdfb_alloc_video_memory(struct atmel_lcdfb_info *sinfo)
 	struct fb_info *info = sinfo->info;
 	struct fb_var_screeninfo *var = &info->var;
 	unsigned int smem_len;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	smem_len = (var->xres_virtual * var->yres_virtual
 		    * ((var->bits_per_pixel + 7) / 8));
 	info->fix.smem_len = max(smem_len, sinfo->smem_len);
@@ -151,7 +146,7 @@ static const struct fb_videomode *atmel_lcdfb_choose_mode(struct fb_var_screenin
 {
 	struct fb_videomode varfbmode;
 	const struct fb_videomode *fbmode = NULL;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	fb_var_to_videomode(&varfbmode, var);
 	fbmode = fb_find_nearest_mode(&varfbmode, &info->modelist);
 	if (fbmode)
@@ -189,7 +184,7 @@ static int atmel_lcdfb_check_var(struct fb_var_screeninfo *var,
 	struct device *dev = info->device;
 	struct atmel_lcdfb_info *sinfo = info->par;
 	unsigned long clk_value_khz;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	clk_value_khz = clk_get_rate(sinfo->lcdc_clk) / 1000;
 
 	dev_dbg(dev, "%s:\n", __func__);
@@ -307,7 +302,6 @@ printk("[%s][%d]\n", __FUNCTION__, __LINE__);
  */
 static void atmel_lcdfb_reset(struct atmel_lcdfb_info *sinfo)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	might_sleep();
 
 	if (sinfo->dev_data->stop)
@@ -334,7 +328,7 @@ static int atmel_lcdfb_set_par(struct fb_info *info)
 {
 	struct atmel_lcdfb_info *sinfo = info->par;
 	unsigned long bits_per_line;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	might_sleep();
 
 	dev_dbg(info->device, "%s:\n", __func__);
@@ -374,7 +368,6 @@ static inline unsigned int chan_to_field(unsigned int chan, const struct fb_bitf
 {
 	chan &= 0xffff;
 	chan >>= 16 - bf->length;
-	printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return chan << bf->offset;
 }
 
@@ -415,7 +408,7 @@ static int atmel_lcdfb_setcolreg(unsigned int regno, unsigned int red,
 	if (info->var.grayscale)
 		red = green = blue = (19595 * red + 38470 * green
 				      + 7471 * blue) >> 16;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	switch (info->fix.visual) {
 	case FB_VISUAL_TRUECOLOR:
 		if (regno < 16) {
@@ -462,7 +455,7 @@ static int atmel_lcdfb_pan_display(struct fb_var_screeninfo *var,
 			       struct fb_info *info)
 {
 	struct atmel_lcdfb_info *sinfo = info->par;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	dev_dbg(info->device, "%s\n", __func__);
 
 	sinfo->dev_data->update_dma(info, var);
@@ -473,7 +466,7 @@ printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 static int atmel_lcdfb_blank(int blank_mode, struct fb_info *info)
 {
 	struct atmel_lcdfb_info *sinfo = info->par;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	switch (blank_mode) {
 	case FB_BLANK_UNBLANK:
 	case FB_BLANK_NORMAL:
@@ -514,7 +507,7 @@ static void atmel_lcdfb_task(struct work_struct *work)
 {
 	struct atmel_lcdfb_info *sinfo =
 		container_of(work, struct atmel_lcdfb_info, task);
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	atmel_lcdfb_reset(sinfo);
 }
 
@@ -522,7 +515,7 @@ static int __init atmel_lcdfb_init_fbinfo(struct atmel_lcdfb_info *sinfo)
 {
 	struct fb_info *info = sinfo->info;
 	int ret = 0;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	info->var.activate |= FB_ACTIVATE_FORCE | FB_ACTIVATE_NOW;
 
 	dev_info(info->device,
@@ -541,7 +534,6 @@ printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 
 void atmel_lcdfb_start_clock(struct atmel_lcdfb_info *sinfo)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (sinfo->bus_clk)
 		clk_enable(sinfo->bus_clk);
 	clk_enable(sinfo->lcdc_clk);
@@ -550,7 +542,6 @@ EXPORT_SYMBOL_GPL(atmel_lcdfb_start_clock);
 
 void atmel_lcdfb_stop_clock(struct atmel_lcdfb_info *sinfo)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	if (sinfo->bus_clk)
 		clk_disable(sinfo->bus_clk);
 	clk_disable(sinfo->lcdc_clk);
@@ -569,7 +560,7 @@ int __atmel_lcdfb_probe(struct platform_device *pdev,
 	struct resource *regs = NULL, *clut = NULL;
 	struct resource *map = NULL;
 	int ret;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	dev_dbg(dev, "%s BEGIN\n", __func__);
 
 	ret = -ENOMEM;
@@ -815,7 +806,7 @@ int __atmel_lcdfb_remove(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct fb_info *info = dev_get_drvdata(dev);
 	struct atmel_lcdfb_info *sinfo;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	if (!info || !info->par)
 		return 0;
 	sinfo = info->par;
@@ -857,7 +848,7 @@ static int atmel_lcdfb_bus_probe(struct platform_device *pdev)
 {
 	struct pinctrl *pinctrl;
 	struct device *dev = &pdev->dev;
-printk("[%s][%d]\n", __FUNCTION__, __LINE__);
+
 	pinctrl = devm_pinctrl_get_select_default(dev);
 	if (IS_ERR(pinctrl)) {
 		dev_err(dev, "Failed to request pinctrl\n");
@@ -878,13 +869,11 @@ static struct platform_driver atmel_lcdfb_bus = {
 
 static int __init atmel_lcdfb_bus_init(void)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	return platform_driver_register(&atmel_lcdfb_bus);
 }
 
 static void __exit atmel_lcdfb_bus_exit(void)
 {
-    printk("[%s][%d]\n", __FUNCTION__, __LINE__);
 	platform_driver_unregister(&atmel_lcdfb_bus);
 }
 

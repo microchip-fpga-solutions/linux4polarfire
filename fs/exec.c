@@ -1545,8 +1545,6 @@ static int do_execve_common(const char *filename,
 		goto out;
 
 	/* execve succeeded */
-//	printk("exec: %d -> %s\n", current->pid, filename);
-	
 	current->fs->in_exec = 0;
 	current->in_execve = 0;
 	acct_update_integrals(current);

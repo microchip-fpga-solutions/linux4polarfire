@@ -82,12 +82,6 @@ EXPORT_SYMBOL(max_mapnr);
 EXPORT_SYMBOL(mem_map);
 #endif
 
-#ifdef CONFIG_INGENICO_SECURE_MOD
-#include "../drivers/ingenico/secure/inc_exp/sec-authenticate.h"
-int (*sec_mod_fct___auth_exec)(const struct vm_area_struct *vma, const struct page *page);
-EXPORT_SYMBOL(sec_mod_fct___auth_exec);
-#endif
-
 unsigned long num_physpages;
 /*
  * A number of key systems in x86 including ioremap() rely on the assumption
@@ -3463,17 +3457,6 @@ static int __do_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 		if (anon)
 			page_cache_release(vmf.page);
 	}
-
-#ifdef CONFIG_INGENICO_SECURE_MOD
-	if (vma->vm_file && !(vma->vm_flags & VM_WRITE) && (vma->vm_flags & VM_READ) ) {
-		if(sec_mod_fct___auth_exec != NULL) {
-			if(sec_mod_fct___auth_exec(vma, page) < 0) {
-				clear_bit(PG_uptodate, &page->flags);
-				goto uncharge_out;
-			}
-		}
-	}
-#endif
 
 	return ret;
 
