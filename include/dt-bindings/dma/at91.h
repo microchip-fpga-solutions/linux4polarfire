@@ -28,6 +28,19 @@
 
 
 /* ---------- XDMAC ---------- */
+#define AT91_XDMAC_DT_MEM_IF_MASK	(0x1)
+#define AT91_XDMAC_DT_MEM_IF_OFFSET	(16)
+#define AT91_XDMAC_DT_MEM_IF(mem_if)	(((mem_if) & AT91_XDMAC_DT_MEM_IF_MASK) \
+					<< AT91_XDMAC_DT_MEM_IF_OFFSET)
+#define AT91_XDMAC_DT_GET_MEM_IF(cfg)	(((cfg) >> AT91_XDMAC_DT_MEM_IF_OFFSET) \
+					& AT91_XDMAC_DT_MEM_IF_MASK)
+
+#define AT91_XDMAC_DT_PER_IF_MASK	(0x1)
+#define AT91_XDMAC_DT_PER_IF_OFFSET	(0)
+#define AT91_XDMAC_DT_PER_IF(per_if)	(((per_if) & AT91_XDMAC_DT_PER_IF_MASK) \
+					<< AT91_XDMAC_DT_PER_IF_OFFSET)
+#define AT91_XDMAC_DT_GET_PER_IF(cfg)	(((cfg) >> AT91_XDMAC_DT_PER_IF_OFFSET) \
+					& AT91_XDMAC_DT_PER_IF_MASK)
 
 #define AT91_XDMAC_DT_PERID_MASK	(0x7f)
 #define AT91_XDMAC_DT_PERID_OFFSET	(24)

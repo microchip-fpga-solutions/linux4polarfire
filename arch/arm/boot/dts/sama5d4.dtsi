@@ -114,17 +114,19 @@
 			};
 
 			dma1: dma-controller@f0004000 {
-				compatible = "atmel,islero-dma";
+				compatible = "atmel,sama5d4-dma";
 				reg = <0xf0004000 0x200>;
 				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
-				#dma-cells = <1>;
+				#dma-cells = <2>;
 			};
 
 			mmc0: mmc@f8000000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
 				interrupts = <35 IRQ_TYPE_LEVEL_HIGH 0>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(0) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(0) | AT91_XDMAC_DT_DWIDTH(0x2))>;
 				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;
@@ -152,8 +154,12 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf8024000 0x4000>;
 				interrupts = <34 4 6>;
-				dmas = <&dma1 AT91_XDMAC_DT_PERID(6)>,
-				       <&dma1 AT91_XDMAC_DT_PERID(7)>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					AT91_XDMAC_DT_PERID(6)>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					AT91_XDMAC_DT_PERID(7)>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_i2c2>;
@@ -166,8 +172,12 @@
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc008000 0x100>;
 				interrupts = <29 IRQ_TYPE_LEVEL_HIGH 5>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(16) | AT91_XDMAC_DT_DWIDTH(0x0))>,
-				       <&dma1 (AT91_XDMAC_DT_PERID(17) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(16) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(17) | AT91_XDMAC_DT_DWIDTH(0x0))>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart2 &pinctrl_usart2_rts &pinctrl_usart2_cts>;
@@ -178,8 +188,12 @@
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc00c000 0x100>;
 				interrupts = <30 IRQ_TYPE_LEVEL_HIGH 5>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(18) | AT91_XDMAC_DT_DWIDTH(0x0))>,
-				       <&dma1 (AT91_XDMAC_DT_PERID(19) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(18) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(19) | AT91_XDMAC_DT_DWIDTH(0x0))>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart3>;
@@ -190,8 +204,12 @@
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc010000 0x100>;
 				interrupts = <31 IRQ_TYPE_LEVEL_HIGH 5>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(20) | AT91_XDMAC_DT_DWIDTH(0x0))>,
-				       <&dma1 (AT91_XDMAC_DT_PERID(21) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(20) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(21) | AT91_XDMAC_DT_DWIDTH(0x0))>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart4>;
