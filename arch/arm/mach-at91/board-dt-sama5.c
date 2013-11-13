@@ -75,7 +75,9 @@ static struct atmel_lcdfb_info __initdata ek_lcdc_primary_dev_data = {
    .lcdcon_is_backlight    = true,
    .alpha_enabled          = false,
    .default_bpp            = 32,
+#ifdef INGENICO_MULTIPLE_FBDEV_MOD
    .layer_index            = 0,
+#endif
 	/* Reserve enough memory for 32bpp and full res, with at least, some auxiliary back buffer (directfb) */
 	.smem_len			      = (320 * 480 * 4) + (320 * 480 * 4),
    /* default_lcdcon2 is used for LCDCFG5 */
@@ -89,7 +91,9 @@ static struct atmel_lcdfb_info __initdata ek_lcdc_overlay1_dev_data = {
 	.lcdcon_is_backlight    = true,
 	.alpha_enabled          = false,
 	.default_bpp            = 32,
+#ifdef INGENICO_MULTIPLE_FBDEV_MOD
    .layer_index            = 1,
+#endif
 	/* Reserve enough memory for 32bpp and full res and that's it (for now) */
 	.smem_len			      = (320 * 480 * 4),
 	/* In sama5 default_lcdcon2 is used for LCDCFG5 */
@@ -103,7 +107,9 @@ static struct atmel_lcdfb_info __initdata ek_lcdc_overlay2_dev_data = {
 	.lcdcon_is_backlight    = true,
 	.alpha_enabled          = false,
 	.default_bpp            = 32,
+#ifdef INGENICO_MULTIPLE_FBDEV_MOD
    .layer_index            = 2,
+#endif
 	/* Reserve enough memory for 32bpp and full res and that's it (for now) */
 	.smem_len			      = (320 * 480 * 4),
 	/* In sama5 default_lcdcon2 is used for LCDCFG5 */
@@ -117,7 +123,9 @@ static struct atmel_lcdfb_info __initdata ek_lcdc_heo_dev_data = {
 	.lcdcon_is_backlight    = true,
 	.alpha_enabled          = false,
 	.default_bpp            = 32,
+#ifdef INGENICO_MULTIPLE_FBDEV_MOD
    .layer_index            = 3,
+#endif
 	/* Reserve enough memory for 32bpp and full res and that's it (for now) */
 	.smem_len			      = (320 * 480 * 4),
 	/* In sama5 default_lcdcon2 is used for LCDCFG5 */
