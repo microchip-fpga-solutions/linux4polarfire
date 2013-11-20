@@ -20,6 +20,9 @@
 	interrupt-parent = <&aic>;
 
 	aliases {
+		serial0 = &usart3;
+		serial1 = &usart4;
+		serial2 = &usart2;
 		gpio0 = &pioA;
 		gpio1 = &pioB;
 		gpio2 = &pioC;
@@ -111,17 +114,19 @@
 			};
 
 			dma1: dma-controller@f0004000 {
-				compatible = "atmel,islero-dma";
+				compatible = "atmel,sama5d4-dma";
 				reg = <0xf0004000 0x200>;
 				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
-				#dma-cells = <1>;
+				#dma-cells = <2>;
 			};
 
 			mmc0: mmc@f8000000 {
 				compatible = "atmel,hsmci";
 				reg = <0xf8000000 0x600>;
 				interrupts = <35 IRQ_TYPE_LEVEL_HIGH 0>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(0) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(0) | AT91_XDMAC_DT_DWIDTH(0x2))>;
 				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc0_clk_cmd_dat0 &pinctrl_mmc0_dat1_3>;
@@ -134,7 +139,9 @@
 				compatible = "atmel,hsmci";
 				reg = <0xfC000000 0x600>;
 				interrupts = <36 IRQ_TYPE_LEVEL_HIGH 0>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(1) | AT91_XDMAC_DT_DWIDTH(0x2))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(1) | AT91_XDMAC_DT_DWIDTH(0x2))>;
 				dma-names = "rxtx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
@@ -162,8 +169,12 @@
 				compatible = "atmel,at91sam9x5-i2c";
 				reg = <0xf8024000 0x4000>;
 				interrupts = <34 4 6>;
-				dmas = <&dma1 AT91_XDMAC_DT_PERID(6)>,
-				       <&dma1 AT91_XDMAC_DT_PERID(7)>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					AT91_XDMAC_DT_PERID(6)>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					AT91_XDMAC_DT_PERID(7)>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_i2c2>;
@@ -172,12 +183,32 @@
 				status = "disabled";
 			};
 
+			usart2: serial@fc008000 {
+				compatible = "atmel,at91sam9260-usart";
+				reg = <0xfc008000 0x100>;
+				interrupts = <29 IRQ_TYPE_LEVEL_HIGH 5>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(16) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(17) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dma-names = "tx", "rx";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_usart2 &pinctrl_usart2_rts &pinctrl_usart2_cts>;
+				status = "disabled";
+			};
+
 			usart3: serial@fc00c000 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc00c000 0x100>;
 				interrupts = <30 IRQ_TYPE_LEVEL_HIGH 5>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(18) | AT91_XDMAC_DT_DWIDTH(0x0))>,
-				       <&dma1 (AT91_XDMAC_DT_PERID(19) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(18) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(19) | AT91_XDMAC_DT_DWIDTH(0x0))>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart3>;
@@ -188,8 +219,12 @@
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfc010000 0x100>;
 				interrupts = <31 IRQ_TYPE_LEVEL_HIGH 5>;
-				dmas = <&dma1 (AT91_XDMAC_DT_PERID(20) | AT91_XDMAC_DT_DWIDTH(0x0))>,
-				       <&dma1 (AT91_XDMAC_DT_PERID(21) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(20) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(21) | AT91_XDMAC_DT_DWIDTH(0x0))>;
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart4>;
@@ -297,7 +332,7 @@
 							 AT91_PIOA 25 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDDISP, conflicts with TD0 */
 							 AT91_PIOA 27 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDHSYNC, conflicts with PWML0 and SPI1_NPCS2 */
 							 AT91_PIOA 28 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDPCK, conflicts with PWMH1 and SPI1_NPCS3 */
-						 /* AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE */ /* LCDPWM, conflicts with PCK0 */
+							 AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDPWM, conflicts with PCK0 */
 							 AT91_PIOA 26 AT91_PERIPH_A AT91_PINCTRL_NONE /* LCDVSYNC, conflicts with PWMH0 and SPI1_NPCS1 */
 							>;
 					};
@@ -396,6 +431,20 @@
 							 AT91_PIOC 12 AT91_PERIPH_A AT91_PINCTRL_NONE>;	/* PC12 periph A Data bit 7 */
 					};
 				};
+				usart2 {
+					pinctrl_usart2: usart2-0 {
+						atmel,pins =
+							<AT91_PIOB 4 AT91_PERIPH_B AT91_PINCTRL_NONE		/* RXD - conflicts with G0_CRS, ISI_HSYNC */
+							 AT91_PIOB 5 AT91_PERIPH_B AT91_PINCTRL_PULL_UP		/* TXD - conflicts with G0_COL, PCK2 */
+							>;
+					};
+					pinctrl_usart2_rts: usart2_rts-0 {
+						atmel,pins = <AT91_PIOB 11 AT91_PERIPH_B AT91_PINCTRL_NONE>;	/* conflicts with G0_RX3, PWMH1 */
+					};
+					pinctrl_usart2_cts: usart2_cts-0 {
+						atmel,pins = <AT91_PIOB 3 AT91_PERIPH_B AT91_PINCTRL_NONE>;	/* conflicts with G0_TXER, ISI_VSYNC */
+					};
+				};
 				usart3 {
 					pinctrl_usart3: usart3-0 {
 						atmel,pins =
@@ -410,6 +459,12 @@
 							<AT91_PIOE 26 AT91_PERIPH_B AT91_PINCTRL_NONE		/* RXD */
 							 AT91_PIOE 27 AT91_PERIPH_B AT91_PINCTRL_PULL_UP	/* TXD */
 							>;
+					};
+					pinctrl_usart4_rts: usart4_rts-0 {
+						atmel,pins = <AT91_PIOE 28 AT91_PERIPH_B AT91_PINCTRL_NONE>;	/* conflicts with NWAIT, A19 */
+					};
+					pinctrl_usart4_cts: usart4_cts-0 {
+						atmel,pins = <AT91_PIOE 0 AT91_PERIPH_C AT91_PINCTRL_NONE>;	/* conflicts with A0/NBS0, MCI0_CDB */
 					};
 				};
 			};
@@ -577,7 +632,7 @@
 			#size-cells = <1>;
 			ranges;
 			reg = <	0x80000000 0x08000000	/* EBI CS3 */
-				0xfc05c600 0x00000200	/* ignored (no NAND_ECC_HW, no PMECC) */
+				0xfc05c600 0x00000200	/* SMC regs */
 				>;
 			atmel,nand-addr-offset = <21>;
 			atmel,nand-cmd-offset = <22>;
@@ -585,20 +640,6 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_nand>;
 			status = "disabled";
-
-			/*
-			nfc@90000000 {
-				compatible = "atmel,sama5d3-nfc";
-				#address-cells = <1>;
-				#size-cells = <1>;
-				reg = <
-					0x90000000 0x10000000 /* NFC Command Registers *
-					0xfc05c000 0x00000070 /* HSMC regs *
-					0x00100000 0x00100000 /* NFC SRAM banks *
-				>;
-				atmel,write-by-sram;
-			};
-			*/
 		};
 	};
 };

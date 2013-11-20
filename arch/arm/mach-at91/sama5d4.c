@@ -13,13 +13,13 @@
 #include <asm/irq.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
+#include "clock.h"
 #include <mach/sama5d4.h>
 #include <mach/at91_pmc.h>
 #include <mach/cpu.h>
 
 #include "soc.h"
 #include "generic.h"
-#include "clock.h"
 #include "sam9_smc.h"
 
 /* --------------------------------------------------------------------
@@ -58,6 +58,11 @@ static struct clk pioE_clk = {
 static struct clk usart0_clk = {
 	.name		= "usart0_clk",
 	.pid		= SAMA5D4_ID_USART0,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
+static struct clk usart2_clk = {
+	.name		= "usart2_clk",
+	.pid		= SAMA5D4_ID_USART2,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
 static struct clk usart3_clk = {
@@ -130,6 +135,11 @@ static struct clk vdec_clk = {
 	.pid		= SAMA5D4_ID_VDEC,
 	.type		= CLK_TYPE_PERIPHERAL | CLK_TYPE_PERIPH_H64MX,
 };
+static struct clk smd_clk = {
+	.name		= "smd_clk",
+	.pid		= SAMA5D4_ID_SMD,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 
 static struct clk *periph_clocks[] __initdata = {
 	&pioA_clk,
@@ -138,6 +148,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&pioD_clk,
 	&pioE_clk,
 	&usart0_clk,
+	&usart2_clk,
 	&usart3_clk,
 	&usart4_clk,
 	&mmc0_clk,
@@ -152,6 +163,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&macb0_clk,
 	&twi2_clk,
 	&vdec_clk,
+	&smd_clk,
 };
 
 static struct clk_lookup periph_clocks_lookups[] = {
@@ -162,6 +174,7 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("hclk", "500000.ohci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ohci_clk", "500000.ohci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("ehci_clk", "600000.ehci", &uhphs_clk),
+	CLKDEV_CON_DEV_ID("smd_clk", "900000.smd", &smd_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "f0004000.dma-controller", &dma1_clk),
 	CLKDEV_CON_DEV_ID("mci_clk", "f8000000.mmc", &mmc0_clk),
 	CLKDEV_CON_DEV_ID("mci_clk", "fc000000.mmc", &mmc1_clk),
@@ -170,6 +183,7 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("hclk", "f8020000.ethernet", &macb0_clk),
 	CLKDEV_CON_DEV_ID("pclk", "f8020000.ethernet", &macb0_clk),
 	CLKDEV_CON_DEV_ID("usart", "f802c000.serial", &usart0_clk),
+	CLKDEV_CON_DEV_ID("usart", "fc008000.serial", &usart2_clk),
 	CLKDEV_CON_DEV_ID("usart", "fc00c000.serial", &usart3_clk),
 	CLKDEV_CON_DEV_ID("usart", "fc010000.serial", &usart4_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "fc020000.timer", &tcb1_clk),

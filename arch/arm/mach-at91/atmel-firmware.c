@@ -71,6 +71,21 @@ static int atmel_nwd_pmc_usb_setup(void)
 	return atmel_smc(SMC_CMD_PMC_USB_SETUP, 0, 0, 0);
 }
 
+static int atmel_nwd_pmc_smd_setup(u32 reg_value)
+{
+	return atmel_smc(SMC_CMD_PMC_SMD_SETUP, reg_value, 0, 0);
+}
+
+/*
+ * RSTC
+ */
+static int atmel_nwd_pm_restart(void)
+{
+	atmel_smc(SMC_CMD_PM_RESTART, 0, 0, 0);
+
+	return 0;
+}
+
 /*
  * Ingenico specific
  */
@@ -79,13 +94,12 @@ static int atmel_nwd_idle(void)
 	return atmel_smc(0, 0, 0, 0);
 }
 
-static int atmel_nwd_restart(void)
+static int atmel_nwd_reboot(void)
 {
 	return atmel_smc(SMC_CMD_REBOOT, 0, 0, 0);
 }
 
-#define SMC_CMD_REBOOT		0x80000030
-static const struct firmware_ops atmel_firmware_ops = {
+const struct firmware_ops atmel_firmware_ops = {
 	.l2x0_init		= atmel_nwd_l2cache_enable,
 	.l2x0_disable		= atmel_nwd_l2cache_disable,
 	.pmc_read_reg		= atmel_nwd_pmc_read_reg,
@@ -93,9 +107,13 @@ static const struct firmware_ops atmel_firmware_ops = {
 	.pmc_sys_clk		= atmel_nwd_pmc_sys_clk,
 	.pmc_uckr_clk		= atmel_nwd_pmc_uckr_clk,
 	.pmc_usb_setup		= atmel_nwd_pmc_usb_setup,
+	.pmc_smd_setup		= atmel_nwd_pmc_smd_setup,
+	.pm_restart		= atmel_nwd_pm_restart,
 	.do_idle		= atmel_nwd_idle,
-	.do_restart		= atmel_nwd_restart,
+	.do_restart		= atmel_nwd_reboot,
 };
+
+EXPORT_SYMBOL(firmware_ops);
 
 void atmel_firmware_init(void)
 {

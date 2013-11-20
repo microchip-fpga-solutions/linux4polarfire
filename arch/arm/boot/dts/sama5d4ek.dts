@@ -104,9 +104,28 @@
 				status = "okay";
 			};
 
-			/* usart3: serial@fc00c000 {
+			macb0: ethernet@f8020000 {
+				phy-mode = "rmii";
 				status = "okay";
-			}; */
+			};
+
+			i2c2: i2c@f8024000 {
+				status = "okay";
+
+				24c256@50 {
+					compatible = "24c256";
+					reg = <0x50>;
+					pagesize = <64>;
+				};
+			};
+
+			usart2: serial@fc008000 {
+				status = "okay";
+			};
+
+			usart3: serial@fc00c000 {
+				status = "okay";
+			};
 
 			usart4: serial@fc010000 {
 				status = "okay";
@@ -195,9 +214,41 @@
 			status = "okay";
 		};
 
-		vdec0: vdec@00300000 {
+		nand0: nand@80000000 {
+			nand-bus-width = <8>;
+			nand-ecc-mode = "soft_bch";
+			nand-on-flash-bbt;
 			status = "okay";
-		};
 
+			at91bootstrap@0 {
+				label = "at91bootstrap";
+				reg = <0x0 0x40000>;
+			};
+
+			bootloader@40000 {
+				label = "bootloader";
+				reg = <0x40000 0x80000>;
+			};
+
+			bootloaderenv@c0000 {
+				label = "bootloader env";
+				reg = <0xc0000 0xc0000>;
+			};
+
+			dtb@180000 {
+				label = "device tree";
+				reg = <0x180000 0x80000>;
+			};
+
+			kernel@200000 {
+				label = "kernel";
+				reg = <0x200000 0x600000>;
+			};
+
+			rootfs@800000 {
+				label = "rootfs";
+				reg = <0x800000 0x0f800000>;
+			};
+		};
 	};
 };

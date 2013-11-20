@@ -19,6 +19,8 @@
 #ifndef __ASSEMBLY__
 extern void __iomem *at91_pmc_base;
 
+extern int clk_set_smd_parent(struct clk *clk, struct clk *parent);
+
 #if defined(CONFIG_SOC_SAMA5D4)
 /* No PMC in NWd for SAMA5D4 */
 #define at91_pmc_read(field) 0
@@ -44,6 +46,7 @@ extern void __iomem *at91_pmc_base;
 #define		AT91RM9200_PMC_UDP	(1 <<  1)		/* USB Devcice Port Clock [AT91RM9200 only] */
 #define		AT91RM9200_PMC_MCKUDP	(1 <<  2)		/* USB Device Port Master Clock Automatic Disable on Suspend [AT91RM9200 only] */
 #define		AT91RM9200_PMC_UHP	(1 <<  4)		/* USB Host Port Clock [AT91RM9200 only] */
+#define		AT91_PMC_SYS_SMD	(1 <<  4)		/* Soft Modem Clock [some SAM9 and SAMA5D only] */
 #define		AT91SAM926x_PMC_UHP	(1 <<  6)		/* USB Host Port Clock [AT91SAM926x only] */
 #define		AT91SAM926x_PMC_UDP	(1 <<  7)		/* USB Devcice Port Clock [AT91SAM926x only] */
 #define		AT91_PMC_PCK0		(1 <<  8)		/* Programmable Clock 0 */

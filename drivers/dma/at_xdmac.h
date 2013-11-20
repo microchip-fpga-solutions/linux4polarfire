@@ -129,9 +129,6 @@
 #define AT_XDMAC_MBR_UBC_NDEN	(0x1 << 26)
 #define AT_XDMAC_MBR_UBC_NDV1	(0x1 << 27)
 
-#define AT_XDMAC_MEM_IF		0x0
-#define AT_XDMAC_PER_IF		0x1
-
 #define AT_XDMAC_MAX_CHAN	0x20
 
 enum atc_status {
@@ -149,6 +146,8 @@ struct at_xdmac_chan {
 	u8		dwidth;
 	u8		csize;
 	u8		mbsize;
+	u8		perif;
+	u8		memif;
 	u32		remain_desc;
 	unsigned long	status;
 	struct tasklet_struct	tasklet;

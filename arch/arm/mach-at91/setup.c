@@ -14,15 +14,16 @@
 
 #include <asm/system_misc.h>
 #include <asm/mach/map.h>
+#include <asm/firmware.h>
 
 #include <mach/hardware.h>
 #include <mach/cpu.h>
 #include <mach/at91_dbgu.h>
-#include <mach/at91_pmc.h>
 
 #include "at91_shdwc.h"
 #include "soc.h"
 #include "generic.h"
+#include <mach/at91_pmc.h>
 
 struct at91_init_soc __initdata at91_boot_soc;
 
@@ -361,6 +362,21 @@ void __init at91_ioremap_rstc(u32 base_addr)
 		panic("Impossible to ioremap at91_rstc_base\n");
 }
 
+static void sama5d4_restart(char mode, const char *cmd)
+{
+	int ret;
+
+	ret = call_firmware_op(pm_restart);
+	WARN_ONCE(ret != 0,
+		"RSTC: error when trying reset SoC %x\n",
+		ret);
+}
+
+void __init sama5d4_rstc(void)
+{
+	arm_pm_restart = sama5d4_restart;
+}
+
 void __iomem *at91_matrix_base;
 EXPORT_SYMBOL_GPL(at91_matrix_base);
 
@@ -517,7 +533,9 @@ void __init at91_dt_initialize(void)
 {
 	atmel_firmware_init();
 
-	if (!cpu_is_sama5d4()) {
+	if (cpu_is_sama5d4()) {
+		sama5d4_rstc();
+	} else {
 		at91_dt_rstc();
 		at91_dt_ramc();
 		at91_dt_shdwc();

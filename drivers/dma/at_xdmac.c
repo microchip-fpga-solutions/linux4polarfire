@@ -46,14 +46,14 @@ static int at_xdmac_set_slave_config(struct dma_chan *chan,
 	if (sconfig->direction == DMA_DEV_TO_MEM) {
 		atchan->cfg |= AT_XDMAC_CC_DAM_INCREMENTED_AM
 			       | AT_XDMAC_CC_SAM_FIXED_AM
-			       | AT_XDMAC_CC_DIF(AT_XDMAC_MEM_IF)
-			       | AT_XDMAC_CC_SIF(AT_XDMAC_PER_IF)
+			       | AT_XDMAC_CC_DIF(atchan->memif)
+			       | AT_XDMAC_CC_SIF(atchan->perif)
 			       | AT_XDMAC_CC_DSYNC_PER2MEM;
 	} else if (sconfig->direction == DMA_MEM_TO_DEV) {
 		atchan->cfg |= AT_XDMAC_CC_DAM_FIXED_AM
 			       | AT_XDMAC_CC_SAM_INCREMENTED_AM
-			       | AT_XDMAC_CC_DIF(AT_XDMAC_PER_IF)
-			       | AT_XDMAC_CC_SIF(AT_XDMAC_MEM_IF)
+			       | AT_XDMAC_CC_DIF(atchan->perif)
+			       | AT_XDMAC_CC_SIF(atchan->memif)
 			       | AT_XDMAC_CC_DSYNC_MEM2PER;
 	} else {
 		return -EINVAL;
@@ -97,8 +97,10 @@ static struct dma_chan *at_xdmac_xlate(struct of_phandle_args *dma_spec,
 	dma_cap_mask_t 		mask;
 	struct platform_device	*pdev = of_find_device_by_node(dma_spec->np);
 
-	if (dma_spec->args_count != 1)
+	if (dma_spec->args_count != 2) {
+		dev_err(&pdev->dev, "2 args must be provided after the phandler instead of %d\n", dma_spec->args_count);
 		return NULL;
+	}
 
 	dma_cap_zero(mask);
 	dma_cap_set(DMA_SLAVE, mask);
@@ -108,12 +110,14 @@ static struct dma_chan *at_xdmac_xlate(struct of_phandle_args *dma_spec,
 		return NULL;
 
 	atchan = to_at_xdmac_chan(chan);
-	atchan->perid = AT91_XDMAC_DT_GET_PERID(dma_spec->args[0]);
-	atchan->dwidth = AT91_XDMAC_DT_GET_DWIDTH(dma_spec->args[0]);
-	atchan->csize = AT91_XDMAC_DT_GET_CSIZE(dma_spec->args[0]);
-	atchan->mbsize = AT91_XDMAC_DT_GET_MBSIZE(dma_spec->args[0]);
-	dev_info(&pdev->dev, "chan dt cfg: perid=%u dwidth=%u csize=%u, mbsize=%u\n",
-		 atchan->perid, atchan->dwidth, atchan->csize, atchan->mbsize);
+	atchan->memif = AT91_XDMAC_DT_GET_MEM_IF(dma_spec->args[0]);
+	atchan->perif = AT91_XDMAC_DT_GET_PER_IF(dma_spec->args[0]);
+	atchan->perid = AT91_XDMAC_DT_GET_PERID(dma_spec->args[1]);
+	atchan->dwidth = AT91_XDMAC_DT_GET_DWIDTH(dma_spec->args[1]);
+	atchan->csize = AT91_XDMAC_DT_GET_CSIZE(dma_spec->args[1]);
+	atchan->mbsize = AT91_XDMAC_DT_GET_MBSIZE(dma_spec->args[1]);
+	dev_info(&pdev->dev, "chan dt cfg: memif=%u perif=%u perid=%u dwidth=%u csize=%u mbsize=%u\n",
+		 atchan->memif, atchan->perif, atchan->perid, atchan->dwidth, atchan->csize, atchan->mbsize);
 
 	return chan;
 }
@@ -153,7 +157,7 @@ static void at_xdmac_start_xfer(struct at_xdmac_chan *atchan,
 	at_xdmac_chan_write(atchan, AT_XDMAC_CC, atchan->cfg);
 
 	reg = AT_XDMAC_CNDA_NDA(first->tx_dma_desc.phys)
-	      | AT_XDMAC_CNDA_NDAIF(AT_XDMAC_MEM_IF);
+	      | AT_XDMAC_CNDA_NDAIF(atchan->memif);
 	at_xdmac_chan_write(atchan, AT_XDMAC_CNDA, reg);
 
 	reg = AT_XDMAC_CNDC_NDVIEW_NDV1
@@ -174,7 +178,10 @@ static void at_xdmac_start_xfer(struct at_xdmac_chan *atchan,
 
 	/* need to enable other interrupts? */
 	at_xdmac_chan_write(atchan, AT_XDMAC_CIE, 0x2); /* TODO: macro */
-	/* cyclic */
+	/*
+	 * There is no end of list when doing cyclic dma, we need to get
+	 * an interrupt after each periods.
+	 */
 	if (at_xdmac_chan_is_cyclic(atchan))
 		at_xdmac_chan_write(atchan, AT_XDMAC_CIE, 0x1);
 	at_xdmac_write(atxdmac, AT_XDMAC_GIE, atchan->mask);
@@ -978,7 +985,7 @@ static void at_xdmac_shutdown(struct platform_device *pdev)
 
 static const struct of_device_id atmel_xdmac_dt_ids[] = {
 	{
-		.compatible = "atmel,islero-dma",
+		.compatible = "atmel,sama5d4-dma",
 	}, {
 		/* sentinel */
 	}
