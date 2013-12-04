@@ -158,6 +158,7 @@ struct at_xdmac_chan {
 	struct dma_slave_config	dma_sconfig;
 
 	spinlock_t		lock;
+	spinlock_t		xfers_list_lock;
 
 	struct list_head	xfers_list;
 	struct list_head	free_descs_list;
@@ -193,13 +194,14 @@ struct at_xdmac_lld {
 
 struct at_xdmac_desc {
 	struct at_xdmac_lld		lld;
-	bool				active_xfer;
-	unsigned int			xfer_size;
 	enum dma_transfer_direction	direction;
 	struct dma_async_tx_descriptor	tx_dma_desc;
-	struct list_head		descs_list;		/* only used by the first descriptor */
 	struct list_head		desc_node;
-	struct list_head		xfer_node;		/* only used by the first descriptor */
+	/* Following members are only used by the first descriptor */
+	bool				active_xfer;
+	unsigned int			xfer_size;
+	struct list_head		descs_list;
+	struct list_head		xfer_node;
 };
 
 static inline void __iomem *at_xdmac_chan_reg_base(struct at_xdmac *atxdmac, unsigned int chan_nb)
