@@ -113,6 +113,21 @@
 				/*arm,tag-latency = <1 1 1>;*/
 			};
 
+			smd: smd@900000 {
+				compatible = "atmel,at91sam9x5-smd";
+				reg = <0x900000 0x100>;
+				interrupts = <61 IRQ_TYPE_LEVEL_HIGH 0>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(1) | AT91_XDMAC_DT_PER_IF(0))
+					(AT91_XDMAC_DT_PERID(33) | AT91_XDMAC_DT_DWIDTH(2) | AT91_XDMAC_DT_CSIZE(2) | AT91_XDMAC_DT_MBSIZE(3))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(1) | AT91_XDMAC_DT_PER_IF(0))
+					(AT91_XDMAC_DT_PERID(34) | AT91_XDMAC_DT_DWIDTH(2) | AT91_XDMAC_DT_CSIZE(2) | AT91_XDMAC_DT_MBSIZE(3))>;
+				dma-names = "tx", "rx";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_smd_dibp &pinctrl_smd_dibn>;
+			};
+
 			dma1: dma-controller@f0004000 {
 				compatible = "atmel,sama5d4-dma";
 				reg = <0xf0004000 0x200>;
@@ -465,6 +480,19 @@
 					};
 					pinctrl_usart4_cts: usart4_cts-0 {
 						atmel,pins = <AT91_PIOE 0 AT91_PERIPH_C AT91_PINCTRL_NONE>;	/* conflicts with A0/NBS0, MCI0_CDB */
+					};
+				};
+
+				smd {
+					pinctrl_smd_dibn: smd_dibn {
+						/* PE30 periph A DIBN, conflicts with TWCK1 and UTXD0 */
+						/* atmel,pins = <4 30 0x1 0x0>; */
+						atmel,pins = <AT91_PIOE 30  AT91_PERIPH_A  AT91_PINCTRL_NONE>;
+					};
+					pinctrl_smd_dibp: smd_dibp {
+						/* PE29 periph A DIBP, conflicts with TWD1 and URXD0 */
+						/* atmel,pins = <4 29 0x1 0x0>; */
+						atmel,pins = <AT91_PIOE 29  AT91_PERIPH_A  AT91_PINCTRL_NONE>;
 					};
 				};
 			};

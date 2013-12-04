@@ -19,6 +19,7 @@
 #include <mach/hardware.h>
 #include <mach/cpu.h>
 #include <mach/at91_dbgu.h>
+#include <linux/dma-mapping.h>
 
 #include "at91_shdwc.h"
 #include "soc.h"
@@ -546,6 +547,8 @@ void __init at91_dt_initialize(void)
 
 	/* Register the processor-specific clocks */
 	at91_boot_soc.register_clocks();
+
+	init_dma_coherent_pool_size(SZ_1M);
 
 	if (at91_boot_soc.init)
 		at91_boot_soc.init();

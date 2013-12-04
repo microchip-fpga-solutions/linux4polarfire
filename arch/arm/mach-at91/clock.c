@@ -840,6 +840,16 @@ static void __init at91_nwd_usbfs_clock_init(void)
 	}
 }
 
+static void __init at91_nwd_smd_clock_init(void)
+{
+	unsigned int smdr;
+
+	smdr = 0x1301;	// select UPLL=480MHz, div = 20(0x13)
+	smdr = call_firmware_op(pmc_smd_setup, smdr);
+	if (smdr == -1)
+		pr_err("PMC: error when trying to enable smd clock\n");
+}
+
 /* UPLL generated USB full speed clock init */
 static void __init at91_upll_usbfs_clock_init(unsigned long main_clock)
 {
@@ -1086,6 +1096,12 @@ int __init at91_dt_clock_init(void)
 	 */
 	if (cpu_has_upll())
 		at91_nwd_usbfs_clock_init();
+
+	/*
+	 * SMD clock init
+	 */
+	if (cpu_has_smd())
+		at91_nwd_smd_clock_init();
 
 	/*
 	 * MCK and CPU derive from one of those primary clocks.

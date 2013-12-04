@@ -20,13 +20,13 @@
 #define SMC_CMD_PMC_SYS_CLK		0x26
 #define SMC_CMD_PMC_UCKR_CLK		0x27
 #define SMC_CMD_PMC_USB_SETUP		0x28
-#define SMC_CMD_PMC_SMD_SETUP		0x50
 /* For RSTC */
 #define SMC_CMD_PM_RESTART		0x29
 /* For CP15 Access */
 /* For L2 Cache Access */
 #define SMC_CMD_L2CC_ENABLE		0x42
 #define SMC_CMD_L2CC_DISABLE		0x43
+#define SMC_CMD_PMC_SMD_SETUP		0x50
 
 #define SMC_CMD_PIO_READ		0x80000014
 #define SMC_CMD_PIO_WRITE		0x80000015
