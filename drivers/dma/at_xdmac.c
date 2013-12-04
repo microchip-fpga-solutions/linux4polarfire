@@ -154,16 +154,24 @@ static void at_xdmac_start_xfer(struct at_xdmac_chan *atchan,
 
 	first->active_xfer = true;
 
-	at_xdmac_chan_write(atchan, AT_XDMAC_CC, atchan->cfg);
-
 	reg = AT_XDMAC_CNDA_NDA(first->tx_dma_desc.phys)
 	      | AT_XDMAC_CNDA_NDAIF(atchan->memif);
 	at_xdmac_chan_write(atchan, AT_XDMAC_CNDA, reg);
 
-	reg = AT_XDMAC_CNDC_NDVIEW_NDV1
-	      | AT_XDMAC_CNDC_NDDUP
-	      | AT_XDMAC_CNDC_NDSUP
-	      | AT_XDMAC_CNDC_NDE;
+	/*
+	 * When doing memory to memory transfer we need to use the next
+	 * descriptor view 2 since some fields of the configuration register
+	 * depend on transfer size and src/dest addresses.
+	 */
+	if (atchan->cfg & AT_XDMAC_CC_TYPE_PER_TRAN) {
+		reg = AT_XDMAC_CNDC_NDVIEW_NDV1;
+		at_xdmac_chan_write(atchan, AT_XDMAC_CC, atchan->cfg);
+	} else
+		reg = AT_XDMAC_CNDC_NDVIEW_NDV2;
+
+	reg |= AT_XDMAC_CNDC_NDDUP
+	       | AT_XDMAC_CNDC_NDSUP
+	       | AT_XDMAC_CNDC_NDE;
 	at_xdmac_chan_write(atchan, AT_XDMAC_CNDC, reg);
 
 	dev_vdbg(chan2dev(&atchan->chan),
@@ -605,7 +613,130 @@ err_desc_get:
 	/* TODO set descriptors taken as available */
 
 	return NULL;
+}
 
+static struct dma_async_tx_descriptor *
+at_xdmac_prep_dma_memcpy(struct dma_chan *chan, dma_addr_t dest, dma_addr_t src,
+			 size_t len, unsigned long flags)
+{
+	struct at_xdmac_chan 	*atchan = to_at_xdmac_chan(chan);
+	struct at_xdmac_desc	*first = NULL, *prev = NULL;
+	size_t			remaining_size = len, xfer_size = 0, ublen;
+	dma_addr_t		src_addr = src, dst_addr = dest;
+	u32			dwidth;
+	u32			chan_cc = AT_XDMAC_CC_DAM_INCREMENTED_AM
+					| AT_XDMAC_CC_SAM_INCREMENTED_AM
+					| AT_XDMAC_CC_DIF(0) /* One interface for the destination */
+					| AT_XDMAC_CC_SIF(1) /* The other one for the source */
+					| AT_XDMAC_CC_TYPE_MEM_TRAN;
+
+	dev_dbg(chan2dev(chan), "%s: src=0x%08x, dest=0x%08x, len=%d, flags=0x%lx\n",
+		__func__, src, dest, len, flags);
+
+	if (unlikely(!len))
+		return NULL;
+
+	/* check address alignment to select the greater data width we can use */
+	if (!((src_addr | dst_addr) & 7)) {
+		dwidth = AT_XDMAC_CC_DWIDTH_DWORD;
+		dev_dbg(chan2dev(chan), "%s: dwidth: double word\n", __func__);
+	} else if (!((src_addr | dst_addr)  & 3)) {
+		dwidth = AT_XDMAC_CC_DWIDTH_WORD;
+		dev_dbg(chan2dev(chan), "%s: dwidth: word\n", __func__);
+	} else if (!((src_addr | dst_addr) & 1)) {
+		dwidth = AT_XDMAC_CC_DWIDTH_HALFWORD;
+		dev_dbg(chan2dev(chan), "%s: dwidth: half word\n", __func__);
+	//} else if ((src_addr | dst_addr) & 1) {
+	} else {
+		dwidth = AT_XDMAC_CC_DWIDTH_BYTE;
+		dev_dbg(chan2dev(chan), "%s: dwidth: byte\n", __func__);
+	}
+
+	atchan->cfg = chan_cc | AT_XDMAC_CC_DWIDTH(dwidth);
+
+	/* prepare descriptors */
+	while (remaining_size) {
+
+		struct at_xdmac_desc	*desc = NULL;
+
+		dev_dbg(chan2dev(chan), "%s: remaining_size=%u\n", __func__, remaining_size);
+
+		desc = at_xdmac_get_desc(atchan);
+		if (!desc) {
+			dev_err(chan2dev(chan),
+				"can't get descriptor\n");
+			goto err_desc_get;
+		}
+
+		/* Update src and dest addresses */
+		src_addr += xfer_size;
+		dst_addr += xfer_size;
+
+		if (remaining_size >= AT_XDMAC_MBR_UBC_UBLEN_MAX << dwidth)
+			xfer_size = AT_XDMAC_MBR_UBC_UBLEN_MAX << dwidth;
+		else
+			xfer_size = remaining_size;
+
+		dev_dbg(chan2dev(chan), "%s: xfer_size=%u\n", __func__, xfer_size);
+
+		/* Check remaining length and change data width if needed */
+		if (!((src_addr | dst_addr | xfer_size) & 7)) {
+			dwidth = AT_XDMAC_CC_DWIDTH_DWORD;
+			dev_dbg(chan2dev(chan), "%s: dwidth: double word\n", __func__);
+		} else if (!((src_addr | dst_addr | xfer_size)  & 3)) {
+			dwidth = AT_XDMAC_CC_DWIDTH_WORD;
+			dev_dbg(chan2dev(chan), "%s: dwidth: word\n", __func__);
+		} else if (!((src_addr | dst_addr | xfer_size) & 1)) {
+			dwidth = AT_XDMAC_CC_DWIDTH_HALFWORD;
+			dev_dbg(chan2dev(chan), "%s: dwidth: half word\n", __func__);
+		} else if ((src_addr | dst_addr | xfer_size) & 1) {
+			dwidth = AT_XDMAC_CC_DWIDTH_BYTE;
+			dev_dbg(chan2dev(chan), "%s: dwidth: byte\n", __func__);
+		}
+		chan_cc |= AT_XDMAC_CC_DWIDTH(dwidth); 
+
+		ublen = xfer_size >> dwidth;
+		remaining_size -= xfer_size;
+
+		desc->lld.mbr_sa = src_addr;
+		desc->lld.mbr_da = dst_addr;
+		desc->lld.mbr_ubc = AT_XDMAC_MBR_UBC_NDV2
+			| AT_XDMAC_MBR_UBC_NDEN
+			| AT_XDMAC_MBR_UBC_NSEN
+			| (remaining_size ? 0 : AT_XDMAC_MBR_UBC_NDE)
+			| ublen;
+		desc->lld.mbr_cfg = chan_cc;
+
+		dev_dbg(chan2dev(chan),
+			 "%s: lld: mbr_sa=0x%08x, mbr_da=0x%08x, mbr_ubc=0x%08x, mbr_cfg=0x%08x\n",
+			 __func__, desc->lld.mbr_sa, desc->lld.mbr_da, desc->lld.mbr_ubc, desc->lld.mbr_cfg);
+
+		/* chain lld */
+		if (prev) {
+			prev->lld.mbr_nda = desc->tx_dma_desc.phys;
+			dev_dbg(chan2dev(chan),
+				 "%s: chain lld: prev = 0x%p, mbr_nda = 0x%08x\n",
+				 __func__, prev, prev->lld.mbr_nda);
+		}
+
+		prev = desc;
+		if (!first)
+			first = desc;
+
+		dev_dbg(chan2dev(chan), "%s: add desc 0x%p to descs_list 0x%p\n",
+			 __func__, desc, first);
+		list_add_tail(&desc->desc_node, &first->descs_list);
+	}
+
+	first->tx_dma_desc.cookie = -EBUSY;
+	first->tx_dma_desc.flags = flags;
+	first->xfer_size = len;
+
+	return &first->tx_dma_desc;
+
+err_desc_get:
+	/* TODO */
+	return NULL;
 }
 
 static void at_xdmac_handle_cyclic(struct at_xdmac_chan *atchan)
@@ -917,6 +1048,7 @@ static int __init at_xdmac_probe(struct platform_device *pdev)
 	atxdmac->dma.device_tx_status = at_xdmac_tx_status;
 	atxdmac->dma.device_issue_pending = at_xdmac_issue_pending;
 	atxdmac->dma.device_prep_dma_cyclic = at_xdmac_prep_dma_cyclic;
+	atxdmac->dma.device_prep_dma_memcpy =at_xdmac_prep_dma_memcpy;
 	//atxdmac->dma.device_prep_dma_memcpy = ;
 	atxdmac->dma.device_prep_slave_sg = at_xdmac_prep_slave_sg;
 	atxdmac->dma.device_control = at_xdmac_control;

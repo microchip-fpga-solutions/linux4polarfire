@@ -90,11 +90,11 @@
 #define			AT_XDMAC_CC_CSIZE_CHK_4		(0x2 << 8)
 #define			AT_XDMAC_CC_CSIZE_CHK_8		(0x3 << 8)
 #define			AT_XDMAC_CC_CSIZE_CHK_16	(0x4 << 8)
-#define		AT_XDMAC_CC_DWIDTH_MASK	(0x3 << 11)	/* Channel Data Width */
-#define			AT_XDMAC_CC_DWIDTH_BYTE		(0x0 << 11)
-#define			AT_XDMAC_CC_DWIDTH_HALFWORD	(0x1 << 11)
-#define			AT_XDMAC_CC_DWIDTH_WORD		(0x2 << 11)
-#define			AT_XDMAC_CC_DWIDTH_DWORD	(0x3 << 11)
+#define		AT_XDMAC_CC_DWIDTH(i)	((i) << 11)	/* Channel Data Width */
+#define			AT_XDMAC_CC_DWIDTH_BYTE		0x0
+#define			AT_XDMAC_CC_DWIDTH_HALFWORD	0x1
+#define			AT_XDMAC_CC_DWIDTH_WORD		0x2
+#define			AT_XDMAC_CC_DWIDTH_DWORD	0x3
 #define		AT_XDMAC_CC_SIF(i)	((0x1 & (i)) << 13)	/* Channel Source Interface Identifier */
 #define		AT_XDMAC_CC_DIF(i)	((0x1 & (i)) << 14)	/* Channel Destination Interface Identifier */
 #define		AT_XDMAC_CC_SAM_MASK	(0x3 << 16)	/* Channel Source Addressing Mode */
@@ -124,10 +124,14 @@
 #define AT_XDMAC_CHAN_REG_BASE	0x50	/* Channel registers base address */
 
 /* TODO */
-#define AT_XDMAC_MBR_UBC_NDE	(0x1 << 24)
-#define AT_XDMAC_MBR_UBC_NSEN	(0x1 << 25)
-#define AT_XDMAC_MBR_UBC_NDEN	(0x1 << 26)
-#define AT_XDMAC_MBR_UBC_NDV1	(0x1 << 27)
+#define AT_XDMAC_MBR_UBC_UBLEN_MAX	0xFFFFFFUL
+#define AT_XDMAC_MBR_UBC_NDE		(0x1 << 24)
+#define AT_XDMAC_MBR_UBC_NSEN		(0x1 << 25)
+#define AT_XDMAC_MBR_UBC_NDEN		(0x1 << 26)
+#define AT_XDMAC_MBR_UBC_NDV0		(0x0 << 27)
+#define AT_XDMAC_MBR_UBC_NDV1		(0x1 << 27)
+#define AT_XDMAC_MBR_UBC_NDV2		(0x2 << 27)
+#define AT_XDMAC_MBR_UBC_NDV3		(0x3 << 27)
 
 #define AT_XDMAC_MAX_CHAN	0x20
 
