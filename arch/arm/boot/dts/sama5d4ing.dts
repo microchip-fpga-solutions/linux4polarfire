@@ -142,7 +142,15 @@
 			usart4: serial@fc010000 {
 				status = "okay";
 			};
+<<<<<<< HEAD
 */
+=======
+
+			uart1: serial@fc004000 {
+				status = "okay";
+			};
+			
+>>>>>>> Added uart0 and uart1 to the list of devices
 			pinctrl@fc06a000 {
 				board {
 					pinctrl_usba_vbus: usba_vbus {

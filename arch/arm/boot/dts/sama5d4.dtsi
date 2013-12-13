@@ -113,6 +113,13 @@
 				/*arm,tag-latency = <1 1 1>;*/
 			};
 
+			dma1: dma-controller@f0004000 {
+				compatible = "atmel,sama5d4-dma";
+				reg = <0xf0004000 0x200>;
+				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
+				#dma-cells = <2>;
+			};
+
 			smd: smd@900000 {
 				compatible = "atmel,at91sam9x5-smd";
 				reg = <0x900000 0x100>;
@@ -126,13 +133,6 @@
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_smd_dibp &pinctrl_smd_dibn>;
-			};
-
-			dma1: dma-controller@f0004000 {
-				compatible = "atmel,sama5d4-dma";
-				reg = <0xf0004000 0x200>;
-				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
-				#dma-cells = <2>;
 			};
 
 			mmc0: mmc@f8000000 {
@@ -243,6 +243,38 @@
 				dma-names = "tx", "rx";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_usart4>;
+				status = "disabled";
+			};
+
+			uart0: serial@f8004000 {
+				compatible = "atmel,at91sam9260-usart";
+				reg = <0xf8004000 0x100>;
+				interrupts = <27 IRQ_TYPE_LEVEL_HIGH 5>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(22) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(23) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dma-names = "tx", "rx";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_uart0>;
+				status = "disabled";
+			};
+
+			uart1: serial@fc004000 {
+				compatible = "atmel,at91sam9260-usart";
+				reg = <0xfC004000 0x100>;
+				interrupts = <28 IRQ_TYPE_LEVEL_HIGH 5>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(24) | AT91_XDMAC_DT_DWIDTH(0x0))>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					(AT91_XDMAC_DT_PERID(25) | AT91_XDMAC_DT_DWIDTH(0x0))>;
+				dma-names = "tx", "rx";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_uart1>;
 				status = "disabled";
 			};
 
@@ -446,6 +478,23 @@
 							 AT91_PIOC 12 AT91_PERIPH_A AT91_PINCTRL_NONE>;	/* PC12 periph A Data bit 7 */
 					};
 				};
+
+				uart0 {
+					pinctrl_uart0: uart0-0 {
+						atmel,pins =
+							<AT91_PIOE 29 AT91_PERIPH_B AT91_PINCTRL_NONE		/* RXD - conflicts with DIPB, TWD1 */
+							 AT91_PIOE 30 AT91_PERIPH_B AT91_PINCTRL_PULL_UP>;	/* TXD - conflicts with DIBN, TWCK1 */
+					};
+				};
+
+				uart1 {
+					pinctrl_uart1: uart1-0 {
+						atmel,pins =
+							<AT91_PIOC 25 AT91_PERIPH_C AT91_PINCTRL_NONE		/* RXD - conflicts with ISI_D6, TWD3 */
+							 AT91_PIOC 26 AT91_PERIPH_C AT91_PINCTRL_PULL_UP>;	/* TXD - conflicts with ISI_D7, TWCK3 */
+					};
+				};
+
 				usart2 {
 					pinctrl_usart2: usart2-0 {
 						atmel,pins =
