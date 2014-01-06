@@ -29,7 +29,7 @@
 
 	aliases {
 		serial0 = &usart3;
-		serial1 = &usart4; /* carte d'extension */
+/*		serial1 = &usart4;  *//* carte d'extension */
 	};
 
 	clocks {
@@ -137,10 +137,11 @@
 				status = "okay";
 			};
 
+/*
 			usart4: serial@fc010000 {
 				status = "okay";
 			};
-
+*/
 			pinctrl@fc06a000 {
 				board {
 					pinctrl_usba_vbus: usba_vbus {
