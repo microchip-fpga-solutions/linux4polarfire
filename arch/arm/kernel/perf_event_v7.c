@@ -795,6 +795,11 @@ static inline void armv7_pmnc_write(u32 val)
 {
 	val &= ARMV7_PMNC_MASK;
 	isb();
+
+//   printk(KERN_INFO "[%s]%08x\n",__FUNCTION__,  val);
+//   Patch, PMCR register is set by secureOS this shall not be write again    
+    return;
+    
 	asm volatile("mcr p15, 0, %0, c9, c12, 0" : : "r"(val));
 }
 
@@ -867,6 +872,13 @@ static inline void armv7_pmnc_write_evtsel(int idx, u32 val)
 static inline int armv7_pmnc_enable_counter(int idx)
 {
 	u32 counter = ARMV7_IDX_TO_COUNTER(idx);
+	
+//  Patch, PMCNTENSET P1 shall not be set, this counter is used by the secureOS
+    if(0x00000001 == counter)
+    {
+        return idx;
+    }	
+//	printk("[%s]%08x (counter = %08x)\n",__FUNCTION__,  (BIT(counter)), counter);
 	asm volatile("mcr p15, 0, %0, c9, c12, 1" : : "r" (BIT(counter)));
 	return idx;
 }
@@ -874,6 +886,14 @@ static inline int armv7_pmnc_enable_counter(int idx)
 static inline int armv7_pmnc_disable_counter(int idx)
 {
 	u32 counter = ARMV7_IDX_TO_COUNTER(idx);
+
+//  Patch, PMCNTENCLR P1 shall not be cleared, this counter is used by the secureOS
+    if(0x00000001 == counter)
+    {
+        return idx;
+    }	
+//	printk("[%s]%08x (counter = %08x)\n",__FUNCTION__,  (BIT(counter)), counter);
+    
 	asm volatile("mcr p15, 0, %0, c9, c12, 2" : : "r" (BIT(counter)));
 	return idx;
 }
