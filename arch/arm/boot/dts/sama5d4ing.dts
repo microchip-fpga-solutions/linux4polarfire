@@ -14,7 +14,7 @@
 
    chosen {
       /* the default cmdline for PROD FLASH version - Console is disable, kernel traces are 'quiet' */
-      /* bootargs = "consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088 quiet"; */
+      /* bootargs = "consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088 loglevel=3"; */
       
       /* the default cmdline for DEBUG FLASH version - Console is on */
       /* bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088"; */
