@@ -17,10 +17,11 @@
       /* bootargs = "consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088 loglevel=3"; */
       
       /* the default cmdline for DEBUG FLASH version - Console is on */
-      /* bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088"; */
+       /* bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088"; */
 
       /* the default cmdline for DEBUG NFS version */
-      bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=/dev/nfs rw nfsroot=10.23.7.56:/home/lcruau/sw/telium3/new_nfsroot ip=dhcp rootwait ing_security_mod=enable:0";
+      bootargs = "console=ttyS0,115200 consoleblank=0 root=/dev/nfs rw nfsroot=10.23.7.56:/home/production/nfs/nfsprXXXX ip=dhcp rootwait ing_security_mod=enable:0"; 
+      
    };
 
 	memory {
@@ -116,7 +117,7 @@
 			};
 
 			macb0: ethernet@f8020000 {
-			  local-mac-address = [00 03 81 66 3d 8e];
+			  local-mac-address = [00 03 81 96 3d 8e];
 				phy-mode = "mii";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_macb0_mii>;
@@ -186,10 +187,11 @@
 				label = "secure world";
 				reg = <0x0 0x1000000>;
 			};
-			/* 112 MiB */
+			/* the rest of the nand available */
 			partition@1000000 {
 				label = "rootfs";
-				reg = <0x1000000 0x07000000>;
+				/*reg = <0x1000000 0x17000000>; */
+				reg = <0x1000000 0x0>; 
 			};
 		};
 	};
