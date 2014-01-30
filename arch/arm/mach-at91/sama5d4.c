@@ -152,11 +152,14 @@ static struct clk smd_clk = {
 };
 
 static struct clk *periph_clocks[] __initdata = {
+#if !defined(CONFIG_SOC_SAMA5D4)
+	// Peripherals clocks are set in secure world
 	&pioA_clk,
 	&pioB_clk,
 	&pioC_clk,
 	&pioD_clk,
 	&pioE_clk,
+#endif
 	&uart0_clk,
 	&uart1_clk,
 	&usart0_clk,

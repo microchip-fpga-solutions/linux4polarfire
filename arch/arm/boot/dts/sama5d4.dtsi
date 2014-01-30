@@ -106,7 +106,8 @@
 			L2: cache-controller@00a00000 {
 				compatible = "arm,pl310-cache";
 				reg = <0x00a00000 0x1000>;
-				interrupts = <0 67 4>;
+				/* interrupts = <0 67 4>; */
+				interrupts = <67 IRQ_TYPE_LEVEL_HIGH 4>;
 				cache-unified;
 				cache-level = <2>;
 				/*arm,data-latency = <1 1 1>;*/
@@ -118,21 +119,6 @@
 				reg = <0xf0004000 0x200>;
 				interrupts = <50 IRQ_TYPE_LEVEL_HIGH 0>;
 				#dma-cells = <2>;
-			};
-
-			smd: smd@900000 {
-				compatible = "atmel,at91sam9x5-smd";
-				reg = <0x900000 0x100>;
-				interrupts = <61 IRQ_TYPE_LEVEL_HIGH 0>;
-				dmas = <&dma1
-					(AT91_XDMAC_DT_MEM_IF(1) | AT91_XDMAC_DT_PER_IF(0))
-					(AT91_XDMAC_DT_PERID(33) | AT91_XDMAC_DT_DWIDTH(2) | AT91_XDMAC_DT_CSIZE(2) | AT91_XDMAC_DT_MBSIZE(3))>,
-				       <&dma1
-					(AT91_XDMAC_DT_MEM_IF(1) | AT91_XDMAC_DT_PER_IF(0))
-					(AT91_XDMAC_DT_PERID(34) | AT91_XDMAC_DT_DWIDTH(2) | AT91_XDMAC_DT_CSIZE(2) | AT91_XDMAC_DT_MBSIZE(3))>;
-				dma-names = "tx", "rx";
-				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_smd_dibp &pinctrl_smd_dibn>;
 			};
 
 			mmc0: mmc@f8000000 {
@@ -701,6 +687,21 @@
 			reg = <0x00300000 0x1000>;
 			interrupts = <19 IRQ_TYPE_LEVEL_HIGH 4>;
 			status = "disabled";
+		};
+
+		smd: smd@00900000 {
+			compatible = "atmel,at91sam9x5-smd";
+			reg = <0x00900000 0x100>;
+			interrupts = <61 IRQ_TYPE_LEVEL_HIGH 0>;
+			dmas = <&dma1
+				(AT91_XDMAC_DT_MEM_IF(1) | AT91_XDMAC_DT_PER_IF(0))
+				(AT91_XDMAC_DT_PERID(33) | AT91_XDMAC_DT_DWIDTH(2) | AT91_XDMAC_DT_CSIZE(2) | AT91_XDMAC_DT_MBSIZE(3))>,
+				   <&dma1
+				(AT91_XDMAC_DT_MEM_IF(1) | AT91_XDMAC_DT_PER_IF(0))
+				(AT91_XDMAC_DT_PERID(34) | AT91_XDMAC_DT_DWIDTH(2) | AT91_XDMAC_DT_CSIZE(2) | AT91_XDMAC_DT_MBSIZE(3))>;
+			dma-names = "tx", "rx";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_smd_dibp &pinctrl_smd_dibn>;
 		};
 
 		nand0: nand@80000000 {
