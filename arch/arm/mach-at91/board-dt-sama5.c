@@ -38,9 +38,48 @@
 /*
  * LCD Controller
  */
+
+
+static struct fb_videomode at91_tft_ili9486_modes[] = {
+	{
+      .name		= "ili9486_320_480_60Hz",
+      .refresh	= 60,
+      .xres		= 320,
+      .yres		= 480,
+      .pixclock = KHZ2PICOS(9594),
+
+		.left_margin /*hbp*/	= 3,  .right_margin /*hfp*/	= 3,
+		.upper_margin/*vbp*/	= 2,  .lower_margin /*vfp*/	= 2,
+		.hsync_len   /*hpw*/ = 3,  .vsync_len    /*vpw*/   = 2,
+
+		.sync = 0,
+		.vmode = FB_VMODE_NONINTERLACED,
+	},
+};
+
+
+static struct fb_videomode at91_tft_ili9481_modes[] = {
+	{
+      .name		= "ili9481_320_480_60Hz",
+      .refresh	= 60,
+      .xres		= 320,
+      .yres		= 480,
+      .pixclock = KHZ2PICOS(11420),
+
+		.left_margin /*hbp*/	= 20,  .right_margin /*hfp*/	= 40,
+		.upper_margin/*vbp*/	= 2,  .lower_margin /*vfp*/	= 4,
+		.hsync_len   /*hpw*/ = 10,  .vsync_len    /*vpw*/  = 2,
+
+		.sync		= 0,
+		.vmode		= FB_VMODE_NONINTERLACED,
+	},
+};
+
+
+
 static struct fb_videomode at91_tft_vga_modes[] = {
 	{
-      .name		= "ingenico",
+      .name		= "ingenico_320_240_60Hz_default",
       .refresh	= 60,
       .xres		= 320,
       .yres		= 480,
@@ -59,13 +98,14 @@ static struct fb_monspecs at91fb_default_monspecs = {
 	.manufacturer	= "ILI",
 	.monitor	= "ILI9481",
 
-	.modedb		= at91_tft_vga_modes,
-	.modedb_len	= ARRAY_SIZE(at91_tft_vga_modes),
+	.modedb		= at91_tft_ili9486_modes,
+	.modedb_len	= ARRAY_SIZE(at91_tft_ili9486_modes),
 	.hfmin		= 15000,
    .hfmax		= 35000,
    .vfmin		= 55,
    .vfmax		= 65,
 };
+
 
 /* Default output mode is TFT 24 bit */
 #define BPP_OUT_DEFAULT_LCDCFG5	(LCDC_LCDCFG5_MODE_OUTPUT_24BPP)
