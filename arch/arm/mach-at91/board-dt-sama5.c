@@ -57,43 +57,6 @@ static struct fb_videomode at91_tft_ili9486_modes[] = {
 	},
 };
 
-
-static struct fb_videomode at91_tft_ili9481_modes[] = {
-	{
-      .name		= "ili9481_320_480_60Hz",
-      .refresh	= 60,
-      .xres		= 320,
-      .yres		= 480,
-      .pixclock = KHZ2PICOS(11420),
-
-		.left_margin /*hbp*/	= 20,  .right_margin /*hfp*/	= 40,
-		.upper_margin/*vbp*/	= 2,  .lower_margin /*vfp*/	= 4,
-		.hsync_len   /*hpw*/ = 10,  .vsync_len    /*vpw*/  = 2,
-
-		.sync		= 0,
-		.vmode		= FB_VMODE_NONINTERLACED,
-	},
-};
-
-
-
-static struct fb_videomode at91_tft_vga_modes[] = {
-	{
-      .name		= "ingenico_320_240_60Hz_default",
-      .refresh	= 60,
-      .xres		= 320,
-      .yres		= 480,
-      .pixclock	= KHZ2PICOS(11125),
-
-		.left_margin	= 10, .right_margin	= 40,
-		.upper_margin	= 2,  .lower_margin	= 4,
-		.hsync_len     = 10, .vsync_len     = 2,
-
-		.sync		= 0,
-		.vmode		= FB_VMODE_NONINTERLACED,
-	},
-};
-
 static struct fb_monspecs at91fb_default_monspecs = {
 	.manufacturer	= "ILI",
 	.monitor	= "ILI9481",
