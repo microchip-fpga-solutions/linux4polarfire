@@ -530,6 +530,38 @@ skip:
 	initrd_end = 0;
 }
 
+static void __init free_initpackage(void)
+{
+#ifdef CONFIG_KEXEC
+	unsigned long crashk_start = (unsigned long)__va(crashk_res.start);
+	unsigned long crashk_end   = (unsigned long)__va(crashk_res.end);
+#endif
+	if (do_retain_initrd)
+		goto skip;
+
+#ifdef CONFIG_KEXEC
+	/*
+	 * If the initpackage region is overlapped with crashkernel reserved region,
+	 * free only memory that is not part of crashkernel region.
+	 */
+	if (initpackage_start < crashk_end && initpackage_end > crashk_start) {
+		/*
+		 * Initialize initpackage memory region since the kexec boot does
+		 * not do.
+		 */
+		memset((void *)initpackage_start, 0, initpackage_end - initpackage_start);
+		if (initpackage_start < crashk_start)
+			free_initrd_mem(initpackage_start, crashk_start);
+		if (initpackage_end > crashk_end)
+			free_initrd_mem(crashk_end, initpackage_end);
+	} else
+#endif
+		free_initrd_mem(initpackage_start, initpackage_end);
+skip:
+	initpackage_start = 0;
+	initpackage_end = 0;
+}
+
 #ifdef CONFIG_BLK_DEV_RAM
 #define BUF_SIZE 1024
 static void __init clean_rootfs(void)
@@ -592,6 +624,13 @@ static int __init populate_rootfs(void)
 			initrd_end - initrd_start);
 		if (!err) {
 			free_initrd();
+
+            if(initpackage_start)   {
+                /* err is not checked because exact init package_end is not mandatory */
+                unpack_to_rootfs((char *)initpackage_start, initpackage_end - initpackage_start);
+                free_initpackage();
+            }
+
 			goto done;
 		} else {
 			clean_rootfs();

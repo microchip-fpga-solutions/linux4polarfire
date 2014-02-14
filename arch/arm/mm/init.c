@@ -39,6 +39,9 @@
 static unsigned long phys_initrd_start __initdata = 0;
 static unsigned long phys_initrd_size __initdata = 0;
 
+static unsigned long phys_initpackage_start __initdata = 0;
+static unsigned long phys_initpackage_size __initdata = 0;
+
 static int __init early_initrd(char *p)
 {
 	unsigned long start, size;
@@ -54,6 +57,22 @@ static int __init early_initrd(char *p)
 	return 0;
 }
 early_param("initrd", early_initrd);
+
+static int __init early_initpackage(char *p)
+{
+	unsigned long start, size;
+	char *endp;
+
+	start = memparse(p, &endp);
+	if (*endp == ',') {
+		size = memparse(endp + 1, NULL);
+
+		phys_initpackage_start = start;
+		phys_initpackage_size = size;
+	}
+	return 0;
+}
+early_param("initpackage", early_initpackage);
 
 static int __init parse_tag_initrd(const struct tag *tag)
 {
@@ -366,6 +385,26 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 		/* Now convert initrd to virtual addresses */
 		initrd_start = __phys_to_virt(phys_initrd_start);
 		initrd_end = initrd_start + phys_initrd_size;
+	}
+	
+	if (phys_initpackage_size &&
+	    !memblock_is_region_memory(phys_initpackage_start, phys_initpackage_size)) {
+		pr_err("INITPACKAGE: 0x%08lx+0x%08lx is not a memory region - disabling initpackage\n",
+		       phys_initpackage_start, phys_initpackage_size);
+		phys_initpackage_start = phys_initpackage_size = 0;
+	}
+	if (phys_initpackage_size &&
+	    memblock_is_region_reserved(phys_initpackage_start, phys_initpackage_size)) {
+		pr_err("INITPACKAGE: 0x%08lx+0x%08lx overlaps in-use memory region - disabling initpackage\n",
+		       phys_initpackage_start, phys_initpackage_size);
+		phys_initpackage_start = phys_initpackage_size = 0;
+	}
+	if (phys_initpackage_size) {
+		memblock_reserve(phys_initpackage_start, phys_initpackage_size);
+
+		/* Now convert initpackage to virtual addresses */
+		initpackage_start = __phys_to_virt(phys_initpackage_start);
+		initpackage_end = initpackage_start + phys_initpackage_size;
 	}
 #endif
 
