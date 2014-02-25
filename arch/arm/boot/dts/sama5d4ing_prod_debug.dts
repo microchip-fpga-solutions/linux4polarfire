@@ -1,0 +1,23 @@
+/*
+ * sama5d4ing_nfs.dts - Device Tree file for SAMA5D4 Ingenico devices
+ *
+ *  Copyright (C) 2013 Ingenico
+ *
+ * Licensed under GPLv2 or later.
+ */
+/dts-v1/;
+#include "sama5d4.dtsi"
+#include "sama5d4ing.dtsi"
+
+/ {
+   model = "Ingenico islero";
+   compatible = "atmel,sama5d4ing", "atmel,sama5d4", "atmel,sama5";
+
+   chosen {
+
+      /* the default cmdline for DEBUG FLASH version - Console is on */
+      bootargs = "console=ttyS0,115200 consoleblank=0 ubi.mtd=1 root=ubi0:ubifs-vol1 rootfstype=ubifs rootflags=bulk_read,chk_data_crc rootwait=1 noinitrd rw lpj=1241088";
+
+   };
+};
+
