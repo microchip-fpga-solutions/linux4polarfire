@@ -80,6 +80,11 @@ static struct clk mmc0_clk = {
 	.pid		= SAMA5D4_ID_HSMCI0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
+static struct clk mmc1_clk = {
+	.name		= "mci1_clk",
+	.pid		= SAMA5D4_ID_HSMCI1,
+	.type		= CLK_TYPE_PERIPHERAL,
+};
 static struct clk tcb0_clk = {
 	.name		= "tcb0_clk",
 	.pid		= SAMA5D4_ID_TC0,
@@ -137,6 +142,7 @@ static struct clk *periph_clocks[] __initdata = {
 	&usart3_clk,
 	&usart4_clk,
 	&mmc0_clk,
+	&mmc1_clk,
 	&tcb0_clk,
 	&tcb1_clk,
 	&dma1_clk,
@@ -157,6 +163,7 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("ehci_clk", "600000.ehci", &uhphs_clk),
 	CLKDEV_CON_DEV_ID("dma_clk", "f0004000.dma-controller", &dma1_clk),
 	CLKDEV_CON_DEV_ID("mci_clk", "f8000000.mmc", &mmc0_clk),
+	CLKDEV_CON_DEV_ID("mci_clk", "fc000000.mmc", &mmc1_clk),
 	CLKDEV_CON_DEV_ID(NULL, "f8024000.i2c", &twi2_clk),
 	CLKDEV_CON_DEV_ID("t0_clk", "f801c000.timer", &tcb0_clk),
 	CLKDEV_CON_DEV_ID("hclk", "f8020000.ethernet", &macb0_clk),
