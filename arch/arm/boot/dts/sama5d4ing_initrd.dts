@@ -16,7 +16,7 @@
    chosen {
 
       /* the initrd boot */
-     bootargs = "console=ttyS0,115200 root=/dev/ram0 ip=off initrd=0x240000A0,2688075 initpackage=0x250000A0,0x2800000 rdinit=/init single ro ing_security_mod=enable:0";
+     bootargs = "console=ttyS0,115200 root=/dev/ram0 ip=off initrd=0x240000A0,2688115 initpackage=0x250000A0,0x2800000 rdinit=/init single ro ing_security_mod=enable:0";
      /* initpackage=0x250000A0,0x2800000 ==> 40Mo reserved for package(s) */
      /* initrd=0x240000A0,2687673  ==> 2nd value is the exact size of the initrd.cpio.gz file */
    };
