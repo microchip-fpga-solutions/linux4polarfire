@@ -247,6 +247,8 @@ static void at_xdmac_terminate_xfer(struct at_xdmac_chan *atchan,
 	/* mark the descriptor as complete */
 	if (!at_xdmac_chan_is_cyclic(atchan))
 		dma_cookie_complete(txd);
+	else
+		list_splice_init(&desc->descs_list, &atchan->free_descs_list);
 
 	/* free descriptors used for the xfer */
 	if (async_tx_test_ack(txd)) {
