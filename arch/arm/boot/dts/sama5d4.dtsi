@@ -135,6 +135,24 @@
 				#size-cells = <0>;
 			};
 
+			i2c0: i2c@f8014000 {
+				compatible = "atmel,at91sam9x5-i2c";
+				reg = <0xf8014000 0x4000>;
+				interrupts = <32 IRQ_TYPE_LEVEL_HIGH 6>;
+				dmas = <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					AT91_XDMAC_DT_PERID(2)>,
+				       <&dma1
+					(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1))
+					AT91_XDMAC_DT_PERID(3)>;
+				dma-names = "tx", "rx";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c0>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+
 			tcb0: timer@f801c000 {
 				compatible = "atmel,at91sam9x5-tcbmmio";
 				reg = <0xf801c000 0x100>;
@@ -293,6 +311,13 @@
 				};
 
 				/* pinctrl pin settings */
+				i2c0 {
+					pinctrl_i2c0: i2c0-0 {
+						atmel,pins =
+							<AT91_PIOA 30 AT91_PERIPH_A AT91_PINCTRL_NONE
+							 AT91_PIOA 31 AT91_PERIPH_A AT91_PINCTRL_NONE>;
+					};
+				};
 				i2c2 {
 					pinctrl_i2c2: i2c2-0 {
 						atmel,pins =
