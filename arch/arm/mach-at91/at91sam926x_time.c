@@ -15,14 +15,14 @@
 #include <linux/clk.h>
 #include <linux/clockchips.h>
 #include <linux/interrupt.h>
+#include <linux/ioport.h>
 #include <linux/irq.h>
 #include <linux/kernel.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
+#include <linux/platform_device.h>
 #include <linux/slab.h>
-
-#include <mach/hardware.h>
 
 #define AT91_PIT_MR		0x00			/* Mode Register */
 #define AT91_PIT_PITIEN			BIT(25)			/* Timer Interrupt Enable */
@@ -265,34 +265,40 @@ static void __init at91sam926x_pit_dt_init(struct device_node *node)
 CLOCKSOURCE_OF_DECLARE(at91sam926x_pit, "atmel,at91sam9260-pit",
 		       at91sam926x_pit_dt_init);
 
-static void __iomem *pit_base_addr;
-
-void __init at91sam926x_pit_init(void)
+static int __init pit_early_probe(struct platform_device *pdev)
 {
 	struct pit_data *data;
+	struct resource *res;
 
 	data = kzalloc(sizeof(*data), GFP_KERNEL);
 	if (!data)
 		panic(pr_fmt("Unable to allocate memory\n"));
 
-	data->base = pit_base_addr;
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!request_mem_region(res->start, resource_size(res),	"at91_pit"))
+		panic(pr_fmt("Unable to request memory region\n"));
+
+	data->base = ioremap(res->start, resource_size(res));
+	if (!data->base)
+		panic(pr_fmt("Impossible to ioremap PIT\n"));
 
 	data->mck = clk_get(NULL, "mck");
 	if (IS_ERR(data->mck))
 		panic(pr_fmt("Unable to get mck clk\n"));
 
-	data->irq = NR_IRQS_LEGACY + AT91_ID_SYS;
+	data->irq = platform_get_irq(pdev, 0);
+	if (data->irq < 0)
+		panic(pr_fmt("Unable to get IRQ from resources\n"));
 
 	at91sam926x_pit_common_init(data);
+
+	return 0;
 }
 
-void __init at91sam926x_ioremap_pit(u32 addr)
-{
-	if (of_have_populated_dt())
-		return;
-
-	pit_base_addr = ioremap(addr, 16);
-
-	if (!pit_base_addr)
-		panic(pr_fmt("Impossible to ioremap PIT\n"));
-}
+static struct platform_driver pit_driver __initdata = {
+	.probe		= pit_early_probe,
+	.driver		= {
+		.name	= "at91_pit",
+	},
+};
+early_platform_init("earlytimer", &pit_driver);

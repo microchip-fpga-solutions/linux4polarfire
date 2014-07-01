@@ -374,7 +374,6 @@ static void __init at91sam9g45_ioremap_registers(void)
 {
 	at91_ioremap_ramc(0, AT91SAM9G45_BASE_DDRSDRC1, 512);
 	at91_ioremap_ramc(1, AT91SAM9G45_BASE_DDRSDRC0, 512);
-	at91sam926x_ioremap_pit(AT91SAM9G45_BASE_PIT);
 	at91sam9_ioremap_smc(0, AT91SAM9G45_BASE_SMC);
 	at91_ioremap_matrix(AT91SAM9G45_BASE_MATRIX);
 	at91_pm_set_standby(at91_ddr_standby);
@@ -477,9 +476,36 @@ static unsigned int at91sam9g45_default_irq_priority[NR_AIC_IRQS] __initdata = {
 	0,	/* Advanced Interrupt Controller (IRQ0) */
 };
 
+static struct resource pit_resources[] = {
+	[0] = {
+		.start	= AT91SAM9G45_BASE_PIT,
+		.end	= AT91SAM9G45_BASE_PIT + SZ_16 - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= NR_IRQS_LEGACY + AT91_ID_SYS,
+		.end	= NR_IRQS_LEGACY + AT91_ID_SYS,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device pit_device = {
+	.name		= "at91_pit",
+	.resource	= pit_resources,
+	.num_resources	= ARRAY_SIZE(pit_resources),
+};
+
+static struct platform_device *at91sam9g45_early_devices[] __initdata = {
+	&pit_device,
+};
+
 static void __init at91sam9g45_init_time(void)
 {
-	at91sam926x_pit_init();
+	early_platform_add_devices(at91sam9g45_early_devices,
+				   ARRAY_SIZE(at91sam9g45_early_devices));
+
+	early_platform_driver_register_all("earlytimer");
+	early_platform_driver_probe("earlytimer", 1, 0);
 }
 
 AT91_SOC_START(at91sam9g45)
