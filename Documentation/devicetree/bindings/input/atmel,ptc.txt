@@ -1,0 +1,67 @@
+Atmel PTC Subsystem
+
+The Atmel Peripheral Touch Controller subsystem offers built-in hardware
+for capacitive touch measurement on sensors that function as buttons, sliders
+and wheels.
+
+1) PTC Subsystem node
+
+Required properties:
+- compatible: 		Must be "atmel,sama5d2-ptc"
+- reg: 			Address, length of the shared memory and ppp registers location
+			and length.
+- clocks: 		Phandlers to the clocks.
+- clock-names: 		Must be "ptc_clk", "ptc_int_osc", "slow_clk".
+- #address-cells:	Must be one. The cell is the button or scroller id.
+- #size-cells: 		Must be zero.
+
+Example:
+	ptc@fc060000 {
+		compatible = "atmel,sama5d2-ptc";
+		reg = <0x00800000 0x10000
+		       0xfc060000 0xcf>;
+		interrupts = <58 IRQ_TYPE_LEVEL_HIGH 7>;
+		clocks = <&ptc_clk>, <&main>, <&clk32k>;
+		clock-names = "ptc_clk", "ptc_int_osc", "slow_clk";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		[ child node definitions... ]
+	};
+
+2) Scroller / buttons subnodes
+
+Subnodes describe the kind of sensors the customer want to use. They have to be
+named according to their function: button, slider or wheel.
+
+2.1) Scroller subnodes
+
+Required properties:
+- reg:	Id of the scroller, each id must be different.
+
+Example:
+	slider@0 {
+		reg = <0>;
+	};
+
+	wheel@1 {
+		reg = <1>;
+	};
+
+2.2) Button subnodes
+
+Required properties:
+- reg:			Id of node used for the button, each id must be
+			different.
+- linux,keycode: 	Key code of the button.
+
+Example:
+		button@8 {
+			reg = <8>;
+			linux,keycode = <2>;
+		};
+
+		button@9 {
+			reg = <9>;
+			linux,keycode = <3>;
+		};
