@@ -1,0 +1,68 @@
+# node_group_config [count] [ptc_type] [freq_option] [calib_option]
+# count: 0 - ???
+# ptc_type: mutual=64, self=128
+# freq_option:
+# calib_option:
+set node_group_config 16 64 2 32
+
+# node_config [id] [mask_x] [mask_y] [csd] [rsel] [prsc] [gain_analog] [gain_digital] [oversampling]
+# id: 0 - 64
+# mask_x:
+# mask_y:
+# csd:
+# rsel:
+# prsc:
+# gain_analog:
+# gain_digital:
+# oversampling:
+set node_config 0 1 1 10 1 0 0 1 4
+set node_config 1 2 1 10 1 0 0 1 4
+set node_config 2 4 1 10 1 0 0 1 4
+set node_config 3 8 1 10 1 0 0 1 4
+set node_config 4 1 2 10 1 0 0 1 4
+set node_config 5 2 2 10 1 0 0 1 4
+set node_config 6 4 2 10 1 0 0 1 4
+set node_config 7 8 2 10 1 0 0 1 4
+set node_config 8 1 4 10 1 0 0 1 4
+set node_config 9 2 4 10 1 0 0 1 4
+set node_config 10 4 4 10 1 0 0 1 4
+set node_config 11 8 4 10 1 0 0 1 4
+set node_config 12 1 8 10 1 0 0 1 4
+set node_config 13 2 8 10 1 0 0 1 4
+set node_config 14 4 8 10 1 0 0 1 4
+set node_config 15 8 8 10 1 0 0 1 4
+
+set node_data 0 1 0 0
+set node_data 1 1 0 0
+set node_data 2 1 0 0
+set node_data 3 1 0 0
+set node_data 4 1 0 0
+set node_data 5 1 0 0
+set node_data 6 1 0 0
+set node_data 7 1 0 0
+set node_data 8 1 0 0
+set node_data 9 1 0 0
+set node_data 10 1 0 0
+set node_data 11 1 0 0
+set node_data 12 1 0 0
+set node_data 13 1 0 0
+set node_data 14 1 0 0
+set node_data 15 1 0 0
+set key_group_config 16 3 0 10 1 0 10 10 1
+set key_config 0 28 1 0
+set key_config 1 28 1 0
+set key_config 2 28 1 0
+set key_config 3 28 1 0
+set key_config 4 28 1 0
+set key_config 5 28 1 0
+set key_config 6 28 1 0
+set key_config 7 28 1 0
+set key_config 8 28 1 0
+set key_config 9 28 1 0
+set key_config 10 28 1 0
+set key_config 11 28 1 0
+set key_config 12 28 1 0
+set key_config 13 28 1 0
+set key_config 14 28 1 0
+set key_config 15 28 1 0
+set auto_scan_config 16 15 14
