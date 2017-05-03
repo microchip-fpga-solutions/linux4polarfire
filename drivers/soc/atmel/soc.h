@@ -114,4 +114,7 @@ at91_soc_init(const struct at91_soc *socs);
 #define SAMV70Q19_CIDR_MATCH		0x213d0a00
 #define SAMV70Q19_EXID_MATCH		0x00000002
 
+#define SAMA7G_CIDR_MATCH		0x00000000 /* WIP TODO */
+#define SAMA7G5_EXID_MATCH		0x00000001
+
 #endif /* __AT91_SOC_H */

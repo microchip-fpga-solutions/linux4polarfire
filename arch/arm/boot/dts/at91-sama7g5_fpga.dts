@@ -1,0 +1,12 @@
+/dts-v1/;
+#include "sama7g5.dtsi"
+
+/ {
+	model = "Atmel SAMA7G5-FPGA";
+	compatible = "atmel,sama7g5fpga", "atmel,sama7g5", "atmel,sama7";
+
+	chosen {
+/*		bootargs = "console=ttyS0,115200 earlyprintk root=/dev/nfs nfsroot=192.168.100.1:/nfsroot ip=192.168.100.10:192.168.100.1::255.255.255.0::eth0:::";*/
+		bootargs = "console=ttyS0,115200 earlycon";
+	};
+};

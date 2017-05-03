@@ -1397,6 +1397,7 @@ static void __init devicemaps_init(const struct machine_desc *mdesc)
 		mdesc->map_io();
 	else
 		debug_ll_io_init();
+
 	fill_pmd_gaps();
 
 	/* Reserve fixed i/o space in VMALLOC region */
@@ -1408,8 +1409,10 @@ static void __init devicemaps_init(const struct machine_desc *mdesc)
 	 * any write-allocated cache lines in the vector page are written
 	 * back.  After this point, we can start to touch devices again.
 	 */
-	local_flush_tlb_all();
-	flush_cache_all();
+	printk("[%s,%u]: TODO: local_flush_tlb_all\n", __func__, __LINE__);
+	//local_flush_tlb_all();
+	printk("[%s,%u]: TODO: flush_cache_all\n", __func__, __LINE__);
+	//flush_cache_all();
 
 	/* Enable asynchronous aborts */
 	early_abt_enable();
