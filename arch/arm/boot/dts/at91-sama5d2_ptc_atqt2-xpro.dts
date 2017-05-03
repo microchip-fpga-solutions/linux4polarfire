@@ -386,84 +386,12 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
-				button@0 {
+				slider@0 {
 					reg = <0>;
-					linux,keycode = <1>;
 				};
 
-				button@1 {
+				slider@1 {
 					reg = <1>;
-					linux,keycode = <2>;
-				};
-
-				button@2 {
-					reg = <2>;
-					linux,keycode = <3>;
-				};
-
-				button@3 {
-					reg = <3>;
-					linux,keycode = <4>;
-				};
-
-				button@4 {
-					reg = <4>;
-					linux,keycode = <5>;
-				};
-
-				button@5 {
-					reg = <5>;
-					linux,keycode = <6>;
-				};
-
-				button@6 {
-					reg = <6>;
-					linux,keycode = <7>;
-				};
-
-				button@7 {
-					reg = <7>;
-					linux,keycode = <8>;
-				};
-
-				button@8 {
-					reg = <8>;
-					linux,keycode = <9>;
-				};
-
-				button@9 {
-					reg = <9>;
-					linux,keycode = <10>;
-				};
-
-				button@10 {
-					reg = <10>;
-					linux,keycode = <11>;
-				};
-
-				button@11 {
-					reg = <11>;
-					linux,keycode = <12>;
-				};
-
-				button@12 {
-					reg = <12>;
-					linux,keycode = <13>;
-				};
-
-				button@13 {
-					reg = <13>;
-					linux,keycode = <14>;
-				};
-
-				button@14 {
-					reg = <14>;
-					linux,keycode = <15>;
-				};
-
-				button@15 {
-					reg = <15>;
-					linux,keycode = <16>;
 				};
 			};
 		};
