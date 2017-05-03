@@ -9,8 +9,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#define INPUT_BUTTONS	"/dev/input/event1"
-#define POLL_NFDS	1
+#define INPUT_SLIDER_X	"/dev/input/event1"
+#define INPUT_SLIDER_Y	"/dev/input/event2"
+#define POLL_NFDS	2
 
 #define IS31FL3728_ADDR 0x60
 #define IS31FL3728_UPDATE_COLUMN_REG 0xc
@@ -51,17 +52,18 @@ void led_all_off(void)
 	led_update();
 }
 
-void led_state(unsigned int id, bool state)
+void led_on(int xpos, int ypos)
 {
 	char buf[2];
 
-	if (state)
-		col_state[id % 7] |= 0b01000000 >> (id / 7);
-	else
-		col_state[id % 7] &= ~0b01000000 >> (id / 7);
+	led_all_off();
 
-	buf[0] = 1 + id % 7; /* col0 @ 0x1 */
-	buf[1] = col_state[id % 7];
+	if (!xpos && !ypos)
+		return;
+
+	/* xpos: 0 to 63, ypos: 0 to 63 */
+	buf[0] = 1 + xpos / 10;
+	buf[1] = 0b01000000 >> (ypos / 10);
 
 	if (write(file, buf, 2) != 2) {
 		perror("Failed to write to the i2c bus.");
@@ -74,7 +76,7 @@ void led_state(unsigned int id, bool state)
 int main(void)
 {
 	char *filename = "/dev/i2c-1";
-	int buttons_fd, rc;
+	int slider_x_fd, slider_y_fd, rc, i, xpos = 0, ypos = 0;
 	struct pollfd fds[POLL_NFDS];
 	struct input_event ev;
 	ssize_t n;
@@ -89,14 +91,22 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	buttons_fd = open(INPUT_BUTTONS, O_RDONLY);
-	if (buttons_fd == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", INPUT_BUTTONS, strerror(errno));
+	slider_x_fd = open(INPUT_SLIDER_X, O_RDONLY);
+	if (slider_x_fd == -1) {
+		fprintf(stderr, "Cannot open %s: %s.\n", INPUT_SLIDER_X, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	fds[0].fd = buttons_fd;
+	slider_y_fd = open(INPUT_SLIDER_Y, O_RDONLY);
+	if (slider_y_fd == -1) {
+		fprintf(stderr, "Cannot open %s: %s.\n", INPUT_SLIDER_Y, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	fds[0].fd = slider_x_fd;
 	fds[0].events = POLLIN;
+	fds[1].fd = slider_y_fd;
+	fds[1].events = POLLIN;
 
 	led_all_off();
 
@@ -108,24 +118,66 @@ int main(void)
 			exit(EXIT_FAILURE);
 		}
 
-		n = read(buttons_fd, &ev, sizeof(ev));
-		if (n < 0) {
-			perror("Failed to read from the i2c bus.");
-			exit(EXIT_FAILURE);
-		} else if (n < sizeof(ev)) {
-			fprintf(stderr, "Only %zd/%d bytes read\n", n, sizeof(ev));
-			exit(EXIT_FAILURE);
+		for (i = 0; i < POLL_NFDS; i++) {
+			if (fds[i].revents == 0)
+				continue;
+
+			if (fds[i].revents != POLLIN) {
+				fprintf(stderr, "error, revents = %d\n", fds[i].revents);
+				break;
+			}
+
+			/* Get slider X event. */
+			if (fds[i].fd == slider_x_fd) {
+				n = read(slider_x_fd, &ev, sizeof(ev));
+				if (n == (ssize_t) - 1) {
+						break;
+				} else {
+					if (n != sizeof(ev)) {
+						errno = EIO;
+						break;
+					}
+				}
+
+				dbg("Slider X event: type=%d, code=%d, value=%d\n", ev.type, ev.code, ev.value);
+
+				/* Slider touch. */
+				if (ev.type == EV_KEY)
+					if (ev.value == 0)
+						xpos = 0;
+
+				/* Slider position. */
+				if (ev.type == EV_ABS)
+					xpos = ev.value;
+			}
+
+			/* Get slider Y event. */
+			if (fds[i].fd == slider_y_fd) {
+				n = read(slider_y_fd, &ev, sizeof(ev));
+				if (n == (ssize_t) - 1) {
+						break;
+				} else {
+					if (n != sizeof(ev)) {
+						errno = EIO;
+						break;
+					}
+				}
+
+				dbg("Slider Y event: type=%d, code=%d, value=%d\n", ev.type, ev.code, ev.value);
+
+				/* Slider touch. */
+				if (ev.type == EV_KEY)
+					if (ev.value == 0)
+						ypos = 0;
+
+				/* Slider position. */
+				if (ev.type == EV_ABS)
+					ypos = ev.value;
+			}
 		}
 
-		if (ev.type == EV_KEY) {
-			int b_row = (ev.code - 1) / 4; /* 0 to 3 */
-			int b_col = (ev.code - 1) % 4; /* 0 to 3 */
-			int led_id = b_row * 7 * 2 + b_col * 2;
-			if (ev.value)
-				led_state(led_id, true);
-			else
-				led_state(led_id, false);
-		}
+		/* Update LEDs. */
+		led_on(xpos, ypos);
 	}
 
 	exit(EXIT_SUCCESS);
