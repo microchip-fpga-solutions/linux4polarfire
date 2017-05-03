@@ -214,7 +214,7 @@ static void atmel_ppp_irq_scroller_event(struct atmel_ptc *ptc)
 		struct atmel_qtm_scroller_data scroller_data;
 		struct atmel_qtm_scroller_config scroller_config;
 
-		if (!(ptc->scroller_event & mask))
+		if (!(ptc->scroller_event & mask) || !ptc->scroller_input[i])
 			continue;
 
 		atmel_qtm_get_scroller_data(&scroller_data, i);
@@ -236,6 +236,9 @@ static void atmel_ppp_irq_scroller_event(struct atmel_ptc *ptc)
 static void atmel_ppp_irq_button_event(struct atmel_ptc *ptc)
 {
 	int i, j;
+
+	if (!ptc->buttons_input)
+		return;
 
 	for (i = 0; i < ATMEL_PTC_MAX_NODES / 32; i++) {
 		if (!ptc->button_event[i])
