@@ -73,82 +73,56 @@ int main(void)
 	fds[2].events = POLLIN;
 
 	slider_led_fds[0] = open(LED_0, O_WRONLY);
-	if (slider_led_fds[0] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_0, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[0] == -1)
+		printf("Cannot open %s: %s.\n", LED_0, strerror(errno));
 
 	slider_led_fds[1] = open(LED_1, O_WRONLY);
-	if (slider_led_fds[1] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_1, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[1] == -1)
+		printf("Cannot open %s: %s.\n", LED_1, strerror(errno));
 
 	slider_led_fds[2] = open(LED_2, O_WRONLY);
-	if (slider_led_fds[2] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_2, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[2] == -1)
+		printf("Cannot open %s: %s.\n", LED_2, strerror(errno));
 
 	slider_led_fds[3] = open(LED_3, O_WRONLY);
-	if (slider_led_fds[3] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_3, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[3] == -1)
+		printf("Cannot open %s: %s.\n", LED_3, strerror(errno));
 
 	slider_led_fds[4] = open(LED_4, O_WRONLY);
-	if (slider_led_fds[4] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_4, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[4] == -1)
+		printf("Cannot open %s: %s.\n", LED_4, strerror(errno));
 
 	slider_led_fds[5] = open(LED_5, O_WRONLY);
-	if (slider_led_fds[5] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_5, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[5] == -1)
+		printf("Cannot open %s: %s.\n", LED_5, strerror(errno));
 
 	slider_led_fds[6] = open(LED_6, O_WRONLY);
-	if (slider_led_fds[6] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_6, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[6] == -1)
+		printf("Cannot open %s: %s.\n", LED_6, strerror(errno));
 
 	slider_led_fds[7] = open(LED_7, O_WRONLY);
-	if (slider_led_fds[7] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_7, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (slider_led_fds[7] == -1)
+		printf("Cannot open %s: %s.\n", LED_7, strerror(errno));
 
 	wheel_led_fds[0] = open(LED_RED, O_WRONLY);
-	if (wheel_led_fds[0] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_RED, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (wheel_led_fds[0] == -1)
+		printf("Cannot open %s: %s.\n", LED_RED, strerror(errno));
 
 	wheel_led_fds[1] = open(LED_GREEN, O_WRONLY);
-	if (wheel_led_fds[1] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_GREEN, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (wheel_led_fds[1] == -1)
+		printf("Cannot open %s: %s.\n", LED_GREEN, strerror(errno));
 
 	wheel_led_fds[2] = open(LED_BLUE, O_WRONLY);
-	if (wheel_led_fds[2] == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_BLUE, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (wheel_led_fds[2] == -1)
+		printf("Cannot open %s: %s.\n", LED_BLUE, strerror(errno));
 
 	button1_led_fd = open(LED_8, O_WRONLY);
-	if (button1_led_fd == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_8, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (button1_led_fd == -1)
+		printf("Cannot open %s: %s.\n", LED_8, strerror(errno));
 
 	button2_led_fd = open(LED_9, O_WRONLY);
-	if (button2_led_fd == -1) {
-		fprintf(stderr, "Cannot open %s: %s.\n", LED_9, strerror(errno));
-		return EXIT_FAILURE;
-	}
+	if (button2_led_fd == -1)
+		printf("Cannot open %s: %s.\n", LED_9, strerror(errno));
 
 	while (1) {
 		rc = poll(fds, POLL_NFDS, -1);
