@@ -1,7 +1,7 @@
 CC=$(CROSS_COMPILE)gcc
 CFLAGS=-Wall
 
-all: atqt1-xpro_demo atqt2-xpro_demo
+all: atqt1-xpro_demo atqt2-xpro_demo atqt6-xpro_demo
 
 atqt1-xpro_demo: atqt1-xpro_demo.o
 	$(CC) -o atqt1-xpro_demo atqt1-xpro_demo.o --static
@@ -14,6 +14,12 @@ atqt2-xpro_demo: atqt2-xpro_demo.o
 
 atqt2-xpro_demo.o: atqt2-xpro_demo.c
 	$(CC) -o atqt2-xpro_demo.o -c atqt2-xpro_demo.c $(CFLAGS)
+
+atqt6-xpro_demo: atqt6-xpro_demo.o
+	$(CC) -o atqt6-xpro_demo atqt6-xpro_demo.o --static
+
+atqt6-xpro_demo.o: atqt6-xpro_demo.c
+	$(CC) -o atqt6-xpro_demo.o -c atqt6-xpro_demo.c $(CFLAGS)
 
 clean:
 	rm -rf *.o
