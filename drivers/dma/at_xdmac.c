@@ -49,14 +49,24 @@
 #define AT_XDMAC_GE		0x1C	/* Global Channel Enable Register */
 #define AT_XDMAC_GD		0x20	/* Global Channel Disable Register */
 #define AT_XDMAC_GS		0x24	/* Global Channel Status Register */
-#define AT_XDMAC_GRS		0x28	/* Global Channel Read Suspend Register */
-#define AT_XDMAC_GWS		0x2C	/* Global Write Suspend Register */
-#define AT_XDMAC_GRWS		0x30	/* Global Channel Read Write Suspend Register */
-#define AT_XDMAC_GRWR		0x34	/* Global Channel Read Write Resume Register */
-#define AT_XDMAC_GSWR		0x38	/* Global Channel Software Request Register */
-#define AT_XDMAC_GSWS		0x3C	/* Global channel Software Request Status Register */
-#define AT_XDMAC_GSWF		0x40	/* Global Channel Software Flush Request Register */
+#define AT_XDMAC_GRS		0x30	/* Global Channel Read Suspend Register */
+#define AT_XDMAC_GWS		0x38	/* Global Write Suspend Register */
+#define AT_XDMAC_GRWS		0x40	/* Global Channel Read Write Suspend Register */
+#define AT_XDMAC_GRWR		0x44	/* Global Channel Read Write Resume Register */
+#define AT_XDMAC_GSWR		0x48	/* Global Channel Software Request Register */
+#define AT_XDMAC_GSWS		0x4C	/* Global channel Software Request Status Register */
+#define AT_XDMAC_GSWF		0x50	/* Global Channel Software Flush Request Register */
 #define AT_XDMAC_VERSION	0xFFC	/* XDMAC Version Register */
+#if 0
+#define AT_XDMAC_GRS           0x28    /* Global Channel Read Suspend Register */
+#define AT_XDMAC_GWS           0x2C    /* Global Write Suspend Register */
+#define AT_XDMAC_GRWS          0x30    /* Global Channel Read Write Suspend Register */
+#define AT_XDMAC_GRWR          0x34    /* Global Channel Read Write Resume Register */
+#define AT_XDMAC_GSWR          0x38    /* Global Channel Software Request Register */
+#define AT_XDMAC_GSWS          0x3C    /* Global channel Software Request Status Register */
+#define AT_XDMAC_GSWF          0x40    /* Global Channel Software Flush Request Register */
+#endif
+
 
 /* Channel relative registers offsets */
 #define AT_XDMAC_CIE		0x00	/* Channel Interrupt Enable Register */
@@ -161,7 +171,10 @@
 #define AT_XDMAC_CSUS		0x30	/* Channel Source Microblock Stride */
 #define AT_XDMAC_CDUS		0x34	/* Channel Destination Microblock Stride */
 
+#if 0
 #define AT_XDMAC_CHAN_REG_BASE	0x50	/* Channel registers base address */
+#endif
+#define AT_XDMAC_CHAN_REG_BASE	0x60	/* Channel registers base address */
 
 /* Microblock control members */
 #define AT_XDMAC_MBR_UBC_UBLEN_MAX	0xFFFFFFUL	/* Maximum Microblock Length */
@@ -350,8 +363,8 @@ static void at_xdmac_start_xfer(struct at_xdmac_chan *atchan,
 	first->active_xfer = true;
 
 	/* Tell xdmac where to get the first descriptor. */
-	reg = AT_XDMAC_CNDA_NDA(first->tx_dma_desc.phys)
-	      | AT_XDMAC_CNDA_NDAIF(atchan->memif);
+	reg = AT_XDMAC_CNDA_NDA(first->tx_dma_desc.phys);
+	//      | AT_XDMAC_CNDA_NDAIF(atchan->memif);
 	at_xdmac_chan_write(atchan, AT_XDMAC_CNDA, reg);
 
 	/*
@@ -394,8 +407,8 @@ static void at_xdmac_start_xfer(struct at_xdmac_chan *atchan,
 	 * an interrupt after each periods.
 	 */
 	if (at_xdmac_chan_is_cyclic(atchan))
-		at_xdmac_chan_write(atchan, AT_XDMAC_CIE,
-				    reg | AT_XDMAC_CIE_BIE);
+	{	at_xdmac_chan_write(atchan, AT_XDMAC_CIE,
+				    reg | AT_XDMAC_CIE_BIE);}
 	else
 		at_xdmac_chan_write(atchan, AT_XDMAC_CIE,
 				    reg | AT_XDMAC_CIE_LIE);
@@ -527,8 +540,8 @@ static struct dma_chan *at_xdmac_xlate(struct of_phandle_args *dma_spec,
 	}
 
 	atchan = to_at_xdmac_chan(chan);
-	atchan->memif = AT91_XDMAC_DT_GET_MEM_IF(dma_spec->args[0]);
-	atchan->perif = AT91_XDMAC_DT_GET_PER_IF(dma_spec->args[0]);
+//	atchan->memif = AT91_XDMAC_DT_GET_MEM_IF(dma_spec->args[0]);
+//	atchan->perif = AT91_XDMAC_DT_GET_PER_IF(dma_spec->args[0]);
 	atchan->perid = AT91_XDMAC_DT_GET_PERID(dma_spec->args[0]);
 	dev_dbg(dev, "chan dt cfg: memif=%u perif=%u perid=%u\n",
 		 atchan->memif, atchan->perif, atchan->perid);
@@ -547,8 +560,8 @@ static int at_xdmac_compute_chan_conf(struct dma_chan *chan,
 			AT91_XDMAC_DT_PERID(atchan->perid)
 			| AT_XDMAC_CC_DAM_INCREMENTED_AM
 			| AT_XDMAC_CC_SAM_FIXED_AM
-			| AT_XDMAC_CC_DIF(atchan->memif)
-			| AT_XDMAC_CC_SIF(atchan->perif)
+//			| AT_XDMAC_CC_DIF(atchan->memif)
+//			| AT_XDMAC_CC_SIF(atchan->perif)
 			| AT_XDMAC_CC_SWREQ_HWR_CONNECTED
 			| AT_XDMAC_CC_DSYNC_PER2MEM
 			| AT_XDMAC_CC_MBSIZE_SIXTEEN
@@ -570,8 +583,8 @@ static int at_xdmac_compute_chan_conf(struct dma_chan *chan,
 			AT91_XDMAC_DT_PERID(atchan->perid)
 			| AT_XDMAC_CC_DAM_FIXED_AM
 			| AT_XDMAC_CC_SAM_INCREMENTED_AM
-			| AT_XDMAC_CC_DIF(atchan->perif)
-			| AT_XDMAC_CC_SIF(atchan->memif)
+//			| AT_XDMAC_CC_DIF(atchan->perif)
+//			| AT_XDMAC_CC_SIF(atchan->memif)
 			| AT_XDMAC_CC_SWREQ_HWR_CONNECTED
 			| AT_XDMAC_CC_DSYNC_MEM2PER
 			| AT_XDMAC_CC_MBSIZE_SIXTEEN
@@ -699,10 +712,15 @@ at_xdmac_prep_slave_sg(struct dma_chan *chan, struct scatterlist *sgl,
 			| AT_XDMAC_MBR_UBC_NSEN					/* next descriptor src parameter update */
 			| (len >> fixed_dwidth);				/* microblock length */
 		desc->lld.mbr_cfg = (atchan->cfg & ~AT_XDMAC_CC_DWIDTH_MASK) |
-				    AT_XDMAC_CC_DWIDTH(fixed_dwidth);
+				    AT_XDMAC_CC_DWIDTH(fixed_dwidth)
+		  | AT_XDMAC_CC_PROT_UNSEC	;
 		dev_dbg(chan2dev(chan),
-			 "%s: lld: mbr_sa=%pad, mbr_da=%pad, mbr_ubc=0x%08x\n",
-			 __func__, &desc->lld.mbr_sa, &desc->lld.mbr_da, desc->lld.mbr_ubc);
+			 "%s: lld: mbr_nda=%p, mbr_sa=%pad, mbr_da=%pad, mbr_ubc=0x%08x, mbr_cfg=%x, mbr_bc=%x, mbr_ds=%x, mbr_sus=%x, mbr_dus=%x\n",
+			 __func__, 
+				&desc->lld.mbr_nda,
+&desc->lld.mbr_sa, &desc->lld.mbr_da, desc->lld.mbr_ubc,
+desc->lld.mbr_cfg, desc->lld.mbr_bc, desc->lld.mbr_ds, desc->lld.mbr_sus, desc->lld.mbr_dus
+);
 
 		/* Chain lld. */
 		if (prev)
@@ -782,7 +800,7 @@ at_xdmac_prep_dma_cyclic(struct dma_chan *chan, dma_addr_t buf_addr,
 			desc->lld.mbr_sa = buf_addr + i * period_len;
 			desc->lld.mbr_da = atchan->sconfig.dst_addr;
 		}
-		desc->lld.mbr_cfg = atchan->cfg;
+		desc->lld.mbr_cfg = atchan->cfg | AT_XDMAC_CC_PROT_UNSEC;
 		desc->lld.mbr_ubc = AT_XDMAC_MBR_UBC_NDV1
 			| AT_XDMAC_MBR_UBC_NDEN
 			| AT_XDMAC_MBR_UBC_NSEN
@@ -867,8 +885,8 @@ at_xdmac_interleaved_queue_desc(struct dma_chan *chan,
 	 * flag status.
 	 */
 	u32			chan_cc = AT_XDMAC_CC_PERID(0x3f)
-					| AT_XDMAC_CC_DIF(0)
-					| AT_XDMAC_CC_SIF(0)
+//					| AT_XDMAC_CC_DIF(0)
+//					| AT_XDMAC_CC_SIF(0)
 					| AT_XDMAC_CC_MBSIZE_SIXTEEN
 					| AT_XDMAC_CC_TYPE_MEM_TRAN;
 
@@ -920,7 +938,7 @@ at_xdmac_interleaved_queue_desc(struct dma_chan *chan,
 		| AT_XDMAC_MBR_UBC_NDEN
 		| AT_XDMAC_MBR_UBC_NSEN
 		| ublen;
-	desc->lld.mbr_cfg = chan_cc;
+	desc->lld.mbr_cfg = chan_cc | AT_XDMAC_CC_PROT_UNSEC;
 
 	dev_dbg(chan2dev(chan),
 		"%s: lld: mbr_sa=%pad, mbr_da=%pad, mbr_ubc=0x%08x, mbr_cfg=0x%08x\n",
@@ -1051,8 +1069,8 @@ at_xdmac_prep_dma_memcpy(struct dma_chan *chan, dma_addr_t dest, dma_addr_t src,
 	u32			chan_cc = AT_XDMAC_CC_PERID(0x3f)
 					| AT_XDMAC_CC_DAM_INCREMENTED_AM
 					| AT_XDMAC_CC_SAM_INCREMENTED_AM
-					| AT_XDMAC_CC_DIF(0)
-					| AT_XDMAC_CC_SIF(0)
+//					| AT_XDMAC_CC_DIF(0)
+//					| AT_XDMAC_CC_SIF(0)
 					| AT_XDMAC_CC_MBSIZE_SIXTEEN
 					| AT_XDMAC_CC_TYPE_MEM_TRAN;
 	unsigned long		irqflags;
@@ -1107,11 +1125,16 @@ at_xdmac_prep_dma_memcpy(struct dma_chan *chan, dma_addr_t dest, dma_addr_t src,
 			| AT_XDMAC_MBR_UBC_NDEN
 			| AT_XDMAC_MBR_UBC_NSEN
 			| ublen;
-		desc->lld.mbr_cfg = chan_cc;
+		desc->lld.mbr_cfg = chan_cc | (0x7F << 24) | AT_XDMAC_CC_PROT_UNSEC	;
+		desc->lld.mbr_nda = 0;
 
 		dev_dbg(chan2dev(chan),
-			 "%s: lld: mbr_sa=%pad, mbr_da=%pad, mbr_ubc=0x%08x, mbr_cfg=0x%08x\n",
-			 __func__, &desc->lld.mbr_sa, &desc->lld.mbr_da, desc->lld.mbr_ubc, desc->lld.mbr_cfg);
+			 "%s: lld: mbr_nda=%p, mbr_sa=%pad, mbr_da=%pad, mbr_ubc=0x%08x, mbr_cfg=%x, mbr_bc=%x, mbr_ds=%x, mbr_sus=%x, mbr_dus=%x\n",
+			 __func__, 
+				&desc->lld.mbr_nda,
+&desc->lld.mbr_sa, &desc->lld.mbr_da, desc->lld.mbr_ubc,
+desc->lld.mbr_cfg, desc->lld.mbr_bc, desc->lld.mbr_ds, desc->lld.mbr_sus, desc->lld.mbr_dus
+);
 
 		/* Chain lld. */
 		if (prev)
@@ -1157,8 +1180,8 @@ static struct at_xdmac_desc *at_xdmac_memset_create_desc(struct dma_chan *chan,
 	u32			chan_cc = AT_XDMAC_CC_PERID(0x3f)
 					| AT_XDMAC_CC_DAM_UBS_AM
 					| AT_XDMAC_CC_SAM_INCREMENTED_AM
-					| AT_XDMAC_CC_DIF(0)
-					| AT_XDMAC_CC_SIF(0)
+//					| AT_XDMAC_CC_DIF(0)
+//					| AT_XDMAC_CC_SIF(0)
 					| AT_XDMAC_CC_MBSIZE_SIXTEEN
 					| AT_XDMAC_CC_MEMSET_HW_MODE
 					| AT_XDMAC_CC_TYPE_MEM_TRAN;
@@ -1190,8 +1213,8 @@ static struct at_xdmac_desc *at_xdmac_memset_create_desc(struct dma_chan *chan,
 		| AT_XDMAC_MBR_UBC_NDEN
 		| AT_XDMAC_MBR_UBC_NSEN
 		| ublen;
-	desc->lld.mbr_cfg = chan_cc;
 
+		desc->lld.mbr_cfg = chan_cc  | AT_XDMAC_CC_PROT_UNSEC	;
 	dev_dbg(chan2dev(chan),
 		"%s: lld: mbr_da=%pad, mbr_ds=0x%08x, mbr_ubc=0x%08x, mbr_cfg=0x%08x\n",
 		__func__, &desc->lld.mbr_da, desc->lld.mbr_ds, desc->lld.mbr_ubc,
@@ -2101,6 +2124,8 @@ static const struct dev_pm_ops atmel_xdmac_dev_pm_ops = {
 static const struct of_device_id atmel_xdmac_dt_ids[] = {
 	{
 		.compatible = "atmel,sama5d4-dma",
+	}, {
+		.compatible = "atmel,sama7-dma",
 	}, {
 		/* sentinel */
 	}

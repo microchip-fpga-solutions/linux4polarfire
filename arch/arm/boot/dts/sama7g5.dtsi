@@ -29,67 +29,164 @@
 		cpu@0 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
-			reg = <0>;
+			reg = <0x0>;
 		};
 	};
 
-	/* I put it 64MB, but it must be 1024MB */
+	/* 256 M */
 	memory {
-		reg = <0x20000000 0x4000000>;
+		reg = <0x60000000 0x10000000>;
 	};
 
-        clocks {
-		compatible = "simple-bus";
-		#address-cells = <1>;
-		#size-cells = <0>;
+    clocks {
+	    compatible = "simple-bus";
+	    #address-cells = <1>;
+	    #size-cells = <0>;
 
-		mck: mainck {
-			compatible = "fixed-clock";
-			#clock-cells = <0>;
-			clock-frequency = <20000000>;
+	    mck: mainck {
+		    compatible = "fixed-clock";
+		    #clock-cells = <0>;
+		    clock-frequency = <20000000>;
+	    };
+	    baseclk: baseclk{
+		    compatible = "fixed-clock";
+		    #clock-cells = <0>;
+		    clock-frequency = <12000000>;
+	    };
+	    multclk: multclk {
+		    compatible = "fixed-clock";
+		    #clock-cells = <0>;
+		    clock-frequency = <96000000>;
+	    };
+
+    };
+
+    ahb {
+	    compatible = "simple-bus";
+	    #address-cells = <1>;
+	    #size-cells = <1>;
+	    ranges;
+
+	    apb {
+		    compatible = "simple-bus";
+		    #address-cells = <1>;
+		    #size-cells = <1>;
+		    ranges;
+
+		    gic: interrupt-controller@4b001000 {
+			    compatible = "arm,cortex-a7-gic";
+			    #interrupt-cells = <3>;
+			    #address-cells = <0>;
+			    interrupt-controller;
+			    interrupt-parent;
+			    reg = <0x4B001000 0x1000>,
+				    <0x4B002000 0x2000>;
+		    };
+
+		    tcb0: timer@e2814000 {
+			    compatible = "atmel,tcbmmio";
+			    reg = <0xe2814000 0x100>;
+			    interrupts = <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>;
+			    clocks = <&mck>;
+			    status = "okay";
+		    };
+
+		    uart0: serial@e1818200 {
+			    compatible = "atmel,at91sam9260-usart";
+			    reg = <0xe1818200 0x200>;
+			    interrupts = <GIC_SPI 38 IRQ_TYPE_LEVEL_HIGH>;
+			    clocks = <&mck>;
+			    clock-names = "usart";
+			    dmas = <&dma0 AT91_XDMAC_DT_PERID(5)>,
+				    <&dma0 AT91_XDMAC_DT_PERID(6)>;
+			    dma-names = "rx", "tx";
+			    atmel,use-dma-rx;
+			    atmel,use-dma-tx;
+			    status = "okay";
+		    };
+
+		    uart1: serial@e181c200 {
+			    compatible = "atmel,at91sam9260-usart";
+			    reg = <0xe181c200 0x200>;
+			    interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
+			    clocks = <&mck>;
+			    clock-names = "usart";
+			    dmas = <&dma0 AT91_XDMAC_DT_PERID(7)>,
+				    <&dma0 AT91_XDMAC_DT_PERID(8)>;
+			    dma-names = "rx", "tx";
+			    atmel,use-dma-rx;
+			    atmel,use-dma-tx;
+			    status = "okay";
+		    };
+
+		    uart2: serial@e1820200 {
+			    compatible = "atmel,at91sam9260-usart";
+			    reg = <0xe1820200 0x200>;
+			    interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
+			    clocks = <&mck>;
+			    clock-names = "usart";
+			    dmas = <&dma0 AT91_XDMAC_DT_PERID(9)>,
+				    <&dma0 AT91_XDMAC_DT_PERID(10)>;
+			    dma-names = "rx", "tx";
+			    atmel,use-dma-rx;
+			    atmel,use-dma-tx;
+			    status = "okay";
+		    };
+
+		    uart3: serial@e1824200 {
+			    compatible = "atmel,at91sam9260-usart";
+			    reg = <0xe1824200 0x200>;
+			    interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
+			    clocks = <&mck>;
+			    clock-names = "usart";
+			    dmas = <&dma0 AT91_XDMAC_DT_PERID(11)>,
+				    <&dma0 AT91_XDMAC_DT_PERID(12)>;
+			    dma-names = "rx", "tx";
+			    atmel,use-dma-rx;
+			    atmel,use-dma-tx;
+			    status = "okay";
+		    };
+
+		sdmmc0: sdio-host@e1204000 {
+			compatible = "atmel,sama5d2-sdhci";
+			reg = <0xe1204000 0x300>;
+		        bus-width = <4>;
+			interrupts = <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&mck>, <&multclk>, <&baseclk>;
+			clock-names = "hclock", "multclk", "baseclk";
+			status = "okay";
 		};
-	};
 
-	ahb {
-		compatible = "simple-bus";
-		#address-cells = <1>;
-		#size-cells = <1>;
-		ranges;
 
-		apb {
-			compatible = "simple-bus";
-			#address-cells = <1>;
-			#size-cells = <1>;
-			ranges;
+		    dma0: dma-controller@e2808000 {
+			    compatible = "atmel,sama7-dma";
+			    reg = <0xe2808000 0x1000>;
+			    interrupts = <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH>;
+			    #dma-cells = <1>;
+			    clocks = <&mck>;
+			    clock-names = "dma_clk";
+			    status = "okay";
+		    };
 
-			aic: interrupt-controller@fc020000 {
-				#interrupt-cells = <3>;
-				compatible = "atmel,sama5d4-aic";
-				interrupt-controller;
-				reg = <0xfc020000 0x200>;
-				atmel,external-irqs = <74>;
-			};
+		    dma1: dma-controller@e2808c000 {
+			    compatible = "atmel,sama7-dma";
+			    reg = <0xe280c000 0x1000>;
+			    interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+			    #dma-cells = <1>;
+			    clocks = <&mck>;
+			    clock-names = "dma_clk";
+			    status = "okay";
+		    };
 
-			tcb0: timer@f800c000 {
-				compatible = "atmel,tcbmmio";
-				reg = <0xf800c000 0x100>;
-				interrupts = <35 IRQ_TYPE_LEVEL_HIGH 0>;
-				clocks = <&mck>;
-			};
-
-			uart0: serial@f801c000 {
-				compatible = "atmel,at91sam9260-usart";
-				reg = <0xf801c000 0x200>;
-				interrupts = <24 IRQ_TYPE_LEVEL_HIGH 7>;
-				clocks = <&mck>;
-				clock-names = "usart";
-			};
-
-			chipid@fc069000 {
-				compatible = "atmel,sama7g5-chipid";
-				reg = <0xfc069000 0x8>;
-			};
-
-		};
-	};
+		    dma2: dma-controller@e1200000 {
+			    compatible = "atmel,sama7-dma";
+			    reg = <0xe1200000 0x1000>;
+			    interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>;
+			    #dma-cells = <1>;
+			    clocks = <&mck>;
+			    clock-names = "dma_clk";
+			    status = "okay";
+		    };
+	    };
+    };
 };

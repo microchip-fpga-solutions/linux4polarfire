@@ -98,6 +98,18 @@ static void sdhci_at91_set_clock(struct sdhci_host *host, unsigned int clock)
 	sdhci_writew(host, clk, SDHCI_CLOCK_CONTROL);
 }
 
+static void sdhci_at91_reset(struct sdhci_host *host, u8 mask)
+{
+	sdhci_reset(host, mask);
+
+	if (host->mmc->caps & MMC_CAP_NONREMOVABLE) {
+		u8 mc1r;
+		mc1r = readb(host->ioaddr + SDMMC_MC1R);
+		mc1r |= SDMMC_MC1R_FCD;
+		writeb(mc1r, host->ioaddr + SDMMC_MC1R);
+	}
+}
+
 /*
  * In this specific implementation of the SDHCI controller, the power register
  * needs to have a valid voltage set even when the power supply is managed by
@@ -109,7 +121,9 @@ static void sdhci_at91_set_power(struct sdhci_host *host, unsigned char mode,
 	if (!IS_ERR(host->mmc->supply.vmmc)) {
 		struct mmc_host *mmc = host->mmc;
 
+		spin_unlock_irq(&host->lock);
 		mmc_regulator_set_ocr(mmc, mmc->supply.vmmc, vdd);
+		spin_lock_irq(&host->lock);
 	}
 	sdhci_set_power_noreg(host, mode, vdd);
 }
@@ -121,12 +135,9 @@ void sdhci_at91_set_uhs_signaling(struct sdhci_host *host, unsigned int timing)
 	sdhci_set_uhs_signaling(host, timing);
 }
 
-static void sdhci_at91_reset(struct sdhci_host *host, u8 mask)
+static unsigned int sdhci_at91_get_ro(struct sdhci_host *host)
 {
-	sdhci_reset(host, mask);
-
-	if (host->mmc->caps & MMC_CAP_NONREMOVABLE)
-		sdhci_at91_set_force_card_detect(host);
+return 0;
 }
 
 static const struct sdhci_ops sdhci_at91_sama5d2_ops = {
@@ -135,6 +146,7 @@ static const struct sdhci_ops sdhci_at91_sama5d2_ops = {
 	.reset			= sdhci_at91_reset,
 	.set_uhs_signaling	= sdhci_at91_set_uhs_signaling,
 	.set_power		= sdhci_at91_set_power,
+	.get_ro = sdhci_at91_get_ro,
 };
 
 static const struct sdhci_pltfm_data soc_data_sama5d2 = {
@@ -346,9 +358,69 @@ static int sdhci_at91_probe(struct platform_device *pdev)
 		return PTR_ERR(priv->gck);
 	}
 
+<<<<<<< 06ec89f01a71a76ba31376ccaecbc7b2c56a9c94
 	ret = sdhci_at91_set_clks_presets(&pdev->dev);
 	if (ret)
 		goto sdhci_pltfm_free;
+=======
+	/*
+	 * The mult clock is provided by as a generated clock by the PMC
+	 * controller. In order to set the rate of gck, we have to get the
+	 * base clock rate and the clock mult from capabilities.
+	 */
+	clk_prepare_enable(priv->hclock);
+	caps0 = readl(host->ioaddr + SDHCI_CAPABILITIES);
+	caps1 = readl(host->ioaddr + SDHCI_CAPABILITIES_1);
+	clk_base = (caps0 & SDHCI_CLOCK_V3_BASE_MASK) >> SDHCI_CLOCK_BASE_SHIFT;
+	clk_mul = (caps1 & SDHCI_CLOCK_MUL_MASK) >> SDHCI_CLOCK_MUL_SHIFT;
+	gck_rate = clk_base * 1000000 * (clk_mul + 1);
+	ret = clk_set_rate(priv->gck, gck_rate);
+	if (ret < 0) {
+		dev_err(&pdev->dev, "failed to set gck");
+//		goto hclock_disable_unprepare;
+	}
+	/*
+	 * We need to check if we have the requested rate for gck because in
+	 * some cases this rate could be not supported. If it happens, the rate
+	 * is the closest one gck can provide. We have to update the value
+	 * of clk mul.
+	 */
+	real_gck_rate = clk_get_rate(priv->gck);
+	if (real_gck_rate != gck_rate) {
+		clk_mul = real_gck_rate / (clk_base * 1000000) - 1;
+		caps1 &= (~SDHCI_CLOCK_MUL_MASK);
+		caps1 |= ((clk_mul << SDHCI_CLOCK_MUL_SHIFT) & SDHCI_CLOCK_MUL_MASK);
+		/* Set capabilities in r/w mode. */
+		writel(SDMMC_CACR_KEY | SDMMC_CACR_CAPWREN, host->ioaddr + SDMMC_CACR);
+		writel(caps1, host->ioaddr + SDHCI_CAPABILITIES_1);
+		/* Set capabilities in ro mode. */
+		writel(0, host->ioaddr + SDMMC_CACR);
+		dev_info(&pdev->dev, "update clk mul to %u as gck rate is %u Hz\n",
+			 clk_mul, real_gck_rate);
+	}
+
+	/*
+	 * We have to set preset values because it depends on the clk_mul
+	 * value. Moreover, SDR104 is supported in a degraded mode since the
+	 * maximum sd clock value is 120 MHz instead of 208 MHz. For that
+	 * reason, we need to use presets to support SDR104.
+	 */
+	preset_div = DIV_ROUND_UP(real_gck_rate, 24000000) - 1;
+	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
+	       host->ioaddr + SDHCI_PRESET_FOR_SDR12);
+	preset_div = DIV_ROUND_UP(real_gck_rate, 50000000) - 1;
+	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
+	       host->ioaddr + SDHCI_PRESET_FOR_SDR25);
+	preset_div = DIV_ROUND_UP(real_gck_rate, 100000000) - 1;
+	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
+	       host->ioaddr + SDHCI_PRESET_FOR_SDR50);
+	preset_div = DIV_ROUND_UP(real_gck_rate, 120000000) - 1;
+	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
+	       host->ioaddr + SDHCI_PRESET_FOR_SDR104);
+	preset_div = DIV_ROUND_UP(real_gck_rate, 50000000) - 1;
+	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
+	       host->ioaddr + SDHCI_PRESET_FOR_DDR50);
+>>>>>>> at91: sama7_fpga: platform bring-up
 
 	priv->restore_needed = false;
 

@@ -47,7 +47,7 @@ static void __init tcb_setup_single_chan(int mck_divisor_idx)
 			| ATMEL_TC_WAVESEL_UP,		/* free-run */
 			tcaddr + ATMEL_TC_REG(0, CMR));
 	__raw_writel(0xff, tcaddr + ATMEL_TC_REG(0, IDR));	/* no irqs */
-	__raw_writel(ATMEL_TC_CLKEN, tcaddr + ATMEL_TC_REG(0, CCR));
+	__raw_writel(ATMEL_TC_CLKEN |ATMEL_TC_SWTRG, tcaddr + ATMEL_TC_REG(0, CCR));
 
 	/* then reset all the timers */
 	__raw_writel(ATMEL_TC_SYNC, tcaddr + ATMEL_TC_BCR);
@@ -66,7 +66,7 @@ static int __init tcbmmio_start(unsigned long *hz)
 
 	/* How fast will we be counting?  Pick something over 5 MHz.  */
 	rate = (u32) clk_get_rate(tcclk);
-	for (i = 0 ; i < 5 ; i++) {
+	for (i = 1 ; i < 2 ; i++) {
 		unsigned divisor = atmel_tc_divisors[i];
 		unsigned tmp;
 
@@ -94,13 +94,11 @@ static int __init tcbmmio_start(unsigned long *hz)
 	return 0;
 }
 
-#if 0
-static void tcbmmio_clkevt_mode(enum clock_event_mode m, struct clock_event_device *d)
+
+static int tcbmmio_clkevt_mode_periodic(struct clock_event_device *d)
 {
 	unsigned long rate = clk_get_rate(tcclk);
 
-	switch (m) {
-	case CLOCK_EVT_MODE_PERIODIC:
 		__raw_writel(0xff, tcaddr + ATMEL_TC_REG(2, IDR));
 		__raw_writel(ATMEL_TC_CLKDIS, tcaddr + ATMEL_TC_REG(2, CCR));
 
@@ -115,9 +113,10 @@ static void tcbmmio_clkevt_mode(enum clock_event_mode m, struct clock_event_devi
 		/* go go gadget! */
 		__raw_writel(ATMEL_TC_CLKEN | ATMEL_TC_SWTRG,
 				tcaddr + ATMEL_TC_REG(2, CCR));
-		break;
-
-	case CLOCK_EVT_MODE_ONESHOT:
+return 0;
+}
+static int tcbmmio_clkevt_mode_oneshot(struct clock_event_device *d)
+{
 		__raw_writel(0xff, tcaddr + ATMEL_TC_REG(2, IDR));
 		__raw_writel(ATMEL_TC_CLKDIS, tcaddr + ATMEL_TC_REG(2, CCR));
 
@@ -128,13 +127,8 @@ static void tcbmmio_clkevt_mode(enum clock_event_mode m, struct clock_event_devi
 		__raw_writel(ATMEL_TC_CPCS, tcaddr + ATMEL_TC_REG(2, IER));
 
 		/* set_next_event() configures and starts the timer */
-		break;
-
-	default:
-		break;
-	}
+return 0;
 }
-#endif
 
 static int tcbmmio_clkevt_next_event(unsigned long delta, struct clock_event_device *d)
 {
@@ -152,13 +146,13 @@ static struct clock_event_device tcbmmio_clkevt = {
 	.shift		= 32,
 	.rating		= 100,
 	.set_next_event	= tcbmmio_clkevt_next_event,
-//	.set_mode	= tcbmmio_clkevt_mode,
+	.set_state_periodic	= tcbmmio_clkevt_mode_periodic,
+	.set_state_oneshot	= tcbmmio_clkevt_mode_oneshot,
 };
 
 static irqreturn_t ch2_irq(int irq, void *dev_id)
 {
 	unsigned int sr;
-
 	sr = __raw_readl(tcaddr + ATMEL_TC_REG(2, SR));
 	if (sr & ATMEL_TC_CPCS) {
 		tcbmmio_clkevt.event_handler(&tcbmmio_clkevt);
@@ -174,7 +168,7 @@ static struct irqaction tcbmmio_irqaction = {
 	.handler	= ch2_irq,
 };
 
-static void __init tcbmmio_dt_init(struct device_node *node)
+static int __init tcbmmio_dt_init(struct device_node *node)
 {
 	int		ret;
 	unsigned long	hz = 0, rate;
@@ -194,9 +188,8 @@ static void __init tcbmmio_dt_init(struct device_node *node)
 	ret = tcbmmio_start(&hz);
 	if (ret || hz == 0) {
 		pr_crit("AT91: TCBMMIO: Unable to start timer\n");
-		return;
+		return ret;
 	}
-
 	sched_clock_register(tcbmmio_sched_read, 32, hz);
 
 	/*
@@ -215,11 +208,12 @@ static void __init tcbmmio_dt_init(struct device_node *node)
 	 * Setup clockevent timer (interrupt-driven)
 	 */
 	rate = clk_get_rate(tcclk);
-	setup_irq(tcirq, &tcbmmio_irqaction);
+	WARN_ON(setup_irq(tcirq, &tcbmmio_irqaction) != 0);
 	tcbmmio_clkevt.cpumask = cpumask_of(0);
+	tcbmmio_clkevt.irq = tcirq;
 	clockevents_config_and_register(&tcbmmio_clkevt,
 					rate/atmel_tc_divisors[DIV128_IDX],
 					1, 0xfffffffe);
-	return;
+	return 0;
 }
 CLOCKSOURCE_OF_DECLARE(at91_tcbmmio, "atmel,tcbmmio", tcbmmio_dt_init);

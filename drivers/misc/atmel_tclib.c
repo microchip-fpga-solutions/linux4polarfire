@@ -24,7 +24,7 @@ EXPORT_SYMBOL(atmel_tc_divisors);
 
 #elif defined(CONFIG_ARCH_AT91)
 /* AT91 has these divide MCK */
-const u8 atmel_tc_divisors[5] = { 2, 8, 32, 128, 0, };
+const u8 atmel_tc_divisors[5] = { 1, 8, 32, 128, 0, };
 EXPORT_SYMBOL(atmel_tc_divisors);
 
 #endif
