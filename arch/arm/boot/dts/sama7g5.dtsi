@@ -11,12 +11,15 @@
 
 #include "skeleton.dtsi"
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/at91.h>
+#include <dt-bindings/dma/at91.h>
 
 / {
 	model = "Atmel SAMA7G5 family SoC";
 	compatible = "atmel,sama7g5";
-	interrupt-parent = <&aic>;
+
+	interrupt-parent = <&gic>;
 
 	aliases {
 		serial0 = &uart0;
@@ -116,8 +119,24 @@
 			    dma-names = "rx", "tx";
 			    atmel,use-dma-rx;
 			    atmel,use-dma-tx;
-			    status = "okay";
+			    status = "disabled";
 		    };
+
+		spi0: spi@e181c200 {
+			compatible = "atmel,at91rm9200-spi";
+			reg = <0xe181c400 0x200>;
+			interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&mck>;
+			clock-names = "spi_clk";
+			dmas = <&dma0 AT91_XDMAC_DT_PERID(7)>,
+				    <&dma0 AT91_XDMAC_DT_PERID(8)>;
+			dma-names = "rx", "tx";
+//atmel,fifo-size = <0>;                          
+                                #address-cells = <1>;                            
+                                #size-cells = <0>;                               
+                                status = "okay"; 
+};
+
 
 		    uart2: serial@e1820200 {
 			    compatible = "atmel,at91sam9260-usart";
@@ -154,6 +173,7 @@
 			interrupts = <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&mck>, <&multclk>, <&baseclk>;
 			clock-names = "hclock", "multclk", "baseclk";
+			max-frequency = <48000000>;
 			status = "okay";
 		};
 
