@@ -405,6 +405,13 @@ config ATMEL_PIT
 	select TIMER_OF if OF
 	def_bool SOC_AT91SAM9 || SOC_SAMA5
 
+config ATMEL_PIT64
+	bool "Atmel/Microchip PIT64 support"
+	depends on GENERIC_CLOCKEVENTS
+	select CLKSRC_OF if OF
+	help
+	  This option enables Atmel/Microchip PIT64 timer.
+
 config ATMEL_ST
 	bool "Atmel ST timer support" if COMPILE_TEST
 	depends on GENERIC_CLOCKEVENTS
