@@ -207,6 +207,23 @@
 			    clock-names = "dma_clk";
 			    status = "okay";
 		    };
+
+			/* Clocksource timer. */
+			timer1: pit64@e1800000 {
+				compatible = "atmel,pit64";
+				reg = <0xe1800000 0x100>;
+				clocks = <&mck>;
+				status = "okay";
+			};
+
+			/* Clockevent timer. */
+			timer2: pit64@e1804000 {
+				compatible = "atmel,pit64";
+				reg = <0xe1804000 0x100>;
+				interrupts = <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>;
+				clocks = <&mck>;
+				status = "okay";
+			};
 	    };
     };
 };
