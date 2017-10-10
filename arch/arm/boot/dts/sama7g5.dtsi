@@ -91,7 +91,7 @@
 			    reg = <0xe2814000 0x100>;
 			    interrupts = <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>;
 			    clocks = <&mck>;
-			    status = "okay";
+			    status = "disabled";
 		    };
 
 		    uart0: serial@e1818200 {
