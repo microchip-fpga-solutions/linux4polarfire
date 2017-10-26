@@ -80,7 +80,8 @@
 struct pit64_common_data {
 	void __iomem *base;
 	struct clk *clk;
-	u64 cycles;
+	u32 cycles_lsb;
+	u32 cycles_msb;
 	u8 pres;
 };
 
@@ -145,30 +146,25 @@ static inline void at91_pit64_init_period(void __iomem *base, u32 lsb, u32 msb)
 	pit64_write(base, AT91_PIT64_MSB_PR, msb);
 }
 
-static inline void at91_pit64_init(struct pit64_common_data *data,
-				   bool periodic)
+static inline void at91_pit64_init(struct pit64_common_data *data, u32 lsb,
+				   u32 msb, bool periodic)
 {
 	u32 val = AT91_PIT64_PRESCALER(data->pres - 1);
-	u32 lsb, msb;
 
 	pit64_write(data->base, AT91_PIT64_CR, AT91_PIT64_CR_SWRST);
-
-	while (pit64_read(data->base, AT91_PIT64_ISR))
-		cpu_relax();
 
 	if (periodic)
 		val |= AT91_PIT64_MR_CONT;
 
 	pit64_write(data->base, AT91_PIT64_MR, val);
-	lsb = data->cycles & AT91_PIT64_LSBMASK;
-	msb = (data->cycles & ~AT91_PIT64_LSBMASK) >> 32;
 	at91_pit64_init_period(data->base, lsb, msb);
 }
 
 static inline void at91_pit64_configure(struct pit64_common_data *data,
 					bool periodic)
 {
-	at91_pit64_init(data, periodic);
+	at91_pit64_init(data, data->cycles_lsb, data->cycles_msb,
+			periodic);
 	pit64_write(data->base, AT91_PIT64_CR, AT91_PIT64_CR_START);
 }
 
@@ -181,7 +177,8 @@ static int pit64_clkevt_shutdown(struct clock_event_device *cedev)
 
 static int pit64_clkevt_set_periodic(struct clock_event_device *cedev)
 {
-	at91_pit64_init(&data.ced->cd, true);
+	at91_pit64_init(&data.ced->cd, data.ced->cd.cycles_lsb,
+			data.ced->cd.cycles_msb, true);
 	pit64_write(data.ced->cd.base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
 	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_START);
 
@@ -190,7 +187,8 @@ static int pit64_clkevt_set_periodic(struct clock_event_device *cedev)
 
 static int pit64_clkevt_set_oneshot(struct clock_event_device *cedev)
 {
-	at91_pit64_init(&data.ced->cd, false);
+	at91_pit64_init(&data.ced->cd, data.ced->cd.cycles_lsb,
+			data.ced->cd.cycles_msb, false);
 	pit64_write(data.ced->cd.base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
 	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_START);
 
@@ -204,7 +202,8 @@ static int pit64_clkevt_set_next_event(unsigned long evt,
 
 	lsb = evt & AT91_PIT64_LSBMASK;
 	msb = (evt & ~AT91_PIT64_LSBMASK) >> 32;
-	at91_pit64_init_period(data.ced->cd.base, lsb, msb);
+	at91_pit64_init(&data.ced->cd, lsb, msb, false);
+	pit64_write(data.ced->cd.base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
 	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_START);
 
 	return 0;
@@ -305,7 +304,8 @@ static int __init at91_pit64_dt_init_clksrc(void __iomem *base, struct clk *clk)
 	clk_rate = clk_get_rate(csd->cd.clk);
 	csd->cd.pres = at91_pit64_pres_compute(clk_rate, AT91_PIT64_CS_RATE);
 	clk_rate = clk_rate / csd->cd.pres;
-	csd->cd.cycles = LLONG_MAX;
+	csd->cd.cycles_lsb = ULONG_MAX;
+	csd->cd.cycles_msb = ULONG_MAX;
 
 	at91_pit64_configure(&csd->cd, true);
 
@@ -336,6 +336,7 @@ static int __init at91_pit64_dt_init_clkevt(void __iomem *base, struct clk *clk,
 					    u32 irq)
 {
 	struct pit64_clkevt_data *ced;
+	u64 cycles;
 	unsigned long clk_rate;
 	int ret;
 
@@ -355,7 +356,9 @@ static int __init at91_pit64_dt_init_clkevt(void __iomem *base, struct clk *clk,
 	clk_rate = clk_get_rate(ced->cd.clk);
 	ced->cd.pres = at91_pit64_pres_compute(clk_rate, AT91_PIT64_CE_RATE);
 	clk_rate = clk_rate / ced->cd.pres;
-	ced->cd.cycles = DIV_ROUND_CLOSEST(clk_rate, HZ);
+	cycles = DIV_ROUND_CLOSEST(clk_rate, HZ);
+	ced->cd.cycles_lsb = cycles & AT91_PIT64_LSBMASK;
+	ced->cd.cycles_msb = (cycles & ~AT91_PIT64_LSBMASK) >> 32;
 
 	ret = request_irq(irq, at91_pit64_interrupt, IRQF_TIMER,
 			  "pit64_tick", ced);
