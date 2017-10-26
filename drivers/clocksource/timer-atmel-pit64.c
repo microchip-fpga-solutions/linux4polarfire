@@ -273,8 +273,7 @@ static u16 __init at91_pit64_pres_compute(unsigned long clk_rate,
 	}
 
 	/*
-	 * Use the last prescaller in case we don't locate one for
-	 * AT91_PIT64_RATE Hz.
+	 * Use the last prescaller in case we don't locate one for max_rate Hz.
 	 */
 	if (pres == AT91_PRES_MAX + 1)
 		pres = AT91_PRES_MAX;
