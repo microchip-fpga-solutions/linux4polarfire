@@ -14,6 +14,7 @@
 #include <asm/system_misc.h>
 
 #include "generic.h"
+#if 0
 #include "soc.h"
 
 static const struct at91_soc sama7_socs[] = {
@@ -21,17 +22,18 @@ static const struct at91_soc sama7_socs[] = {
 		 "sama7g5", "sama7g"),
 	{ /* sentinel */ },
 };
+#endif
 
 static void __init sama7_common_init(void)
 {
-	struct soc_device *soc;
-	struct device *soc_dev = NULL;
+//	struct soc_device *soc;
+//	struct device *soc_dev = NULL;
 
-	soc = at91_soc_init(sama7_socs);
-	if (soc != NULL)
-		soc_dev = soc_device_to_device(soc);
+//	soc = at91_soc_init(sama7_socs);
+//	if (soc != NULL)
+//		soc_dev = soc_device_to_device(soc);
 
-	of_platform_default_populate(NULL, NULL, soc_dev);
+	of_platform_default_populate(NULL, NULL, NULL);
 }
 
 static void __init sama7_dt_device_init(void)

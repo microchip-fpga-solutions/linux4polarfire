@@ -184,8 +184,8 @@ static int sdhci_at91_set_clks_presets(struct device *dev)
 	ret = clk_set_rate(priv->gck, gck_rate);
 	if (ret < 0) {
 		dev_err(dev, "failed to set gck");
-		clk_disable_unprepare(priv->hclock);
-		return ret;
+	//	clk_disable_unprepare(priv->hclock);
+	//	return ret;
 	}
 	/*
 	 * We need to check if we have the requested rate for gck because in
@@ -358,69 +358,9 @@ static int sdhci_at91_probe(struct platform_device *pdev)
 		return PTR_ERR(priv->gck);
 	}
 
-<<<<<<< 06ec89f01a71a76ba31376ccaecbc7b2c56a9c94
 	ret = sdhci_at91_set_clks_presets(&pdev->dev);
 	if (ret)
 		goto sdhci_pltfm_free;
-=======
-	/*
-	 * The mult clock is provided by as a generated clock by the PMC
-	 * controller. In order to set the rate of gck, we have to get the
-	 * base clock rate and the clock mult from capabilities.
-	 */
-	clk_prepare_enable(priv->hclock);
-	caps0 = readl(host->ioaddr + SDHCI_CAPABILITIES);
-	caps1 = readl(host->ioaddr + SDHCI_CAPABILITIES_1);
-	clk_base = (caps0 & SDHCI_CLOCK_V3_BASE_MASK) >> SDHCI_CLOCK_BASE_SHIFT;
-	clk_mul = (caps1 & SDHCI_CLOCK_MUL_MASK) >> SDHCI_CLOCK_MUL_SHIFT;
-	gck_rate = clk_base * 1000000 * (clk_mul + 1);
-	ret = clk_set_rate(priv->gck, gck_rate);
-	if (ret < 0) {
-		dev_err(&pdev->dev, "failed to set gck");
-//		goto hclock_disable_unprepare;
-	}
-	/*
-	 * We need to check if we have the requested rate for gck because in
-	 * some cases this rate could be not supported. If it happens, the rate
-	 * is the closest one gck can provide. We have to update the value
-	 * of clk mul.
-	 */
-	real_gck_rate = clk_get_rate(priv->gck);
-	if (real_gck_rate != gck_rate) {
-		clk_mul = real_gck_rate / (clk_base * 1000000) - 1;
-		caps1 &= (~SDHCI_CLOCK_MUL_MASK);
-		caps1 |= ((clk_mul << SDHCI_CLOCK_MUL_SHIFT) & SDHCI_CLOCK_MUL_MASK);
-		/* Set capabilities in r/w mode. */
-		writel(SDMMC_CACR_KEY | SDMMC_CACR_CAPWREN, host->ioaddr + SDMMC_CACR);
-		writel(caps1, host->ioaddr + SDHCI_CAPABILITIES_1);
-		/* Set capabilities in ro mode. */
-		writel(0, host->ioaddr + SDMMC_CACR);
-		dev_info(&pdev->dev, "update clk mul to %u as gck rate is %u Hz\n",
-			 clk_mul, real_gck_rate);
-	}
-
-	/*
-	 * We have to set preset values because it depends on the clk_mul
-	 * value. Moreover, SDR104 is supported in a degraded mode since the
-	 * maximum sd clock value is 120 MHz instead of 208 MHz. For that
-	 * reason, we need to use presets to support SDR104.
-	 */
-	preset_div = DIV_ROUND_UP(real_gck_rate, 24000000) - 1;
-	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
-	       host->ioaddr + SDHCI_PRESET_FOR_SDR12);
-	preset_div = DIV_ROUND_UP(real_gck_rate, 50000000) - 1;
-	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
-	       host->ioaddr + SDHCI_PRESET_FOR_SDR25);
-	preset_div = DIV_ROUND_UP(real_gck_rate, 100000000) - 1;
-	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
-	       host->ioaddr + SDHCI_PRESET_FOR_SDR50);
-	preset_div = DIV_ROUND_UP(real_gck_rate, 120000000) - 1;
-	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
-	       host->ioaddr + SDHCI_PRESET_FOR_SDR104);
-	preset_div = DIV_ROUND_UP(real_gck_rate, 50000000) - 1;
-	writew(SDHCI_AT91_PRESET_COMMON_CONF | preset_div,
-	       host->ioaddr + SDHCI_PRESET_FOR_DDR50);
->>>>>>> at91: sama7_fpga: platform bring-up
 
 	priv->restore_needed = false;
 

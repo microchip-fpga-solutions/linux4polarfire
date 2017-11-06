@@ -111,7 +111,7 @@ static inline void pit64_write(void __iomem *base, u32 offset, u32 val)
 	writel_relaxed(val, base + offset);
 }
 
-static cycle_t pit64_read_clk(struct clocksource *cs)
+static u64 pit64_read_clk(struct clocksource *cs)
 {
 	u32 lsb, msb;
 

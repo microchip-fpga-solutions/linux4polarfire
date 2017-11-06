@@ -131,6 +131,10 @@ static const struct at91_soc __initconst socs[] = {
 	AT91_SOC(SAMV70Q19_CIDR_MATCH, SAMV70Q19_EXID_MATCH,
 		 "samv70q19", "samv7"),
 #endif
+#ifdef CONFIG_SOC_SAMA7
+	AT91_SOC(SAMA7G_CIDR_MATCH, SAMA7G5_EXID_MATCH,
+		 "sama7g5", "sama7g"),
+#endif
 	{ /* sentinel */ },
 };
 
