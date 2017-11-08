@@ -611,6 +611,8 @@ static int macb_mii_init(struct macb *bp)
 err_out_unregister_bus:
 	mdiobus_unregister(bp->mii_bus);
 err_out_free_mdiobus:
+	if (np && of_phy_is_fixed_link(np))
+		of_phy_deregister_fixed_link(np);
 	mdiobus_free(bp->mii_bus);
 err_out:
 	return err;
@@ -3552,6 +3554,8 @@ static int macb_probe(struct platform_device *pdev)
 err_out_unregister_mdio:
 	phy_disconnect(dev->phydev);
 	mdiobus_unregister(bp->mii_bus);
+	if (np && of_phy_is_fixed_link(np))
+		of_phy_deregister_fixed_link(np);
 	mdiobus_free(bp->mii_bus);
 
 	/* Shutdown the PHY if there is a GPIO reset */
@@ -3574,6 +3578,7 @@ static int macb_remove(struct platform_device *pdev)
 {
 	struct net_device *dev;
 	struct macb *bp;
+	struct device_node *np = pdev->dev.of_node;
 
 	dev = platform_get_drvdata(pdev);
 
@@ -3582,6 +3587,8 @@ static int macb_remove(struct platform_device *pdev)
 		if (dev->phydev)
 			phy_disconnect(dev->phydev);
 		mdiobus_unregister(bp->mii_bus);
+		if (np && of_phy_is_fixed_link(np))
+			of_phy_deregister_fixed_link(np);
 		dev->phydev = NULL;
 		mdiobus_free(bp->mii_bus);
 
