@@ -225,6 +225,27 @@
 				clocks = <&mck>;
 				status = "okay";
 			};
+
+			macb0: ethernet@e2800000 {
+				compatible = "atmel,sama7g5-gem";
+				reg = <0xe2800000 0x1000>;
+				interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH	/* Queue 0 */
+					      GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH   /* Queue 1 */
+					      GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH	/* Queue 2 */
+					      GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH	/* Queue 3 */
+					      GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH	/* Queue 4 */
+					      GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;	/* Queue 5 */
+				#address-cells = <1>;
+				#size-cells = <0>;
+				clocks = <&mck>, <&mck>;
+				clock-names = "hclk", "pclk";
+				phy-mode = "rmii";
+				status = "okay";
+
+				ethernet-phy@1 {
+					reg = <0x1>;
+				};
+			};
 	    };
     };
 };
