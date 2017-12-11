@@ -24,6 +24,7 @@
 #define AT91_PIT64_MR		0x04	/* Mode Register */
 #define AT91_PIT64_MR_CONT	BIT(0)
 #define AT91_PIT64_MR_SGCLK	BIT(3)
+#define AT91_PIT64_MR_SMOD	BIT(4)
 #define AT91_PIT64_MR_PRES	GENMASK(11, 8)
 
 #define AT91_PIT64_LSB_PR	0x08	/* LSB Period Register */
@@ -80,8 +81,7 @@
 struct pit64_common_data {
 	void __iomem *base;
 	struct clk *clk;
-	u32 cycles_lsb;
-	u32 cycles_msb;
+	u64 cycles;
 	u8 pres;
 };
 
@@ -112,24 +112,54 @@ static inline void pit64_write(void __iomem *base, u32 offset, u32 val)
 	writel_relaxed(val, base + offset);
 }
 
-static u64 pit64_read_clk(struct clocksource *cs)
+static inline u64 pit64_get_period(void __iomem *base)
 {
 	u32 lsb, msb;
 
-	lsb = pit64_read(data.csd->cd.base, AT91_PIT64_TLSB_CVR);
-	msb = pit64_read(data.csd->cd.base, AT91_PIT64_TMSB_CVR);
+	/* LSB must be read first to guarantee an atomic read of the 64 bit
+	 * timer.
+	 */
+	lsb = pit64_read(base, AT91_PIT64_TLSB_CVR);
+	msb = pit64_read(base, AT91_PIT64_TMSB_CVR);
 
 	return (((u64)msb << 32) | lsb);
 }
 
-static u64 sched_read_clk(void)
+static inline void pit64_set_period(void __iomem *base, u64 cycles)
 {
 	u32 lsb, msb;
 
-	lsb = pit64_read(data.csd->cd.base, AT91_PIT64_TLSB_CVR);
-	msb = pit64_read(data.csd->cd.base, AT91_PIT64_TMSB_CVR);
+	lsb = cycles & AT91_PIT64_LSBMASK;
+	msb = cycles >> 32;
 
-	return (((u64)msb << 32) | lsb);
+	/* LSB must be write last to guarantee an atomic update of the timer
+	 * even when SMOD=1.
+	 */
+	pit64_write(base, AT91_PIT64_MSB_PR, msb);
+	pit64_write(base, AT91_PIT64_LSB_PR, lsb);
+}
+
+static inline void pit64_reset(struct pit64_common_data *data, u32 mode,
+			       bool irq_ena)
+{
+	mode |= AT91_PIT64_PRESCALER(data->pres - 1);
+
+	pit64_write(data->base, AT91_PIT64_CR, AT91_PIT64_CR_SWRST);
+	pit64_write(data->base, AT91_PIT64_MR, mode);
+	pit64_set_period(data->base, data->cycles);
+	if (irq_ena)
+		pit64_write(data->base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
+	pit64_write(data->base, AT91_PIT64_CR, AT91_PIT64_CR_START);
+}
+
+static u64 pit64_read_clk(struct clocksource *cs)
+{
+	return pit64_get_period(data.csd->cd.base);
+}
+
+static u64 sched_read_clk(void)
+{
+	return pit64_get_period(data.csd->cd.base);
 }
 
 static struct clocksource clksrc = {
@@ -140,34 +170,6 @@ static struct clocksource clksrc = {
 	.read = pit64_read_clk,
 };
 
-static inline void at91_pit64_init_period(void __iomem *base, u32 lsb, u32 msb)
-{
-	pit64_write(base, AT91_PIT64_LSB_PR, lsb);
-	pit64_write(base, AT91_PIT64_MSB_PR, msb);
-}
-
-static inline void at91_pit64_init(struct pit64_common_data *data, u32 lsb,
-				   u32 msb, bool periodic)
-{
-	u32 val = AT91_PIT64_PRESCALER(data->pres - 1);
-
-	pit64_write(data->base, AT91_PIT64_CR, AT91_PIT64_CR_SWRST);
-
-	if (periodic)
-		val |= AT91_PIT64_MR_CONT;
-
-	pit64_write(data->base, AT91_PIT64_MR, val);
-	at91_pit64_init_period(data->base, lsb, msb);
-}
-
-static inline void at91_pit64_configure(struct pit64_common_data *data,
-					bool periodic)
-{
-	at91_pit64_init(data, data->cycles_lsb, data->cycles_msb,
-			periodic);
-	pit64_write(data->base, AT91_PIT64_CR, AT91_PIT64_CR_START);
-}
-
 static int pit64_clkevt_shutdown(struct clock_event_device *cedev)
 {
 	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_SWRST);
@@ -177,20 +179,14 @@ static int pit64_clkevt_shutdown(struct clock_event_device *cedev)
 
 static int pit64_clkevt_set_periodic(struct clock_event_device *cedev)
 {
-	at91_pit64_init(&data.ced->cd, data.ced->cd.cycles_lsb,
-			data.ced->cd.cycles_msb, true);
-	pit64_write(data.ced->cd.base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
-	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_START);
+	pit64_reset(&data.ced->cd, AT91_PIT64_MR_CONT, true);
 
 	return 0;
 }
 
 static int pit64_clkevt_set_oneshot(struct clock_event_device *cedev)
 {
-	at91_pit64_init(&data.ced->cd, data.ced->cd.cycles_lsb,
-			data.ced->cd.cycles_msb, false);
-	pit64_write(data.ced->cd.base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
-	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_START);
+	pit64_reset(&data.ced->cd, AT91_PIT64_MR_SMOD, true);
 
 	return 0;
 }
@@ -198,12 +194,7 @@ static int pit64_clkevt_set_oneshot(struct clock_event_device *cedev)
 static int pit64_clkevt_set_next_event(unsigned long evt,
 				       struct clock_event_device *cedev)
 {
-	u32 lsb, msb;
-
-	lsb = evt & AT91_PIT64_LSBMASK;
-	msb = (evt & ~AT91_PIT64_LSBMASK) >> 32;
-	at91_pit64_init(&data.ced->cd, lsb, msb, false);
-	pit64_write(data.ced->cd.base, AT91_PIT64_IER, AT91_PIT64_IER_PERIOD);
+	pit64_set_period(data.ced->cd.base, evt);
 	pit64_write(data.ced->cd.base, AT91_PIT64_CR, AT91_PIT64_CR_START);
 
 	return 0;
@@ -218,7 +209,7 @@ static void pit64_clkevt_suspend(struct clock_event_device *cedev)
 
 static void pit64_clkevt_resume(struct clock_event_device *cedev)
 {
-	bool periodic = false;
+	u32 mode = AT91_PIT64_MR_SMOD;
 
 	/* TODO: test it on suspend/resume. */
 	if (clk_prepare_enable(data.ced->cd.clk)) {
@@ -227,9 +218,9 @@ static void pit64_clkevt_resume(struct clock_event_device *cedev)
 	}
 
 	if (clockevent_state_periodic(data.ced->clkevt))
-		periodic = true;
+		mode = AT91_PIT64_MR_CONT;
 
-	at91_pit64_configure(&data.ced->cd, periodic);
+	pit64_reset(&data.ced->cd, mode, true);
 }
 
 static struct clock_event_device clkevt = {
@@ -244,7 +235,7 @@ static struct clock_event_device clkevt = {
 	.resume = pit64_clkevt_suspend,
 };
 
-static irqreturn_t at91_pit64_interrupt(int irq, void *dev_id)
+static irqreturn_t pit64_interrupt(int irq, void *dev_id)
 {
 	struct pit64_clkevt_data *irq_data = dev_id;
 
@@ -260,8 +251,8 @@ static irqreturn_t at91_pit64_interrupt(int irq, void *dev_id)
 	return IRQ_NONE;
 }
 
-static u16 __init at91_pit64_pres_compute(unsigned long clk_rate,
-					  unsigned long long max_rate)
+static u16 __init pit64_pres_compute(unsigned long clk_rate,
+				     unsigned long long max_rate)
 {
 	u32 tmp;
 	u16 pres;
@@ -281,7 +272,7 @@ static u16 __init at91_pit64_pres_compute(unsigned long clk_rate,
 	return pres;
 }
 
-static int __init at91_pit64_dt_init_clksrc(void __iomem *base, struct clk *clk)
+static int __init pit64_dt_init_clksrc(void __iomem *base, struct clk *clk)
 {
 	struct pit64_clksrc_data *csd;
 	unsigned long clk_rate;
@@ -296,17 +287,16 @@ static int __init at91_pit64_dt_init_clksrc(void __iomem *base, struct clk *clk)
 
 	ret = clk_prepare_enable(csd->cd.clk);
 	if (ret) {
-		pr_err("clksrc: Unable to enable PIT64 clock!\n");
+		pr_err("clksrc: Failed to enable PIT64 clock!\n");
 		goto free;
 	}
 
 	clk_rate = clk_get_rate(csd->cd.clk);
-	csd->cd.pres = at91_pit64_pres_compute(clk_rate, AT91_PIT64_CS_RATE);
+	csd->cd.pres = pit64_pres_compute(clk_rate, AT91_PIT64_CS_RATE);
 	clk_rate = clk_rate / csd->cd.pres;
-	csd->cd.cycles_lsb = ULONG_MAX;
-	csd->cd.cycles_msb = ULONG_MAX;
+	csd->cd.cycles = ULLONG_MAX;
 
-	at91_pit64_configure(&csd->cd, true);
+	pit64_reset(&csd->cd, AT91_PIT64_MR_CONT, false);
 
 	data.csd = csd;
 
@@ -331,11 +321,10 @@ free:
 	return ret;
 }
 
-static int __init at91_pit64_dt_init_clkevt(void __iomem *base, struct clk *clk,
-					    u32 irq)
+static int __init pit64_dt_init_clkevt(void __iomem *base, struct clk *clk,
+				       u32 irq)
 {
 	struct pit64_clkevt_data *ced;
-	u64 cycles;
 	unsigned long clk_rate;
 	int ret;
 
@@ -348,21 +337,18 @@ static int __init at91_pit64_dt_init_clkevt(void __iomem *base, struct clk *clk,
 
 	ret = clk_prepare_enable(ced->cd.clk);
 	if (ret) {
-		pr_err("clkevt: Unable to enable PIT64 clock!\n");
+		pr_err("clkevt: Failed to enable PIT64 clock!\n");
 		goto free;
 	}
 
 	clk_rate = clk_get_rate(ced->cd.clk);
-	ced->cd.pres = at91_pit64_pres_compute(clk_rate, AT91_PIT64_CE_RATE);
+	ced->cd.pres = pit64_pres_compute(clk_rate, AT91_PIT64_CE_RATE);
 	clk_rate = clk_rate / ced->cd.pres;
-	cycles = DIV_ROUND_CLOSEST(clk_rate, HZ);
-	ced->cd.cycles_lsb = cycles & AT91_PIT64_LSBMASK;
-	ced->cd.cycles_msb = (cycles & ~AT91_PIT64_LSBMASK) >> 32;
+	ced->cd.cycles = DIV_ROUND_CLOSEST(clk_rate, HZ);
 
-	ret = request_irq(irq, at91_pit64_interrupt, IRQF_TIMER,
-			  "pit64_tick", ced);
+	ret = request_irq(irq, pit64_interrupt, IRQF_TIMER, "pit64_tick", ced);
 	if (ret) {
-		pr_err("clkevt: Unable to setup IRQ\n");
+		pr_err("clkevt: Failed to setup IRQ\n");
 		goto clk_unprepare;
 	}
 
@@ -385,7 +371,7 @@ free:
 	return ret;
 }
 
-static int __init at91_pit64_dt_init(struct device_node *node)
+static int __init pit64_dt_init(struct device_node *node)
 {
 	void __iomem *base;
 	struct clk *clk;
@@ -400,24 +386,24 @@ static int __init at91_pit64_dt_init(struct device_node *node)
 
 	clk = of_clk_get(node, 0);
 	if (IS_ERR(clk)) {
-		pr_err("%s: Unable to get PIT64 clock!\n", node->name);
+		pr_err("%s: Failed to get PIT64 clock!\n", node->name);
 		ret = PTR_ERR(clk);
 		goto unmap;
 	}
 
 	if (!data.csd) {
-		ret = at91_pit64_dt_init_clksrc(base, clk);
+		ret = pit64_dt_init_clksrc(base, clk);
 		if (ret)
 			goto clock_put;
 	} else if (!data.ced) {
 		irq = irq_of_parse_and_map(node, 0);
 		if (!irq) {
-			pr_err("%s: Unable to get PIT64 clockevent IRQ!\n",
+			pr_err("%s: Failed to get PIT64 clockevent IRQ!\n",
 			       node->name);
 			ret = -EINVAL;
 			goto clock_put;
 		}
-		ret = at91_pit64_dt_init_clkevt(base, clk, irq);
+		ret = pit64_dt_init_clkevt(base, clk, irq);
 		if (ret)
 			goto irq_unmap;
 	} else {
@@ -436,4 +422,4 @@ unmap:
 	return ret;
 }
 
-CLOCKSOURCE_OF_DECLARE(at91_pit64, "atmel,pit64", at91_pit64_dt_init);
+CLOCKSOURCE_OF_DECLARE(at91_pit64, "atmel,pit64", pit64_dt_init);
