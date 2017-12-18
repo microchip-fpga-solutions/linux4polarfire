@@ -2624,6 +2624,7 @@ static int gem_get_ts_info(struct net_device *dev,
 	struct macb *bp = netdev_priv(dev);
 
 	if ((bp->hw_dma_cap & HW_DMA_CAP_PTP) == 0) {
+
 		ethtool_op_get_ts_info(dev, info);
 		return 0;
 	}
@@ -3718,7 +3719,7 @@ static const struct macb_config pc302gem_config = {
 };
 
 static const struct macb_config sama7g5_config = {
-	.caps = MACB_CAPS_USRIO_DEFAULT_IS_MII_GMII,
+	.caps = MACB_CAPS_USRIO_DEFAULT_IS_MII_GMII | MACB_CAPS_GEM_HAS_PTP,
 	.dma_burst_length = 16,
 	.clk_init = macb_clk_init,
 	.init = macb_init,
