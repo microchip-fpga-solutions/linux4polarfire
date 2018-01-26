@@ -2080,6 +2080,13 @@ static int at_xdmac_probe(struct platform_device *pdev)
 		goto err_dma_unregister;
 	}
 
+	if (nr_channels ==8)
+	at_xdmac_write(atxdmac, AT_XDMAC_GCFG, (0xF<<24) | (0xF<< 12) );
+else {
+
+	at_xdmac_write(atxdmac, AT_XDMAC_GCFG, (0x1 << 28) | (0x3 << 16) | (0x5 << 4));
+	at_xdmac_write(atxdmac, AT_XDMAC_GWAC, (0xF << 8) | (0xF << 0) );
+}
 	dev_info(&pdev->dev, "%d channels, mapped at 0x%p\n",
 		 nr_channels, atxdmac->regs);
 

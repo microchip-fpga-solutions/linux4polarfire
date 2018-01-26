@@ -214,6 +214,23 @@ MODULE_PARM_DESC(wait, "Wait for tests to complete (default: false)");
 static bool dmatest_match_channel(struct dmatest_params *params,
 		struct dma_chan *chan)
 {
+/*	if((dma_chan_name(chan)[3]=='0' && (dma_chan_name(chan)[8]=='1'
+		|| dma_chan_name(chan)[8]=='2'
+		|| dma_chan_name(chan)[8]=='3')) || dma_chan_name(chan)[3]=='1')
+		 return false;
+*/
+if (strcmp(dma_chan_name(chan), "dma0chan12") >=0 && 
+strcmp(dma_chan_name(chan), "dma0chan32") <=0
+) return false;
+if (strcmp(dma_chan_name(chan), "dma1chan11") >=0 && 
+strcmp(dma_chan_name(chan), "dma1chan32") <=0
+) return false;
+
+//if (strcmp(dma_chan_name(chan), "dma1chan8") ==0) return false;
+if (strcmp(dma_chan_name(chan), "dma0chan9") <=0) return true;
+if (strcmp(dma_chan_name(chan), "dma1chan8") <=0) return true;
+if (strcmp(dma_chan_name(chan), "dma2chan0") >=0) return true;
+return false;
 	if (params->channel[0] == '\0')
 		return true;
 	return strcmp(dma_chan_name(chan), params->channel) == 0;

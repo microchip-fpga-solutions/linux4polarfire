@@ -7,7 +7,7 @@
 
 	chosen {
 //		bootargs = "console=ttyS0,115200 earlycon earlyprintk=serial,ttyS0 ignore_loglevel rw root=ram0 init=/sbin/init rdinit=/sbin/init memtest=0";
-		bootargs = "console=ttyS0,115200 earlycon earlyprintk=serial,ttyS0 ignore_loglevel rw rootwait root=/dev/mmcblk0p3 init=/sbin/init";
+		bootargs = "console=ttyS0,115200 earlycon earlyprintk=serial,ttyS0 ignore_loglevel rw rootwait root=/dev/mmcblk0p2 init=/sbin/init";
 //		linux,initrd-start = <0x61010000>;
 //		linux,initrd-end = <0x618AC200>; /* must be exact size of the ramdisk */
 	};

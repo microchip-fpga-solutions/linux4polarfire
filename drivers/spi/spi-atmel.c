@@ -7,7 +7,6 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
-
 #include <linux/kernel.h>
 #include <linux/clk.h>
 #include <linux/module.h>
@@ -110,6 +109,8 @@
 #define SPI_MODF_SIZE				1
 #define SPI_OVRES_OFFSET			3
 #define SPI_OVRES_SIZE				1
+#define SPI_UNDES_OFFSET			10
+#define SPI_UNDES_SIZE				1
 #define SPI_ENDRX_OFFSET			4
 #define SPI_ENDRX_SIZE				1
 #define SPI_ENDTX_OFFSET			5
@@ -365,11 +366,13 @@ static void cs_activate(struct atmel_spi *as, struct spi_device *spi)
 					SPI_BF(PCS, ~(0x01 << spi->chip_select))
 					| SPI_BIT(WDRBT)
 					| SPI_BIT(MODFDIS)
+					| SPI_BIT(LLB)
 					| SPI_BIT(MSTR));
 		} else {
 			spi_writel(as, MR,
 					SPI_BF(PCS, ~(0x01 << spi->chip_select))
 					| SPI_BIT(MODFDIS)
+					| SPI_BIT(LLB)
 					| SPI_BIT(MSTR));
 		}
 
@@ -393,7 +396,8 @@ static void cs_activate(struct atmel_spi *as, struct spi_device *spi)
 		mr = SPI_BFINS(PCS, ~(1 << spi->chip_select), mr);
 		if (as->use_cs_gpios && spi->chip_select != 0)
 			gpio_set_value(asd->npcs_pin, active);
-		spi_writel(as, MR, mr);
+		spi_writel(as, MR, mr
+					| SPI_BIT(LLB));
 	}
 
 	dev_dbg(&spi->dev, "activate %u%s, mr %08x\n",
@@ -413,7 +417,8 @@ static void cs_deactivate(struct atmel_spi *as, struct spi_device *spi)
 	mr = spi_readl(as, MR);
 	if (~SPI_BFEXT(PCS, mr) & (1 << spi->chip_select)) {
 		mr = SPI_BFINS(PCS, 0xf, mr);
-		spi_writel(as, MR, mr);
+		spi_writel(as, MR, mr
+					| SPI_BIT(LLB));
 	}
 
 	dev_dbg(&spi->dev, "DEactivate %u%s, mr %08x\n",
@@ -626,7 +631,7 @@ static void atmel_spi_next_xfer_single(struct spi_master *master,
 		xfer->bits_per_word);
 
 	/* Enable relevant interrupts */
-	spi_writel(as, IER, SPI_BIT(RDRF) | SPI_BIT(OVRES));
+	spi_writel(as, IER, SPI_BIT(RDRF) | SPI_BIT(OVRES) | SPI_BIT(UNDES));
 }
 
 /*
@@ -652,9 +657,10 @@ static void atmel_spi_next_xfer_fifo(struct spi_master *master,
 	num_data = min(current_remaining_data, as->fifo_size);
 
 	/* Flush RX and TX FIFOs */
-	spi_writel(as, CR, SPI_BIT(RXFCLR) | SPI_BIT(TXFCLR));
+/*	spi_writel(as, CR, SPI_BIT(RXFCLR) | SPI_BIT(TXFCLR));
 	while (spi_readl(as, FLR))
 		cpu_relax();
+*/
 
 	/* Set RX FIFO Threshold to the number of data to transfer */
 	fifomr = spi_readl(as, FMR);
@@ -696,7 +702,7 @@ static void atmel_spi_next_xfer_fifo(struct spi_master *master,
 	 * Enable RX FIFO Threshold Flag interrupt to be notified about
 	 * transfer completion.
 	 */
-	spi_writel(as, IER, SPI_BIT(RXFTHF) | SPI_BIT(OVRES));
+	spi_writel(as, IER, SPI_BIT(RXFTHF) | SPI_BIT(OVRES) |SPI_BIT(UNDES));
 }
 
 /*
@@ -758,13 +764,14 @@ static int atmel_spi_next_xfer_dma_submit(struct spi_master *master,
 	if (!txdesc)
 		goto err_dma;
 
-	dev_dbg(master->dev.parent,
+		dev_dbg(master->dev.parent,
 		"  start dma xfer %p: len %u tx %p/%08llx rx %p/%08llx\n",
 		xfer, xfer->len, xfer->tx_buf, (unsigned long long)xfer->tx_dma,
 		xfer->rx_buf, (unsigned long long)xfer->rx_dma);
 
 	/* Enable relevant interrupts */
 	spi_writel(as, IER, SPI_BIT(OVRES));
+	spi_writel(as, IER, SPI_BIT(UNDES));
 
 	/* Put the callback on the RX transfer only, that should finish last */
 	rxdesc->callback = dma_callback;
@@ -786,6 +793,7 @@ static int atmel_spi_next_xfer_dma_submit(struct spi_master *master,
 
 err_dma:
 	spi_writel(as, IDR, SPI_BIT(OVRES));
+	spi_writel(as, IDR, SPI_BIT(UNDES));
 	atmel_spi_stop_dma(master);
 err_exit:
 	atmel_spi_lock(as);
@@ -908,6 +916,7 @@ static void atmel_spi_pdc_next_xfer(struct spi_master *master,
 	 * It should be doable, though. Just not now...
 	 */
 	spi_writel(as, IER, SPI_BIT(RXBUFF) | SPI_BIT(OVRES));
+	spi_writel(as, IER, SPI_BIT(RXBUFF) | SPI_BIT(UNDES));
 	spi_writel(as, PTCR, SPI_BIT(TXTEN) | SPI_BIT(RXTEN));
 }
 
@@ -1079,6 +1088,9 @@ atmel_spi_pio_interrupt(int irq, void *dev_id)
 
 		complete(&as->xfer_completion);
 
+}	else if (pending & SPI_BIT(UNDES)) {
+		dev_warn(master->dev.parent , "underrun\n");
+
 	} else if (pending & (SPI_BIT(RDRF) | SPI_BIT(RXFTHF))) {
 		atmel_spi_lock(as);
 
@@ -1128,6 +1140,8 @@ atmel_spi_pdc_interrupt(int irq, void *dev_id)
 
 		complete(&as->xfer_completion);
 
+}	else if (pending & SPI_BIT(UNDES)) {
+		dev_warn(master->dev.parent , "underrun\n");
 	} else if (pending & (SPI_BIT(RXBUFF) | SPI_BIT(ENDRX))) {
 		ret = IRQ_HANDLED;
 
@@ -1487,13 +1501,18 @@ static int atmel_spi_gpio_cs(struct platform_device *pdev)
 
 static void atmel_spi_init(struct atmel_spi *as)
 {
+
+
+
 	spi_writel(as, CR, SPI_BIT(SWRST));
 	spi_writel(as, CR, SPI_BIT(SWRST)); /* AT91SAM9263 Rev B workaround */
 	if (as->caps.has_wdrbt) {
 		spi_writel(as, MR, SPI_BIT(WDRBT) | SPI_BIT(MODFDIS)
+					| SPI_BIT(LLB)
 				| SPI_BIT(MSTR));
 	} else {
-		spi_writel(as, MR, SPI_BIT(MSTR) | SPI_BIT(MODFDIS));
+		spi_writel(as, MR, SPI_BIT(MSTR) | SPI_BIT(MODFDIS)
+					| SPI_BIT(LLB));
 	}
 
 	if (as->use_pdc)
