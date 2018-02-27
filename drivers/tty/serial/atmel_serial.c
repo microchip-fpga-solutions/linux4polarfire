@@ -638,7 +638,9 @@ static void atmel_stop_tx(struct uart_port *port)
 	if (((port->rs485.flags & SER_RS485_ENABLED) &&
 	     !(port->rs485.flags & SER_RS485_RX_DURING_TX)) ||
 	    port->iso7816.flags & SER_ISO7816_ENABLED)
-		atmel_start_rx(port);
+		if (!atomic_read(&atmel_port->tasklet_shutdown))
+			atmel_start_rx(port);
+
 }
 
 /*
