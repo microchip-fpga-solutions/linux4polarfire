@@ -81,6 +81,13 @@ PIT Timer required properties:
 - interrupts: Should contain interrupt for the PIT which is the IRQ line
   shared across all System Controller members.
 
+PIT64 Timer required properties:
+- compatible: Should be "atmel,pit64"
+- reg: Should contain registers location and length
+- interrupts: Should contain interrupt for PIT64 timer which is used as
+clockevents; for clocksource timer, the interrupt could be omitted.
+- clock: Should contain the input clock of the PIT64 timer.
+
 System Timer (ST) required properties:
 - compatible: Should be "atmel,at91rm9200-st", "syscon", "simple-mfd"
 - reg: Should contain registers location and length
