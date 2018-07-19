@@ -252,7 +252,7 @@
 
 			flx0: flexcom@f8034000 {
 				atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_USART>;
-				status = "disabled"; /* conflict with ISC_D2 & ISC_D3 data pins */
+				status = "okay"; /* conflict with ISC_D2 & ISC_D3 data pins */
 
 				uart5: serial@200 {
 					compatible = "atmel,at91sam9260-usart";
@@ -292,7 +292,7 @@
 				atmel,use-dma-tx;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_uart3_default>;
-				status = "okay";
+				status = "disabled";
 			};
 
 			flx4: flexcom@fc018000 {
@@ -402,7 +402,7 @@
 
 				pinctrl_flx0_default: flx0_default {
 					pinmux = <PIN_PB28__FLEXCOM0_IO0>,
-						 <PIN_PB29__FLEXCOM0_IO1>;
+						 <PIN_PB30__FLEXCOM0_IO2>;
 					bias-disable;
 				};
 
