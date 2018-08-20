@@ -33,6 +33,7 @@
 #include <linux/irq.h>
 #include <linux/suspend.h>
 #include <linux/mm.h>
+#include <linux/ftrace.h>
 
 #include <asm/div64.h>
 #include <asm/io.h>
@@ -430,6 +431,7 @@ static int atmel_config_iso7816(struct uart_port *port,
 	unsigned int cd, fidi;
 	int ret = 0;
 
+	printk("=== atmel_config_iso7816 ===\n");
 	/* Disable interrupts */
 	atmel_uart_writel(port, ATMEL_US_IDR, atmel_port->tx_done_mask);
 
@@ -447,9 +449,11 @@ static int atmel_config_iso7816(struct uart_port *port,
 
 		if ((iso7816conf->flags & SER_ISO7816_T_PARAM)
 		    == SER_ISO7816_T(0)) {
+		    	printk("=== atmel_config_iso7816 set T0 ===\n");
 			mode |= ATMEL_US_USMODE_ISO7816_T0 | ATMEL_US_DSNACK;
 		} else if ((iso7816conf->flags & SER_ISO7816_T_PARAM)
 			   == SER_ISO7816_T(1)) {
+		    	printk("=== atmel_config_iso7816 set T1 ===\n");
 			mode |= ATMEL_US_USMODE_ISO7816_T1 | ATMEL_US_INACK;
 		} else {
 			dev_err(port->dev, "ISO7816: Type not supported\n");
@@ -1463,6 +1467,8 @@ static irqreturn_t atmel_interrupt(int irq, void *dev_id)
 		if (!pending)
 			break;
 
+		trace_printk("status=0x%08x, mask=0x%08x, pending=0x%08x\n",
+			     status, mask, pending);
 		if (atmel_port->suspended) {
 			atmel_port->pending |= pending;
 			atmel_port->pending_status = status;

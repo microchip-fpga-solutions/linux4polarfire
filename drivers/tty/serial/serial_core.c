@@ -1329,9 +1329,11 @@ static int uart_set_iso7816_config(struct uart_port *port,
 
 	if (!port->iso7816_config)
 		return -ENOIOCTLCMD;
+	//printk("%s: l.%u\n", __func__, __LINE__);
 
 	if (copy_from_user(&iso7816, iso7816_user, sizeof(*iso7816_user)))
 		return -EFAULT;
+	//printk("%s: l.%u\n", __func__, __LINE__);
 
 	/*
 	 * There are 5 words reserved for future use. Check that userspace
@@ -1340,15 +1342,18 @@ static int uart_set_iso7816_config(struct uart_port *port,
 	for (i = 0; i < 5; i++)
 		if (iso7816.reserved[i])
 			return -EINVAL;
+	//printk("%s: l.%u\n", __func__, __LINE__);
 
 	spin_lock_irqsave(&port->lock, flags);
 	ret = port->iso7816_config(port, &iso7816);
 	spin_unlock_irqrestore(&port->lock, flags);
 	if (ret)
 		return ret;
+	//printk("%s: l.%u\n", __func__, __LINE__);
 
 	if (copy_to_user(iso7816_user, &port->iso7816, sizeof(port->iso7816)))
 		return -EFAULT;
+	//printk("%s: l.%u\n", __func__, __LINE__);
 
 	return 0;
 }
@@ -1439,10 +1444,12 @@ uart_ioctl(struct tty_struct *tty, unsigned int cmd, unsigned long arg)
 		break;
 
 	case TIOCSISO7816:
+		//printk("=== TIOCSISO7816 ===\n");
 		ret = uart_set_iso7816_config(state->uart_port, uarg);
 		break;
 
 	case TIOCGISO7816:
+		//printk("=== TIOCGISO7816 ===\n");
 		ret = uart_get_iso7816_config(state->uart_port, uarg);
 		break;
 	default:
