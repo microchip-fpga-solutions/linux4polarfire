@@ -40,10 +40,10 @@
 #define DRIVER_NAME "sdhci"
 
 #define DBG(f, x...) \
-	pr_debug("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
+	pr_warn("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
 
 #define SDHCI_DUMP(f, x...) \
-	pr_err("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
+	pr_warn("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
 
 #define MAX_TUNING_LOOP 40
 
@@ -200,7 +200,7 @@ void sdhci_reset(struct sdhci_host *host, u8 mask)
 			sdhci_dumpregs(host);
 			return;
 		}
-		udelay(10);
+		/*udelay(10);*/
 	}
 }
 EXPORT_SYMBOL_GPL(sdhci_reset);
@@ -1425,7 +1425,7 @@ void sdhci_enable_clk(struct sdhci_host *host, u16 clk)
 			sdhci_dumpregs(host);
 			return;
 		}
-		udelay(10);
+		/*udelay(10);*/
 	}
 
 	clk |= SDHCI_CLOCK_CARD_EN;
@@ -3383,6 +3383,7 @@ int sdhci_setup_host(struct sdhci_host *host)
 	u32 max_clk;
 	int ret;
 
+	pr_warn("In %s \n",__func__);
 	WARN_ON(host == NULL);
 	if (host == NULL)
 		return -EINVAL;
@@ -3884,6 +3885,7 @@ int sdhci_setup_host(struct sdhci_host *host)
 			return ret;
 	}
 
+	pr_warn("In %s End \n",__func__);
 	return 0;
 
 unreg:
@@ -3897,6 +3899,7 @@ undma:
 	host->adma_table = NULL;
 	host->align_buffer = NULL;
 
+	pr_warn("In %s err at end \n",__func__);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(sdhci_setup_host);
@@ -3922,6 +3925,7 @@ int __sdhci_add_host(struct sdhci_host *host)
 	struct mmc_host *mmc = host->mmc;
 	int ret;
 
+	pr_warn("In %s \n",__func__);
 	/*
 	 * Init tasklets.
 	 */
@@ -3964,6 +3968,7 @@ int __sdhci_add_host(struct sdhci_host *host)
 		(host->flags & SDHCI_USE_SDMA) ? "DMA" : "PIO");
 
 	sdhci_enable_card_detection(host);
+	pr_warn("In %s End\n",__func__);
 
 	return 0;
 
@@ -3977,6 +3982,7 @@ unirq:
 untasklet:
 	tasklet_kill(&host->finish_tasklet);
 
+	pr_warn("In %s err at end \n",__func__);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(__sdhci_add_host);
@@ -3985,6 +3991,7 @@ int sdhci_add_host(struct sdhci_host *host)
 {
 	int ret;
 
+	pr_warn("In %s \n",__func__);
 	ret = sdhci_setup_host(host);
 	if (ret)
 		return ret;
@@ -3993,11 +4000,13 @@ int sdhci_add_host(struct sdhci_host *host)
 	if (ret)
 		goto cleanup;
 
+	pr_warn("In %s End\n",__func__);
 	return 0;
 
 cleanup:
 	sdhci_cleanup_host(host);
 
+	pr_warn("In %s error \n",__func__);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(sdhci_add_host);

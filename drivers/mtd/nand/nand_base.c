@@ -3585,12 +3585,15 @@ static int nand_flash_detect_jedec(struct nand_chip *chip)
 	int val;
 	int i, j;
 
+	pr_warn("In %s \n",__func__);
 	/* Try JEDEC for unknown chip or LP */
 	chip->cmdfunc(mtd, NAND_CMD_READID, 0x40, -1);
 	if (chip->read_byte(mtd) != 'J' || chip->read_byte(mtd) != 'E' ||
 		chip->read_byte(mtd) != 'D' || chip->read_byte(mtd) != 'E' ||
-		chip->read_byte(mtd) != 'C')
+		chip->read_byte(mtd) != 'C') {
+		pr_warn("In %s != JEDEC\n",__func__);
 		return 0;
+	}
 
 	chip->cmdfunc(mtd, NAND_CMD_PARAM, 0x40, -1);
 	for (i = 0; i < 3; i++) {
@@ -3879,6 +3882,7 @@ static int nand_detect(struct nand_chip *chip, struct nand_flash_dev *type)
 	u8 *id_data = chip->id.data;
 	u8 maf_id, dev_id;
 
+	pr_warn("In %s \n",__func__);
 	/*
 	 * Reset the chip, required by some chips (e.g. Micron MT29FxGxxxxx)
 	 * after power-up.
@@ -3958,8 +3962,10 @@ static int nand_detect(struct nand_chip *chip, struct nand_flash_dev *type)
 			goto ident_done;
 	}
 
-	if (!type->name)
+	if (!type->name) {
+		pr_warn("In %s !type->name: return -ENODEV \n",__func__);
 		return -ENODEV;
+	}
 
 	if (!mtd->name)
 		mtd->name = type->name;

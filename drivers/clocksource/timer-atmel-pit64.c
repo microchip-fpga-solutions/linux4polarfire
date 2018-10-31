@@ -226,7 +226,7 @@ static void pit64_clkevt_resume(struct clock_event_device *cedev)
 static struct clock_event_device clkevt = {
 	.name = pit64_name,
 	.features = CLOCK_EVT_FEAT_ONESHOT | CLOCK_EVT_FEAT_PERIODIC,
-	.rating = 250,
+	.rating = 600,
 	.set_state_shutdown = pit64_clkevt_shutdown,
 	.set_state_periodic = pit64_clkevt_set_periodic,
 	.set_state_oneshot = pit64_clkevt_set_oneshot,
@@ -239,8 +239,9 @@ static irqreturn_t pit64_interrupt(int irq, void *dev_id)
 {
 	struct pit64_clkevt_data *irq_data = dev_id;
 
-	if (data.ced != irq_data)
+	if (data.ced != irq_data) {
 		return IRQ_NONE;
+	}
 
 	if (pit64_read(irq_data->cd.base, AT91_PIT64_ISR) &
 	    AT91_PIT64_ISR_PERIOD) {
@@ -354,6 +355,8 @@ static int __init pit64_dt_init_clkevt(void __iomem *base, struct clk *clk,
 
 	data.ced = ced;
 
+	pit64_reset(&ced->cd, AT91_PIT64_MR_CONT, true);
+
 	/* Set up and register clockevents. */
 	ced->clkevt = &clkevt;
 	ced->clkevt->cpumask = cpumask_of(0);
@@ -378,6 +381,7 @@ static int __init pit64_dt_init(struct device_node *node)
 	u32 irq;
 	int ret = -EINVAL;
 
+	pr_warn("In %s \n",__func__);
 	base = of_iomap(node, 0);
 	if (!base) {
 		pr_err("%s: Could not map PIT64 address!\n", node->name);
@@ -398,15 +402,17 @@ static int __init pit64_dt_init(struct device_node *node)
 		ret = -EINVAL;
 		goto clock_put;
 	}
+
 	ret = pit64_dt_init_clkevt(base, clk, irq);
 	if (ret)
 		goto irq_unmap;
 
-/* commenting clock soruce initalization for now.
-	ret = pit64_dt_init_clksrc(base, clk);
+	//commenting clock soruce initalization for now.
+/*	ret = pit64_dt_init_clksrc(base, clk);
 	if (ret)
 		goto clock_put;
 */
+	pr_warn("In %s end \n",__func__);
 	return 0;
 
 irq_unmap:
@@ -419,4 +425,4 @@ unmap:
 	return ret;
 }
 
-CLOCKSOURCE_OF_DECLARE(at91_pit64, "atmel,pit64", pit64_dt_init);
+TIMER_OF_DECLARE(at91_pit64, "atmel,pit64", pit64_dt_init);

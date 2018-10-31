@@ -66,6 +66,7 @@
 #include <linux/iopoll.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
+#include <soc/at91/atmel-sfr.h>
 
 #include "pmecc.h"
 
@@ -205,6 +206,7 @@ struct atmel_nand_controller_ops {
 struct atmel_nand_controller_caps {
 	bool has_dma;
 	bool legacy_of_bindings;
+	bool ebicsa_in_sfr;
 	u32 ale_offs;
 	u32 cle_offs;
 	const struct atmel_nand_controller_ops *ops;
@@ -230,6 +232,7 @@ to_nand_controller(struct nand_hw_control *ctl)
 struct atmel_smc_nand_controller {
 	struct atmel_nand_controller base;
 	struct regmap *matrix;
+	struct regmap *sfr;
 	unsigned int ebi_csa_offs;
 };
 
@@ -1206,6 +1209,41 @@ static int atmel_smc_nand_prepare_smcconf(struct atmel_nand *nand,
 
 	atmel_smc_cs_conf_init(smcconf);
 
+#if 0
+	ret = atmel_smc_cs_conf_set_pulse(smcconf, ATMEL_SMC_NWE_SHIFT, 1);
+	if (ret)
+		return ret;
+	ret = atmel_smc_cs_conf_set_pulse(smcconf, ATMEL_SMC_NCS_WR_SHIFT, 2);
+	if (ret)
+		return ret;
+	ret = atmel_smc_cs_conf_set_pulse(smcconf, ATMEL_SMC_NRD_SHIFT, 1);
+	if (ret)
+		return ret;
+	ret = atmel_smc_cs_conf_set_pulse(smcconf, ATMEL_SMC_NCS_RD_SHIFT, 2);
+	if (ret)
+		return ret;
+
+	ret = atmel_smc_cs_conf_set_setup(smcconf, ATMEL_SMC_NWE_SHIFT, 0);
+	if (ret)
+		return ret;
+	ret = atmel_smc_cs_conf_set_setup(smcconf, ATMEL_SMC_NCS_WR_SHIFT, 0);
+	if (ret)
+		return ret;
+	ret = atmel_smc_cs_conf_set_setup(smcconf, ATMEL_SMC_NRD_SHIFT, 0);
+	if (ret)
+		return ret;
+	ret = atmel_smc_cs_conf_set_setup(smcconf, ATMEL_SMC_NCS_RD_SHIFT, 0);
+	if (ret)
+		return ret;
+
+	ret = atmel_smc_cs_conf_set_cycle(smcconf, ATMEL_SMC_NWE_SHIFT, 2);
+	if (ret)
+		return ret;
+
+	ret = atmel_smc_cs_conf_set_cycle(smcconf, ATMEL_SMC_NRD_SHIFT, 2);
+	if (ret)
+		return ret;
+#else
 	mckperiodps = NSEC_PER_SEC / clk_get_rate(nc->mck);
 	mckperiodps *= 1000;
 
@@ -1402,6 +1440,11 @@ static int atmel_smc_nand_prepare_smcconf(struct atmel_nand *nand,
 	/* Attach the CS line to the NFC logic. */
 	smcconf->timings |= ATMEL_HSMC_TIMINGS_NFSEL;
 
+#endif
+
+#if 0
+	smcconf->mode |= ATMEL_SMC_MODE_TDF(0);
+#endif
 	/* Set the appropriate data bus width. */
 	if (nand->base.options & NAND_BUSWIDTH_16)
 		smcconf->mode |= ATMEL_SMC_MODE_DBW_16;
@@ -1529,13 +1572,21 @@ static void atmel_smc_nand_init(struct atmel_nand_controller *nc,
 	atmel_nand_init(nc, nand);
 
 	smc_nc = to_smc_nand_controller(chip->controller);
-	if (!smc_nc->matrix)
+	if ((!smc_nc->matrix) && (!smc_nc->sfr))
 		return;
 
 	/* Attach the CS to the NAND Flash logic. */
-	for (i = 0; i < nand->numcs; i++)
-		regmap_update_bits(smc_nc->matrix, smc_nc->ebi_csa_offs,
+	for (i = 0; i < nand->numcs; i++) {
+		if(smc_nc->matrix) {
+			regmap_update_bits(smc_nc->matrix, smc_nc->ebi_csa_offs,
 				   BIT(nand->cs[i].id), BIT(nand->cs[i].id));
+		} else if(smc_nc->sfr) {
+			pr_warn("In %s: ebi_csa_offs = %d val = %ld \n ",__func__,smc_nc->ebi_csa_offs,
+                   BIT(nand->cs[i].id));
+			regmap_update_bits(smc_nc->sfr, smc_nc->ebi_csa_offs,
+				   BIT(nand->cs[i].id), BIT(nand->cs[i].id));
+		}
+	}
 }
 
 static void atmel_hsmc_nand_init(struct atmel_nand_controller *nc,
@@ -1945,7 +1996,15 @@ static const struct of_device_id atmel_matrix_of_ids[] = {
 	},
 	{
 		.compatible = "atmel,at91sam9x5-matrix",
-		.data = (void *)AT91SAM9X5_MATRIX_EBICSA,
+		.data = (void *) 0x04,
+	},
+	{ /* sentinel */ },
+};
+
+static const struct of_device_id atmel_sfr_of_ids[] = {
+	{
+		.compatible = "atmel,sam9x60-sfr",
+		.data = (void *)AT91_SFR_EBICSA,
 	},
 	{ /* sentinel */ },
 };
@@ -2024,22 +2083,44 @@ atmel_smc_nand_controller_init(struct atmel_smc_nand_controller *nc)
 	if (nc->base.caps->legacy_of_bindings)
 		return 0;
 
-	np = of_parse_phandle(dev->parent->of_node, "atmel,matrix", 0);
-	if (!np)
-		return 0;
+	if(nc->base.caps->ebicsa_in_sfr) {
+		pr_warn("In %s: ebicsa_in_sfr\n",__func__);
+		np = of_parse_phandle(dev->parent->of_node, "atmel,sam9x60-sfr", 0);
+		if (!np)
+			return 0;
 
-	match = of_match_node(atmel_matrix_of_ids, np);
-	if (!match) {
+		match = of_match_node(atmel_sfr_of_ids, np);
+		if (!match) {
+			of_node_put(np);
+			return 0;
+		}
+
+		nc->sfr = syscon_node_to_regmap(np);
 		of_node_put(np);
-		return 0;
-	}
+		if (IS_ERR(nc->sfr)) {
+			ret = PTR_ERR(nc->sfr);
+			dev_err(dev, "Could not get SFR regmap (err = %d)\n", ret);
+			return ret;
+		}
 
-	nc->matrix = syscon_node_to_regmap(np);
-	of_node_put(np);
-	if (IS_ERR(nc->matrix)) {
-		ret = PTR_ERR(nc->matrix);
-		dev_err(dev, "Could not get Matrix regmap (err = %d)\n", ret);
-		return ret;
+	} else {
+		np = of_parse_phandle(dev->parent->of_node, "atmel,matrix", 0);
+		if (!np)
+			return 0;
+
+		match = of_match_node(atmel_matrix_of_ids, np);
+		if (!match) {
+			of_node_put(np);
+			return 0;
+		}
+
+		nc->matrix = syscon_node_to_regmap(np);
+		of_node_put(np);
+		if (IS_ERR(nc->matrix)) {
+			ret = PTR_ERR(nc->matrix);
+			dev_err(dev, "Could not get Matrix regmap (err = %d)\n", ret);
+			return ret;
+		}
 	}
 
 	nc->ebi_csa_offs = (uintptr_t)match->data;
@@ -2404,7 +2485,7 @@ static const struct atmel_nand_controller_caps atmel_sam9261_nc_caps = {
 };
 
 static const struct atmel_nand_controller_caps atmel_sam9g45_nc_caps = {
-	.has_dma = true,
+	/*.has_dma = true,*/
 	.ale_offs = BIT(21),
 	.cle_offs = BIT(22),
 	.ops = &atmel_smc_nc_ops,
@@ -2474,7 +2555,6 @@ MODULE_DEVICE_TABLE(of, atmel_nand_controller_of_ids);
 static int atmel_nand_controller_probe(struct platform_device *pdev)
 {
 	const struct atmel_nand_controller_caps *caps;
-
 	if (pdev->id_entry)
 		caps = (void *)pdev->id_entry->driver_data;
 	else

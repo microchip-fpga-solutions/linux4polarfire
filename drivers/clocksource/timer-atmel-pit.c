@@ -156,10 +156,11 @@ static irqreturn_t at91sam926x_pit_interrupt(int irq, void *dev_id)
 		data->cnt += data->cycle * PIT_PICNT(pit_read(data->base,
 							      AT91_PIT_PIVR));
 		data->clkevt.event_handler(&data->clkevt);
-
+		pr_warn("In %s : IRQ_HANDLED \n",__func__);
 		return IRQ_HANDLED;
 	}
 
+	pr_warn("In %s : IRQ_NONE \n",__func__);
 	return IRQ_NONE;
 }
 
@@ -173,6 +174,7 @@ static int __init at91sam926x_pit_dt_init(struct device_node *node)
 	int             ret;
 	struct pit_data *data;
 
+	pr_warn("In %s \n",__func__);
 	data = kzalloc(sizeof(*data), GFP_KERNEL);
 	if (!data)
 		return -ENOMEM;
@@ -207,6 +209,7 @@ static int __init at91sam926x_pit_dt_init(struct device_node *node)
 	 * 1/HZ period (instead of a compile-time constant LATCH).
 	 */
 	pit_rate = clk_get_rate(data->mck) / 16;
+	pr_warn("In %s pit_rate = %ld Hz= %ld \n",__func__,pit_rate, HZ);
 	data->cycle = DIV_ROUND_CLOSEST(pit_rate, HZ);
 	WARN_ON(((data->cycle - 1) & ~AT91_PIT_PIV) != 0);
 
@@ -253,6 +256,7 @@ static int __init at91sam926x_pit_dt_init(struct device_node *node)
 	data->clkevt.suspend = at91sam926x_pit_suspend;
 	clockevents_register_device(&data->clkevt);
 
+	pr_warn("In %s end \n",__func__);
 	return 0;
 }
 TIMER_OF_DECLARE(at91sam926x_pit, "atmel,at91sam9260-pit",

@@ -63,6 +63,8 @@ static const struct at91_soc __initconst socs[] = {
 		 "at91sam9n12", "at91sam9n12"),
 	AT91_SOC(AT91SAM9N12_CIDR_MATCH, AT91SAM9CN11_EXID_MATCH,
 		 "at91sam9cn11", "at91sam9n12"),
+	AT91_SOC(AT91SAM9X60_CIDR_MATCH, AT91SAM9X60_EXID_MATCH,
+		 "at91sam9x60", "at91sam9x60"),
 	AT91_SOC(AT91SAM9XE128_CIDR_MATCH, 0, "at91sam9xe128", "at91sam9xe128"),
 	AT91_SOC(AT91SAM9XE256_CIDR_MATCH, 0, "at91sam9xe256", "at91sam9xe256"),
 	AT91_SOC(AT91SAM9XE512_CIDR_MATCH, 0, "at91sam9xe512", "at91sam9xe512"),

@@ -46,8 +46,10 @@ static unsigned long clk_programmable_recalc_rate(struct clk_hw *hw,
 	struct clk_programmable *prog = to_clk_programmable(hw);
 	unsigned int pckr;
 
+	pr_warn("In %s \n",__func__);
 	regmap_read(prog->regmap, AT91_PMC_PCKR(prog->id), &pckr);
 
+	pr_warn("In %s End\n",__func__);
 	return parent_rate >> PROG_PRES(prog->layout, pckr);
 }
 
@@ -61,6 +63,7 @@ static int clk_programmable_determine_rate(struct clk_hw *hw,
 	int shift;
 	int i;
 
+	pr_warn("In %s \n",__func__);
 	for (i = 0; i < clk_hw_get_num_parents(hw); i++) {
 		parent = clk_hw_get_parent_by_index(hw, i);
 		if (!parent)
@@ -91,6 +94,7 @@ static int clk_programmable_determine_rate(struct clk_hw *hw,
 		return best_rate;
 
 	req->rate = best_rate;
+	pr_warn("In %s End \n",__func__);
 	return 0;
 }
 
@@ -101,6 +105,7 @@ static int clk_programmable_set_parent(struct clk_hw *hw, u8 index)
 	unsigned int mask = layout->css_mask;
 	unsigned int pckr = index;
 
+	pr_warn("In %s \n",__func__);
 	if (layout->have_slck_mck)
 		mask |= AT91_PMC_CSSMCK_MCK;
 
@@ -113,6 +118,7 @@ static int clk_programmable_set_parent(struct clk_hw *hw, u8 index)
 
 	regmap_update_bits(prog->regmap, AT91_PMC_PCKR(prog->id), mask, pckr);
 
+	pr_warn("In %s End \n",__func__);
 	return 0;
 }
 
@@ -123,6 +129,7 @@ static u8 clk_programmable_get_parent(struct clk_hw *hw)
 	unsigned int pckr;
 	u8 ret;
 
+	pr_warn("In %s \n",__func__);
 	regmap_read(prog->regmap, AT91_PMC_PCKR(prog->id), &pckr);
 
 	ret = pckr & layout->css_mask;
@@ -130,6 +137,7 @@ static u8 clk_programmable_get_parent(struct clk_hw *hw)
 	if (layout->have_slck_mck && (pckr & AT91_PMC_CSSMCK_MCK) && !ret)
 		ret = PROG_MAX_RM9200_CSS + 1;
 
+	pr_warn("In %s End \n",__func__);
 	return ret;
 }
 
@@ -142,6 +150,7 @@ static int clk_programmable_set_rate(struct clk_hw *hw, unsigned long rate,
 	unsigned int pckr;
 	int shift = 0;
 
+	pr_warn("In %s \n",__func__);
 	regmap_read(prog->regmap, AT91_PMC_PCKR(prog->id), &pckr);
 
 	if (!div)
@@ -159,6 +168,7 @@ static int clk_programmable_set_rate(struct clk_hw *hw, unsigned long rate,
 			   PROG_PRES_MASK << layout->pres_shift,
 			   shift << layout->pres_shift);
 
+	pr_warn("In %s End \n",__func__);
 	return 0;
 }
 
@@ -181,6 +191,7 @@ at91_clk_register_programmable(struct regmap *regmap,
 	struct clk_init_data init;
 	int ret;
 
+	pr_warn("In %s \n",__func__);
 	if (id > PROG_ID_MAX)
 		return ERR_PTR(-EINVAL);
 
@@ -208,6 +219,7 @@ at91_clk_register_programmable(struct regmap *regmap,
 		pmc_register_pck(id);
 	}
 
+	pr_warn("In %s End\n",__func__);
 	return hw;
 }
 
@@ -229,6 +241,12 @@ static const struct clk_programmable_layout at91sam9x5_programmable_layout = {
 	.have_slck_mck = 0,
 };
 
+static const struct clk_programmable_layout at91sam9x60_programmable_layout = {
+	.pres_shift = 8,
+	.css_mask = 0x1f,
+	.have_slck_mck = 0,
+};
+
 static void __init
 of_at91_clk_prog_setup(struct device_node *np,
 		       const struct clk_programmable_layout *layout)
@@ -242,6 +260,7 @@ of_at91_clk_prog_setup(struct device_node *np,
 	struct device_node *progclknp;
 	struct regmap *regmap;
 
+	pr_warn("In %s \n",__func__);
 	num_parents = of_clk_get_parent_count(np);
 	if (num_parents == 0 || num_parents > PROG_SOURCE_MAX)
 		return;
@@ -271,6 +290,8 @@ of_at91_clk_prog_setup(struct device_node *np,
 
 		of_clk_add_hw_provider(progclknp, of_clk_hw_simple_get, hw);
 	}
+	
+	pr_warn("In %s End \n",__func__);
 }
 
 
@@ -294,3 +315,12 @@ static void __init of_at91sam9x5_clk_prog_setup(struct device_node *np)
 }
 CLK_OF_DECLARE(at91sam9x5_clk_prog, "atmel,at91sam9x5-clk-programmable",
 	       of_at91sam9x5_clk_prog_setup);
+
+static void __init of_at91sam9x60_clk_prog_setup(struct device_node *np)
+{
+	pr_warn("In %s \n",__func__);
+	of_at91_clk_prog_setup(np, &at91sam9x60_programmable_layout);
+	pr_warn("In %s End \n",__func__);
+}
+CLK_OF_DECLARE(at91sam9x60_clk_prog, "atmel,at91sam9x60-clk-programmable",
+	       of_at91sam9x60_clk_prog_setup);

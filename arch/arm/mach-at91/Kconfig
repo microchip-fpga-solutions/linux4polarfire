@@ -84,12 +84,17 @@ config SOC_AT91SAM9
 	bool "AT91SAM9"
 	depends on ARCH_MULTI_V5
 	select ATMEL_AIC_IRQ
+	select ATMEL_AIC5_IRQ
 	select ATMEL_PM if PM
 	select ATMEL_SDRAMC
 	select CPU_ARM926T
 	select HAVE_AT91_SMD
 	select HAVE_AT91_USB_CLK
 	select HAVE_AT91_UTMI
+	select HAVE_AT91_GENERATED_CLK
+	select HAVE_AT91_SAM9x60_PLL
+	select HAVE_AT91_AUDIO_PLL
+	select HAVE_AT91_I2S_MUX_CLK
 	select HAVE_FB_ATMEL
 	select MEMORY
 	select PINCTRL_AT91
@@ -113,6 +118,7 @@ config SOC_AT91SAM9
 	    AT91SAM9X25
 	    AT91SAM9X35
 	    AT91SAM9XE
+	    AT91SAM9X60
 
 config HAVE_AT91_UTMI
 	bool
@@ -135,6 +141,9 @@ config HAVE_AT91_GENERATED_CLK
 	bool
 
 config HAVE_AT91_AUDIO_PLL
+	bool
+
+config HAVE_AT91_SAM9x60_PLL
 	bool
 
 config HAVE_AT91_I2S_MUX_CLK

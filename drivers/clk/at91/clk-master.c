@@ -46,20 +46,26 @@ struct clk_master {
 
 static inline bool clk_master_ready(struct regmap *regmap)
 {
-	unsigned int status;
+	unsigned int status, tmp;
 
+	pr_warn("In %s \n",__func__);
 	regmap_read(regmap, AT91_PMC_SR, &status);
 
-	return status & AT91_PMC_MCKRDY ? 1 : 0;
+	tmp = status & AT91_PMC_MCKRDY ? 1 : 0;
+
+	pr_warn("In %s tmp = %d end \n",__func__, tmp);
+	return tmp;
 }
 
 static int clk_master_prepare(struct clk_hw *hw)
 {
 	struct clk_master *master = to_clk_master(hw);
 
+	pr_warn("In %s \n",__func__);
 	while (!clk_master_ready(master->regmap))
 		cpu_relax();
 
+	pr_warn("In %s end \n",__func__);
 	return 0;
 }
 
@@ -67,6 +73,7 @@ static int clk_master_is_prepared(struct clk_hw *hw)
 {
 	struct clk_master *master = to_clk_master(hw);
 
+	pr_warn("In %s \n",__func__);
 	return clk_master_ready(master->regmap);
 }
 
@@ -88,6 +95,8 @@ static unsigned long clk_master_recalc_rate(struct clk_hw *hw,
 	pres = (mckr >> layout->pres_shift) & MASTER_PRES_MASK;
 	div = (mckr >> MASTER_DIV_SHIFT) & MASTER_DIV_MASK;
 
+	pr_warn("In %s pres %d div %d \n",__func__,pres,div);
+
 	if (characteristics->have_div3_pres && pres == MASTER_PRES_MAX)
 		rate /= 3;
 	else
@@ -100,17 +109,21 @@ static unsigned long clk_master_recalc_rate(struct clk_hw *hw,
 	else if (rate > characteristics->output.max)
 		pr_warn("master clk is overclocked");
 
+	pr_warn("In %s master clk = %ld",__func__,rate);
 	return rate;
 }
 
 static u8 clk_master_get_parent(struct clk_hw *hw)
 {
 	struct clk_master *master = to_clk_master(hw);
-	unsigned int mckr;
+	unsigned int mckr, tmp;
 
+	pr_warn("In %s \n",__func__);
 	regmap_read(master->regmap, AT91_PMC_MCKR, &mckr);
 
-	return mckr & AT91_PMC_CSS;
+	tmp = mckr & AT91_PMC_CSS;
+	pr_warn("In %s  end tmp = %d\n",__func__, tmp);
+	return tmp;
 }
 
 static const struct clk_ops master_ops = {
@@ -132,6 +145,7 @@ at91_clk_register_master(struct regmap *regmap,
 	struct clk_hw *hw;
 	int ret;
 
+	pr_warn("In %s \n",__func__);
 	if (!name || !num_parents || !parent_names)
 		return ERR_PTR(-EINVAL);
 
@@ -157,6 +171,7 @@ at91_clk_register_master(struct regmap *regmap,
 		hw = ERR_PTR(ret);
 	}
 
+	pr_warn("In %s end \n",__func__);
 	return hw;
 }
 
@@ -208,6 +223,7 @@ of_at91_clk_master_setup(struct device_node *np,
 	struct clk_master_characteristics *characteristics;
 	struct regmap *regmap;
 
+	pr_warn("In %s \n",__func__);
 	num_parents = of_clk_get_parent_count(np);
 	if (num_parents == 0 || num_parents > MASTER_SOURCE_MAX)
 		return;
@@ -231,9 +247,11 @@ of_at91_clk_master_setup(struct device_node *np,
 		goto out_free_characteristics;
 
 	of_clk_add_hw_provider(np, of_clk_hw_simple_get, hw);
+	pr_warn("In %s end \n",__func__);
 	return;
 
 out_free_characteristics:
+	pr_warn("In %s err \n",__func__);
 	kfree(characteristics);
 }
 
@@ -246,7 +264,9 @@ CLK_OF_DECLARE(at91rm9200_clk_master, "atmel,at91rm9200-clk-master",
 
 static void __init of_at91sam9x5_clk_master_setup(struct device_node *np)
 {
+	pr_warn("In %s \n",__func__);
 	of_at91_clk_master_setup(np, &at91sam9x5_master_layout);
+	pr_warn("In %s end \n",__func__);
 }
 CLK_OF_DECLARE(at91sam9x5_clk_master, "atmel,at91sam9x5-clk-master",
 	       of_at91sam9x5_clk_master_setup);

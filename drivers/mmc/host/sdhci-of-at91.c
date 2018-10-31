@@ -91,7 +91,7 @@ static void sdhci_at91_set_clock(struct sdhci_host *host, unsigned int clock)
 			return;
 		}
 		timeout--;
-		mdelay(1);
+		/*mdelay(1);*/
 	}
 
 	clk |= SDHCI_CLOCK_CARD_EN;
@@ -158,6 +158,7 @@ static int sdhci_at91_set_clks_presets(struct device *dev)
 	unsigned int			gck_rate, real_gck_rate;
 	unsigned int			preset_div;
 
+	pr_warn("In %s \n",__func__);
 	/*
 	 * The mult clock is provided by as a generated clock by the PMC
 	 * controller. In order to set the rate of gck, we have to get the
@@ -195,6 +196,7 @@ static int sdhci_at91_set_clks_presets(struct device *dev)
 	 * of clk mul.
 	 */
 	real_gck_rate = clk_get_rate(priv->gck);
+	pr_warn("In %s: clk_base = %d clk_mul = %d gck_rate = %d real_gck_rate=%d \n",__func__, clk_base,clk_mul,gck_rate,real_gck_rate);
 	if (real_gck_rate != gck_rate) {
 		clk_mul = real_gck_rate / (clk_base * 1000000) - 1;
 		caps1 &= (~SDHCI_CLOCK_MUL_MASK);
@@ -235,6 +237,7 @@ static int sdhci_at91_set_clks_presets(struct device *dev)
 	clk_prepare_enable(priv->mainck);
 	clk_prepare_enable(priv->gck);
 
+	pr_warn("In %s \n",__func__);
 	return 0;
 }
 
@@ -328,7 +331,7 @@ static int sdhci_at91_probe(struct platform_device *pdev)
 	struct sdhci_pltfm_host		*pltfm_host;
 	struct sdhci_at91_priv		*priv;
 	int				ret;
-
+	pr_warn("In %s \n",__func__);
 	match = of_match_device(sdhci_at91_dt_match, &pdev->dev);
 	if (!match)
 		return -EINVAL;

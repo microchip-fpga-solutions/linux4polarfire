@@ -344,6 +344,7 @@ static int __init tcb_clksrc_init(void)
 	int i;
 	int ret;
 
+	pr_warn("In %s \n",__func__);
 	tc = atmel_tc_alloc(CONFIG_ATMEL_TCB_CLKSRC_BLOCK);
 	if (!tc) {
 		pr_debug("can't alloc TC for clocksource\n");
@@ -361,18 +362,20 @@ static int __init tcb_clksrc_init(void)
 
 	/* How fast will we be counting?  Pick something over 5 MHz.  */
 	rate = (u32) clk_get_rate(t0_clk);
+	pr_warn("In %s rate=%d \n",__func__,rate);
 	for (i = 0; i < 5; i++) {
 		unsigned divisor = atmel_tc_divisors[i];
 		unsigned tmp;
 
 		/* remember 32 KiHz clock for later */
 		if (!divisor) {
+			pr_warn("In %s !divisor \n",__func__);
 			clk32k_divisor_idx = i;
 			continue;
 		}
 
 		tmp = rate / divisor;
-		pr_debug("TC: %u / %-3u [%d] --> %u\n", rate, divisor, i, tmp);
+		pr_warn("TC: %u / %-3u [%d] --> %u\n", rate, divisor, i, tmp);
 		if (best_divisor_idx > 0) {
 			if (tmp < 5 * 1000 * 1000)
 				continue;
@@ -414,6 +417,7 @@ static int __init tcb_clksrc_init(void)
 	if (ret)
 		goto err_unregister_clksrc;
 
+	pr_warn("In %s return 0\n",__func__);
 	return 0;
 
 err_unregister_clksrc:
@@ -428,6 +432,7 @@ err_disable_t0:
 
 err_free_tc:
 	atmel_tc_free(tc);
+	pr_warn("In %s return error\n",__func__);
 	return ret;
 }
 arch_initcall(tcb_clksrc_init);

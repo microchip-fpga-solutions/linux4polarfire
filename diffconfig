@@ -1,0 +1,4 @@
+-NO_HZ_COMMON y
+ HZ_PERIODIC n -> y
+ NO_HZ n -> y
+ NO_HZ_IDLE y -> n

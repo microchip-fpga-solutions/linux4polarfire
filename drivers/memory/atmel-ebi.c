@@ -17,6 +17,7 @@
 #include <linux/init.h>
 #include <linux/of_device.h>
 #include <linux/regmap.h>
+#include <soc/at91/atmel-sfr.h>
 
 struct atmel_ebi_dev_config {
 	int cs;
@@ -36,6 +37,7 @@ struct atmel_ebi_dev {
 struct atmel_ebi_caps {
 	unsigned int available_cs;
 	unsigned int ebi_csa_offs;
+	bool ebi_csa_in_sfr;
 	void (*get_config)(struct atmel_ebi_dev *ebid,
 			   struct atmel_ebi_dev_config *conf);
 	int (*xlate_config)(struct atmel_ebi_dev *ebid,
@@ -48,6 +50,7 @@ struct atmel_ebi_caps {
 struct atmel_ebi {
 	struct clk *clk;
 	struct regmap *matrix;
+	struct regmap *sfr;
 	struct  {
 		struct regmap *regmap;
 		struct clk *clk;
@@ -304,6 +307,7 @@ static int atmel_ebi_dev_setup(struct atmel_ebi *ebi, struct device_node *np,
 	bool apply = false;
 	u32 cs;
 
+	pr_warn("In %s: \n",__func__);
 	nentries = of_property_count_elems_of_size(np, "reg",
 						   reg_cells * sizeof(u32));
 	for (i = 0; i < nentries; i++) {
@@ -357,22 +361,32 @@ static int atmel_ebi_dev_setup(struct atmel_ebi *ebi, struct device_node *np,
 		 * Attach the EBI device to the generic SMC logic if at least
 		 * one "atmel,smc-" property is present.
 		 */
-		if (ebi->caps->ebi_csa_offs && apply)
-			regmap_update_bits(ebi->matrix,
+		if (ebi->caps->ebi_csa_offs && apply) {
+			if(ebi->matrix) {
+				pr_warn("In %s: csa set matrix bits \n",__func__);
+				regmap_update_bits(ebi->matrix,
 					   ebi->caps->ebi_csa_offs,
 					   BIT(cs), 0);
-
+			} else if(ebi->sfr) {
+				pr_warn("In %s: csa set sfr bits\n",__func__);
+				regmap_update_bits(ebi->sfr,
+					   ebi->caps->ebi_csa_offs,
+					   BIT(cs), 0);
+			}
+		}
 		i++;
 	}
 
 	list_add_tail(&ebid->node, &ebi->devs);
 
+	pr_warn("In %s: End \n",__func__);
 	return 0;
 }
 
 static const struct atmel_ebi_caps at91sam9260_ebi_caps = {
 	.available_cs = 0xff,
 	.ebi_csa_offs = AT91SAM9260_MATRIX_EBICSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
@@ -381,6 +395,7 @@ static const struct atmel_ebi_caps at91sam9260_ebi_caps = {
 static const struct atmel_ebi_caps at91sam9261_ebi_caps = {
 	.available_cs = 0xff,
 	.ebi_csa_offs = AT91SAM9261_MATRIX_EBICSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
@@ -389,6 +404,7 @@ static const struct atmel_ebi_caps at91sam9261_ebi_caps = {
 static const struct atmel_ebi_caps at91sam9263_ebi0_caps = {
 	.available_cs = 0x3f,
 	.ebi_csa_offs = AT91SAM9263_MATRIX_EBI0CSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
@@ -397,6 +413,7 @@ static const struct atmel_ebi_caps at91sam9263_ebi0_caps = {
 static const struct atmel_ebi_caps at91sam9263_ebi1_caps = {
 	.available_cs = 0x7,
 	.ebi_csa_offs = AT91SAM9263_MATRIX_EBI1CSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
@@ -405,6 +422,7 @@ static const struct atmel_ebi_caps at91sam9263_ebi1_caps = {
 static const struct atmel_ebi_caps at91sam9rl_ebi_caps = {
 	.available_cs = 0x3f,
 	.ebi_csa_offs = AT91SAM9RL_MATRIX_EBICSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
@@ -413,6 +431,7 @@ static const struct atmel_ebi_caps at91sam9rl_ebi_caps = {
 static const struct atmel_ebi_caps at91sam9g45_ebi_caps = {
 	.available_cs = 0x3f,
 	.ebi_csa_offs = AT91SAM9G45_MATRIX_EBICSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
@@ -421,13 +440,25 @@ static const struct atmel_ebi_caps at91sam9g45_ebi_caps = {
 static const struct atmel_ebi_caps at91sam9x5_ebi_caps = {
 	.available_cs = 0x3f,
 	.ebi_csa_offs = AT91SAM9X5_MATRIX_EBICSA,
+	.ebi_csa_in_sfr= false,
 	.get_config = at91sam9_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = at91sam9_ebi_apply_config,
 };
 
+static const struct atmel_ebi_caps at91sam9x60_ebi_caps = {
+	.available_cs = 0x3f,
+	.ebi_csa_offs = AT91_SFR_EBICSA,
+	.ebi_csa_in_sfr= true,
+	.get_config = at91sam9_ebi_get_config,
+	.xlate_config = atmel_ebi_xslate_smc_config,
+	.apply_config = at91sam9_ebi_apply_config,
+};
+
+
 static const struct atmel_ebi_caps sama5d3_ebi_caps = {
 	.available_cs = 0xf,
+	.ebi_csa_in_sfr= false,
 	.get_config = sama5_ebi_get_config,
 	.xlate_config = atmel_ebi_xslate_smc_config,
 	.apply_config = sama5_ebi_apply_config,
@@ -461,6 +492,10 @@ static const struct of_device_id atmel_ebi_id_table[] = {
 	{
 		.compatible = "atmel,at91sam9x5-ebi",
 		.data = &at91sam9x5_ebi_caps,
+	},
+	{
+		.compatible = "atmel,at91sam9x60-ebi",
+		.data = &at91sam9x60_ebi_caps,
 	},
 	{
 		.compatible = "atmel,sama5d3-ebi",
@@ -500,6 +535,8 @@ static int atmel_ebi_probe(struct platform_device *pdev)
 	int ret, reg_cells;
 	struct clk *clk;
 	u32 val;
+
+	pr_warn("In %s: \n",__func__);
 
 	match = of_match_device(atmel_ebi_id_table, dev);
 	if (!match || !match->data)
@@ -547,10 +584,19 @@ static int atmel_ebi_probe(struct platform_device *pdev)
 	 * to access the matrix registers.
 	 */
 	if (ebi->caps->ebi_csa_offs) {
-		ebi->matrix =
-			syscon_regmap_lookup_by_phandle(np, "atmel,matrix");
-		if (IS_ERR(ebi->matrix))
-			return PTR_ERR(ebi->matrix);
+		if(ebi->caps->ebi_csa_in_sfr) {
+			pr_warn("In %s: ebi_csa_in_sfr \n",__func__);
+			ebi->sfr =
+				syscon_regmap_lookup_by_phandle(np, "atmel,sfr");
+			if (IS_ERR(ebi->sfr))
+				return PTR_ERR(ebi->sfr);
+		} else {
+			pr_warn("In %s: ebi_csa_in_matrix \n",__func__);
+			ebi->matrix =
+				syscon_regmap_lookup_by_phandle(np, "atmel,matrix");
+			if (IS_ERR(ebi->matrix))
+				return PTR_ERR(ebi->matrix);
+		}
 	}
 
 	ret = of_property_read_u32(np, "#address-cells", &val);
@@ -584,6 +630,7 @@ static int atmel_ebi_probe(struct platform_device *pdev)
 		}
 	}
 
+	pr_warn("In %s: End \n",__func__);
 	return of_platform_populate(np, NULL, NULL, dev);
 }
 

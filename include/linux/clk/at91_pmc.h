@@ -34,9 +34,58 @@
 #define		AT91_PMC_HCK0		(1 << 16)		/* AHB Clock (USB host) [AT91SAM9261 only] */
 #define		AT91_PMC_HCK1		(1 << 17)		/* AHB Clock (LCD) [AT91SAM9261 only] */
 
+#define AT91_PMC_PLL_CTRL0	0x0C			/* PMC PLL Control Register 0 */
+#define 	AT91_PMC_PLL_CTRL0_DIVPMC_Pos 0
+#define 	AT91_PMC_PLL_CTRL0_DIVPMC_Msk (0xffu << AT91_PMC_PLL_CTRL0_DIVPMC_Pos) /**< \brief (AT91_PMC_PLL_CTRL0) Divider for PMC */
+#define 	AT91_PMC_PLL_CTRL0_DIVPMC(value) ((AT91_PMC_PLL_CTRL0_DIVPMC_Msk & ((value) << AT91_PMC_PLL_CTRL0_DIVPMC_Pos)))
+#define 	AT91_PMC_PLL_CTRL0_DIVIO_Pos 12
+#define 	AT91_PMC_PLL_CTRL0_DIVIO_Msk (0xffu << AT91_PMC_PLL_CTRL0_DIVIO_Pos) /**< \brief (AT91_PMC_PLL_CTRL0) Divider for PAD */
+#define 	AT91_PMC_PLL_CTRL0_DIVIO(value) ((AT91_PMC_PLL_CTRL0_DIVIO_Msk & ((value) << AT91_PMC_PLL_CTRL0_DIVIO_Pos)))
+#define 	AT91_PMC_PLL_CTRL0_ENPLL (0x1u << 28) /**< \brief (AT91_PMC_PLL_CTRL0) Enable PLL */
+#define 	AT91_PMC_PLL_CTRL0_ENPLLCK (0x1u << 29) /**< \brief (AT91_PMC_PLL_CTRL0) Enable PLL Clock for PMC */
+#define 	AT91_PMC_PLL_CTRL0_ENLOCK (0x1u << 31) /**< \brief (AT91_PMC_PLL_CTRL0) Enable PLL Lock */
+
 #define	AT91_PMC_PCER		0x10			/* Peripheral Clock Enable Register */
+#define AT91_PMC_PLL_CTRL1	0x10			/* PMC PLL Control Register 1 */
+#define 	AT91_PMC_PLL_CTRL1_FRACR_Pos 0
+#define 	AT91_PMC_PLL_CTRL1_FRACR_Msk (0x3fffffu << AT91_PMC_PLL_CTRL1_FRACR_Pos) /**< \brief (AT91_PMC_PLL_CTRL1) Fractional Loop Divider Setting */
+#define 	AT91_PMC_PLL_CTRL1_FRACR(value) ((AT91_PMC_PLL_CTRL1_FRACR_Msk & ((value) << AT91_PMC_PLL_CTRL1_FRACR_Pos)))
+#define 	AT91_PMC_PLL_CTRL1_MUL_Pos 24
+#define 	AT91_PMC_PLL_CTRL1_MUL_Msk (0x7fu << AT91_PMC_PLL_CTRL1_MUL_Pos) /**< \brief (AT91_PMC_PLL_CTRL1) Multiplier Factor Value */
+#define 	AT91_PMC_PLL_CTRL1_MUL(value) ((AT91_PMC_PLL_CTRL1_MUL_Msk & ((value) << AT91_PMC_PLL_CTRL1_MUL_Pos)))
+
 #define	AT91_PMC_PCDR		0x14			/* Peripheral Clock Disable Register */
+#define AT91_PMC_PLL_SSR	0x14    /**< \brief (Pmc Offset: 0x0014) PLL Spread Spectrum Register */
+#define 	AT91_PMC_PLL_SSR_STEP_Pos 0
+#define 	AT91_PMC_PLL_SSR_STEP_Msk (0xffffu << AT91_PMC_PLL_SSR_STEP_Pos) /**< \brief (AT91_PMC_PLL_SSR) Spread Spectrum Step Size */
+#define 	AT91_PMC_PLL_SSR_STEP(value) ((AT91_PMC_PLL_SSR_STEP_Msk & ((value) << AT91_PMC_PLL_SSR_STEP_Pos)))
+#define 	AT91_PMC_PLL_SSR_NSTEP_Pos 16
+#define 	AT91_PMC_PLL_SSR_NSTEP_Msk (0xffu << AT91_PMC_PLL_SSR_NSTEP_Pos) /**< \brief (AT91_PMC_PLL_SSR) Spread Spectrum Number of Step */
+#define 	AT91_PMC_PLL_SSR_NSTEP(value) ((AT91_PMC_PLL_SSR_NSTEP_Msk & ((value) << AT91_PMC_PLL_SSR_NSTEP_Pos)))
+#define 	AT91_PMC_PLL_SSR_ENSPREAD (0x1u << 28) /**< \brief (AT91_PMC_PLL_SSR) Spread Spectrum Enable */
+
 #define	AT91_PMC_PCSR		0x18			/* Peripheral Clock Status Register */
+#define AT91_PMC_PLL_ACR	0x18	/**< \brief (Pmc Offset: 0x0018) PLL Analog Control Register */
+#define 	AT91_PMC_PLL_ACR_CONTROL_Pos 0
+#define 	AT91_PMC_PLL_ACR_CONTROL_Msk (0xfffu << AT91_PMC_PLL_ACR_CONTROL_Pos) /**< \brief (AT91_PMC_PLL_ACR) PLL CONTROL Value Selection */
+#define 	AT91_PMC_PLL_ACR_CONTROL(value) ((AT91_PMC_PLL_ACR_CONTROL_Msk & ((value) << AT91_PMC_PLL_ACR_CONTROL_Pos)))
+#define 	AT91_PMC_PLL_ACR_UTMIVR (0x1u << 12)
+#define 	AT91_PMC_PLL_ACR_UTMIBG (0x1u << 13)
+#define 	AT91_PMC_PLL_ACR_LOCK_THR_Pos 16
+#define 	AT91_PMC_PLL_ACR_LOCK_THR_Msk (0xffu << AT91_PMC_PLL_ACR_LOCK_THR_Pos) /**< \brief (AT91_PMC_PLL_ACR) PLL Lock Threshold Value Selection */
+#define 	AT91_PMC_PLL_ACR_LOCK_THR(value) ((AT91_PMC_PLL_ACR_LOCK_THR_Msk & ((value) << AT91_PMC_PLL_ACR_LOCK_THR_Pos)))
+#define 	AT91_PMC_PLL_ACR_LOOP_FILTER_Pos 24
+#define 	AT91_PMC_PLL_ACR_LOOP_FILTER_Msk (0xffu << AT91_PMC_PLL_ACR_LOOP_FILTER_Pos) /**< \brief (AT91_PMC_PLL_ACR) LOOP Filter Selection */
+#define 	AT91_PMC_PLL_ACR_LOOP_FILTER(value) ((AT91_PMC_PLL_ACR_LOOP_FILTER_Msk & ((value) << AT91_PMC_PLL_ACR_LOOP_FILTER_Pos)))
+
+#define AT91_PMC_PLL_UPDT	0x1C   /**< \brief (Pmc Offset: 0x001C) PLL Update Register */
+#define 	AT91_PMC_PLL_UPDT_ID_Pos 0
+#define 	AT91_PMC_PLL_UPDT_ID_Msk (0xfu << AT91_PMC_PLL_UPDT_ID_Pos) /**< \brief (AT91_PMC_PLL_UPDT) PLL ID */
+#define 	AT91_PMC_PLL_UPDT_ID(value) ((AT91_PMC_PLL_UPDT_ID_Msk & ((value) << AT91_PMC_PLL_UPDT_ID_Pos)))
+#define 	AT91_PMC_PLL_UPDT_UPDATE (0x1u << 8) /**< \brief (AT91_PMC_PLL_UPDT) PLL Setting Update (write-only) */
+#define 	AT91_PMC_PLL_UPDT_STUPTIM_Pos 16
+#define 	AT91_PMC_PLL_UPDT_STUPTIM_Msk (0xffu << AT91_PMC_PLL_UPDT_STUPTIM_Pos) /**< \brief (AT91_PMC_PLL_UPDT) Startup Time */
+#define 	AT91_PMC_PLL_UPDT_STUPTIM(value) ((AT91_PMC_PLL_UPDT_STUPTIM_Msk & ((value) << AT91_PMC_PLL_UPDT_STUPTIM_Pos)))
 
 #define	AT91_CKGR_UCKR		0x1C			/* UTMI Clock Register [some SAM9] */
 #define		AT91_PMC_UPLLEN		(1   << 16)		/* UTMI PLL Enable */
@@ -74,7 +123,7 @@
 #define			AT91_PMC_USBDIV_4		(2 << 28)
 #define		AT91_PMC_USB96M		(1     << 28)		/* Divider by 2 Enable (PLLB only) */
 
-#define	AT91_PMC_MCKR		0x30			/* Master Clock Register */
+#define	AT91_PMC_MCKR		0x28			/* Master Clock Register */
 #define		AT91_PMC_CSS		(3 <<  0)		/* Master Clock Selection */
 #define			AT91_PMC_CSS_SLOW		(0 << 0)
 #define			AT91_PMC_CSS_MAIN		(1 << 0)
@@ -173,6 +222,18 @@
 
 #define AT91_PMC_PLLICPR	0x80			/* PLL Charge Pump Current Register */
 
+#define AT91_PMC_PLL_IER	0xE0    /**< \brief (Pmc Offset: 0x00E0) PLL Interrupt Enable Register */
+#define AT91_PMC_PLL_IDR    0xE4 	/**< \brief (Pmc Offset: 0x00E4) PLL Interrupt Disable Register */
+#define AT91_PMC_PLL_IMR    0xE8	/**< \brief (Pmc Offset: 0x00E8) PLL Interrupt Mask Register */
+#define AT91_PMC_PLL_ISR0   0xEC	/**< \brief (Pmc Offset: 0x00EC) PLL Interrupt Status Register 0 */
+#define		AT91_PMC_PLL_ISR0_LOCK0	(1 << 0)
+#define		AT91_PMC_PLL_ISR0_LOCK(n)	(1 << (n))
+#define		AT91_PMC_PLL_ISR0_UNLOCK(n)	(1 << ((n)+16))
+#define AT91_PMC_PLL_ISR1   0xF0	/**< \brief (Pmc Offset: 0x00F0) PLL Interrupt Status Register 1 */
+#define		AT91_PMC_PLL_ISR1_LOCK(n)	(1 << (n))
+#define		AT91_PMC_PLL_ISR1_UNLOCK(n)	(1 << ((n)+16))
+
+
 #define AT91_PMC_PROT		0xe4			/* Write Protect Mode Register [some SAM9] */
 #define		AT91_PMC_WPEN		(0x1  <<  0)		/* Write Protect Enable */
 #define		AT91_PMC_WPKEY		(0xffffff << 8)		/* Write Protect Key */
@@ -186,13 +247,13 @@
 #define AT91_PMC_PCDR1		0x104			/* Peripheral Clock Enable Register 1 */
 #define AT91_PMC_PCSR1		0x108			/* Peripheral Clock Enable Register 1 */
 
-#define AT91_PMC_PCR		0x10c			/* Peripheral Control Register [some SAM9 and SAMA5] */
-#define		AT91_PMC_PCR_PID_MASK		0x3f
+#define AT91_PMC_PCR		0x88			/* Peripheral Control Register [some SAM9 and SAMA5] */
+#define		AT91_PMC_PCR_PID_MASK		0x7f
 #define		AT91_PMC_PCR_GCKCSS_OFFSET	8
-#define		AT91_PMC_PCR_GCKCSS_MASK	(0x7  << AT91_PMC_PCR_GCKCSS_OFFSET)
+#define		AT91_PMC_PCR_GCKCSS_MASK	(0x1f  << AT91_PMC_PCR_GCKCSS_OFFSET)
 #define		AT91_PMC_PCR_GCKCSS(n)		((n)  << AT91_PMC_PCR_GCKCSS_OFFSET)	/* GCK Clock Source Selection */
-#define		AT91_PMC_PCR_CMD		(0x1  <<  12)				/* Command (read=0, write=1) */
-#define		AT91_PMC_PCR_DIV_OFFSET		16
+#define		AT91_PMC_PCR_CMD		(0x1  <<  31)				/* Command (read=0, write=1) */
+#define		AT91_PMC_PCR_DIV_OFFSET		14
 #define		AT91_PMC_PCR_DIV_MASK		(0x3  << AT91_PMC_PCR_DIV_OFFSET)
 #define		AT91_PMC_PCR_DIV(n)		((n)  << AT91_PMC_PCR_DIV_OFFSET)	/* Divisor Value */
 #define		AT91_PMC_PCR_GCKDIV_OFFSET	20
