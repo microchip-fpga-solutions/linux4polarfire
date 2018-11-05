@@ -1,5 +1,6 @@
 /*
- *  Copyright (C) 2013 Boris BREZILLON <b.brezillon@overkiz.com>
+ *  Copyright (C) 2018 Sandeep Sheriker M \
+ *						<sandeepsheriker.mallikarjun@microchip.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +37,7 @@
 #define PLL_MAX_ID		1
 #define PLLA_LOOP_FILTER	0
 #define PLLA_FRACR		0
+#define PLL_ID_UPLL 	1
 
 struct clk_pll_characteristics {
 	struct clk_range input;
@@ -119,6 +121,25 @@ static int clk_pll_prepare(struct clk_hw *hw)
 	/* 3. Define the MUL and FRACR to be applied to PLL(n) in PMC_PLL_CTRL1. */
     regmap_write(regmap, AT91_PMC_PLL_CTRL1, (AT91_PMC_PLL_CTRL1_MUL(pll->mul) | AT91_PMC_PLL_CTRL1_FRACR(PLLA_FRACR)));
 
+    /* In case UPLL is being configured, follow Step 4. to Step 7., else jump to Step 8. */
+    if (id == PLL_ID_UPLL) {
+        /* 4. Write PMC_PLL_ACR.UTMIBG to '1' to enable the UTMI internal bandgap. */
+        regmap_read(regmap, AT91_PMC_PLL_ACR, &status);
+    	status |= AT91_PMC_PLL_ACR_UTMIBG;
+		regmap_write(regmap, AT91_PMC_PLL_ACR, status);
+
+        /* 5. Wait 10 us. */
+        udelay(10);
+
+        /* 6. Write PMC_PLL_ACR.UTMIVR to '1' to enable the UTMI internal regulator. */
+        regmap_read(regmap, AT91_PMC_PLL_ACR, &status);
+    	status |= AT91_PMC_PLL_ACR_UTMIVR;
+		regmap_write(regmap, AT91_PMC_PLL_ACR, status);
+
+        /* 7. Wait 10 us. */
+        udelay(10);
+    }
+
     /* 8. Set PMC_PLL_UPDT.UPDATE to '1'. PMC_PLL_UPDT.ID must equal the one written during step
     1, else the update is cancelled. */
 	regmap_read(regmap, AT91_PMC_PLL_UPDT, &status);
@@ -185,6 +206,14 @@ static void clk_pll_unprepare(struct clk_hw *hw)
     regmap_read(regmap, AT91_PMC_PLL_CTRL0, &reg);
 	reg &= (~AT91_PMC_PLL_CTRL0_ENPLL);
     regmap_write(regmap, AT91_PMC_PLL_CTRL0, reg);
+
+	 /* 6. In case a UPLL is being powered down, write a '0' to PMC_PLL_ACR.UTMIBG and
+    PMC_PLL_ACR.UTMIVR. */
+    if (pll->id == PLL_ID_UPLL) {
+        regmap_read(regmap, AT91_PMC_PLL_ACR, &reg);
+    	reg &= ~(AT91_PMC_PLL_ACR_UTMIBG | AT91_PMC_PLL_ACR_UTMIVR);
+		regmap_write(regmap, AT91_PMC_PLL_ACR, reg);
+	}
 
 	pr_warn("In %s End \n",__func__);
 }

@@ -200,7 +200,7 @@ void sdhci_reset(struct sdhci_host *host, u8 mask)
 			sdhci_dumpregs(host);
 			return;
 		}
-		/*udelay(10);*/
+		udelay(10);
 	}
 }
 EXPORT_SYMBOL_GPL(sdhci_reset);
@@ -1425,7 +1425,7 @@ void sdhci_enable_clk(struct sdhci_host *host, u16 clk)
 			sdhci_dumpregs(host);
 			return;
 		}
-		/*udelay(10);*/
+		udelay(10);
 	}
 
 	clk |= SDHCI_CLOCK_CARD_EN;
