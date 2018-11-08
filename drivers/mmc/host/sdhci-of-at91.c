@@ -91,7 +91,7 @@ static void sdhci_at91_set_clock(struct sdhci_host *host, unsigned int clock)
 			return;
 		}
 		timeout--;
-		/*mdelay(1);*/
+		mdelay(1);
 	}
 
 	clk |= SDHCI_CLOCK_CARD_EN;
@@ -349,18 +349,21 @@ static int sdhci_at91_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "failed to get baseclk\n");
 		return PTR_ERR(priv->mainck);
 	}
+	pr_warn("%s: mainck = %ld \n",__func__,clk_get_rate(priv->mainck));
 
 	priv->hclock = devm_clk_get(&pdev->dev, "hclock");
 	if (IS_ERR(priv->hclock)) {
 		dev_err(&pdev->dev, "failed to get hclock\n");
 		return PTR_ERR(priv->hclock);
 	}
+	pr_warn("%s: hclock = %ld \n",__func__,clk_get_rate(priv->hclock));
 
 	priv->gck = devm_clk_get(&pdev->dev, "multclk");
 	if (IS_ERR(priv->gck)) {
 		dev_err(&pdev->dev, "failed to get multclk\n");
 		return PTR_ERR(priv->gck);
 	}
+	pr_warn("%s: gck = %ld \n",__func__,clk_get_rate(priv->gck));
 
 	ret = sdhci_at91_set_clks_presets(&pdev->dev);
 	if (ret)

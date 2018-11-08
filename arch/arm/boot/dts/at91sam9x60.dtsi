@@ -213,14 +213,14 @@
                 ranges = <0x0 0xf0024000 0x800>;
 				status = "disabled";
             };
-
+/*
 			pit64b: timer@f0028000 {
 				compatible = "atmel,pit64";
 				reg = <0xf0028000 0x100>;
 				interrupts = <37 IRQ_TYPE_LEVEL_HIGH 7>;
 				clocks = <&pit64b_clk>;
 			};
-
+*/
 			sha@f002c000 {
 				compatible = "atmel,at91sam9g46-sha";
 				reg = <0xf002c000 0x100>;
@@ -231,6 +231,7 @@
 				dma-names = "tx";
 				clocks = <&sha_clk>;
 				clock-names = "sha_clk";
+				status = "disabled";
 			};
 
 			trng@f0030000 {
@@ -238,6 +239,7 @@
 				reg = <0xf0030000 0x100>;
 				interrupts = <38 IRQ_TYPE_LEVEL_HIGH 0>;
 				clocks = <&trng_clk>;
+				status = "disabled";
 			};
 
 			aes@f0034000 {
@@ -253,6 +255,7 @@
 				dma-names = "tx", "rx";
 				clocks = <&aes_clk>;
 				clock-names = "aes_clk";
+				status = "disabled";
 			};
 
 			tdes@f0038000 {
@@ -268,6 +271,7 @@
 				dma-names = "tx", "rx";
 				clocks = <&tdes_clk>;
 				clock-names = "tdes_clk";
+				status = "disabled";
 			};
 
 			classd: classd@f003c000 {
@@ -504,7 +508,7 @@
             flx9: flexcom@f8040000 {
                 compatible = "atmel,sama5d2-flexcom";
                 reg = <0xf8040000 0x200>;
-                clocks = <&mck>;
+                clocks = <&flex9_clk>;
                 #address-cells = <1>;
                 #size-cells = <1>;
                 ranges = <0x0 0xf8040000 0x800>;
@@ -514,7 +518,7 @@
             flx10: flexcom@f8044000 {
                 compatible = "atmel,sama5d2-flexcom";
                 reg = <0xf8044000 0x200>;
-                clocks = <&mck>;
+                clocks = <&flex10_clk>;
                 #address-cells = <1>;
                 #size-cells = <1>;
                 ranges = <0x0 0xf8044000 0x800>;
@@ -538,7 +542,7 @@
 				compatible = "atmel,sama5d2-adc";
 				reg = <0xf804c000 0x100>;
 				interrupts = <19 IRQ_TYPE_LEVEL_HIGH 7>;
-				clocks = <&mck>;
+				clocks = <&adc_clk>;
 				clock-names = "adc_clk";
 				dmas = <&dma0 (AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) | AT91_XDMAC_DT_PERID(40))>;
 				dma-names = "rx";
@@ -578,7 +582,7 @@
 				compatible = "atmel,at91sam9260-smc", "syscon";
 				reg = <0xffffea00 0x200>;
 			};
-
+/*
 			sdramc: sdramc@ffffec00 {
 				compatible = "atmel,at91sam9g45-ddramc";
 				reg = <0xffffec00 0x200>;
@@ -586,7 +590,7 @@
 				clock-names = "ddrck";
 			};
 
-			aic: interrupt-controller@fffff100 {
+*/			aic: interrupt-controller@fffff100 {
 				compatible = "atmel,sam9x60-aic";
 				#interrupt-cells = <3>;
 				interrupt-controller;
@@ -601,11 +605,11 @@
                 dmas = <&dma0
                     (AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) |
                      AT91_XDMAC_DT_PERID(28))>,
-                       <&dma0
+                     <&dma0
                     (AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) |
-                     AT91_XDMAC_DT_PERID(29))>;
+                     AT91_XDMAC_DT_PERID(29))>; 
                 dma-names = "tx", "rx";
-				clocks = <&mck>;
+				clocks = <&dbgu_clk>;
 				clock-names = "usart";
 			};
 
@@ -727,7 +731,6 @@
                     clocks = <&md_slck>, <&main>, <&plla>;
 					atmel,clk-output-range = <140000000 200000000>;
                     atmel,clk-divisors = <1 2 4 6>;
-                    /*atmel,master-clk-have-div3-pres;*/
                 };
 
 				prog: progck {
@@ -1073,6 +1076,11 @@
 						#clock-cells = <0>;
 						reg = <45>;
 					};
+
+					dbgu_clk: dbgu_clk {
+						#clock-cells = <0>;
+						reg = <47>;
+					};
 				};
 
               
@@ -1121,6 +1129,7 @@
 					sdmmc0_gclk: sdmmc0_gclk {
 						#clock-cells = <0>;
 						reg = <12>;
+						atmel,clk-output-range = <0 63000000>;
 					};
 
 					flex4_gclk: flex4_gclk {
@@ -1196,6 +1205,7 @@
 					dbgu_gclk: dbgu_gclk {
 						#clock-cells = <0>;
 						reg = <47>;
+						atmel,clk-output-range = <0 66666666>;
 					};
 				};
 
@@ -1271,7 +1281,6 @@
 				reg = <0xfffffe20 0x10>;
 				interrupts = <1 IRQ_TYPE_LEVEL_HIGH 7>;
 				clocks = <&td_slck>;
-				status = "disabled";
 			};
 
 			rtc@ffffffA8 {
@@ -1279,7 +1288,6 @@
 				reg = <0xffffffa8 0x40>;
 				interrupts = <1 IRQ_TYPE_LEVEL_HIGH 7>;
 				clocks = <&td_slck>;
-				status = "disabled";
 			};
 
 			watchdog: watchdog@ffffff80 {

@@ -40,10 +40,10 @@
 #define DRIVER_NAME "sdhci"
 
 #define DBG(f, x...) \
-	pr_warn("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
+	pr_debug("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
 
 #define SDHCI_DUMP(f, x...) \
-	pr_warn("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
+	pr_err("%s: " DRIVER_NAME ": " f, mmc_hostname(host->mmc), ## x)
 
 #define MAX_TUNING_LOOP 40
 

@@ -392,7 +392,6 @@ static noinline void __ref rest_init(void)
 	struct task_struct *tsk;
 	int pid;
 
-	pr_warn("In %s \n",__func__);
 	rcu_scheduler_starting();
 	/*
 	 * We need to spawn init first so that it obtains pid 1, however
@@ -584,7 +583,6 @@ asmlinkage __visible void __init start_kernel(void)
 	 * time - but meanwhile we still have a functioning scheduler.
 	 */
 	sched_init();
-	pr_warn("sched_init done \n");
 	/*
 	 * Disable preemption - early bootup scheduling is extremely
 	 * fragile until we cpu_idle() for the first time.
@@ -610,33 +608,22 @@ asmlinkage __visible void __init start_kernel(void)
 	context_tracking_init();
 	/* init some links before init_ISA_irqs() */
 	early_irq_init();
-	pr_warn("early_irq_init done \n");
 	init_IRQ();
-	pr_warn("init_IRQ done \n");
 	tick_init();
-	pr_warn("tick_init done \n");
 	rcu_init_nohz();
-	pr_warn("rcu_init_nohz done \n");
 	init_timers();
-	pr_warn("init_timers done \n");
 	hrtimers_init();
 	softirq_init();
-	pr_warn(" softirq_init done \n");
 	timekeeping_init();
-	pr_warn(" timekeeping_init done \n");
 	time_init();
-	pr_warn("time_init done \n");
 	sched_clock_postinit();
 	printk_safe_init();
-	pr_warn("printk_safe_init done \n");
 	perf_event_init();
 	profile_init();
-	pr_warn("profile_init done \n");
 	call_function_init();
 	WARN(!irqs_disabled(), "Interrupts were enabled early\n");
 	early_boot_irqs_disabled = false;
 	local_irq_enable();
-	pr_warn(" local_irq_enable done \n");
 
 	kmem_cache_init_late();
 
@@ -646,7 +633,6 @@ asmlinkage __visible void __init start_kernel(void)
 	 * this. But we do want output early, in case something goes wrong.
 	 */
 	console_init();
-	pr_warn("console_init done \n");
 	if (panic_later)
 		panic("Too many boot %s vars at `%s'", panic_later,
 		      panic_param);
@@ -682,72 +668,43 @@ asmlinkage __visible void __init start_kernel(void)
 	debug_objects_mem_init();
 	setup_per_cpu_pageset();
 	numa_policy_init();
-	pr_warn("numa_policy_init done \n");
 	if (late_time_init) {
 		late_time_init();
 	}
-	pr_warn("late_time_init done \n");
 	calibrate_delay();
-	pr_warn("calibrate_delay done \n");
 	pidmap_init();
-	pr_warn("anon_vma_init done \n");
 	anon_vma_init();
-	pr_warn("anon_vma_init done \n");
 	acpi_early_init();
-	pr_warn("acpi_early_init done \n");
 #ifdef CONFIG_X86
 	if (efi_enabled(EFI_RUNTIME_SERVICES))
 		efi_enter_virtual_mode();
-		pr_warn("efi_enter_virtual_mode done \n");
 #endif
 	thread_stack_cache_init();
-	pr_warn("thread_stack_cache_init done \n");
 	cred_init();
-	pr_warn("cred_init done \n");
 	fork_init();
-	pr_warn("fork_init done \n");
 	proc_caches_init();
-	pr_warn("proc_caches_init done \n");
 	buffer_init();
-	pr_warn("buffer_init done \n");
 	key_init();
-	pr_warn("key_init done \n");
 	security_init();
-	pr_warn("security_init done \n");
 	dbg_late_init();
-	pr_warn("dbg_late_init done \n");
 	vfs_caches_init();
-	pr_warn("vfs_caches_init done \n");
 	pagecache_init();
-	pr_warn("pagecache_init done \n");
 	signals_init();
-	pr_warn("signals_init done \n");
 	proc_root_init();
-	pr_warn("pr_warn done \n");
 	nsfs_init();
-	pr_warn("pr_warn done \n");
 	cpuset_init();
-	pr_warn("cpuset_init done \n");
 	cgroup_init();
-	pr_warn("cgroup_init done \n");
 	taskstats_init_early();
-	pr_warn("taskstats_init_early done \n");
 	delayacct_init();
-	pr_warn("delayacct_init done \n");
 
 	check_bugs();
-	pr_warn("check_bugs done \n");
 
 	acpi_subsystem_init();
-	pr_warn("acpi_subsystem_init done \n");
 	arch_post_acpi_subsys_init();
-	pr_warn("arch_post_acpi_subsys_init done \n");
 	sfi_init_late();
-	pr_warn("sfi_init_late done \n");
 
 	if (efi_enabled(EFI_RUNTIME_SERVICES)) {
 		efi_free_boot_services();
-		pr_warn("efi_free_boot_services done \n");
 	}
 
 	/* Do the rest non-__init'ed, we're now alive */
@@ -1042,26 +999,17 @@ static int __ref kernel_init(void *unused)
 {
 	int ret;
 
-	pr_warn("In %s \n",__func__);
 	kernel_init_freeable();
-	pr_warn("In %s 1\n",__func__);
 	/* need to finish all async __init code before freeing the memory */
 	async_synchronize_full();
-	pr_warn("In %s 2\n",__func__);
 	ftrace_free_init_mem();
-	pr_warn("In %s 3\n",__func__);
 	free_initmem();
-	pr_warn("In %s 4\n",__func__);
 	mark_readonly();
-	pr_warn("In %s 5\n",__func__);
 	system_state = SYSTEM_RUNNING;
-	pr_warn("In %s 6\n",__func__);
 	numa_default_policy();
-	pr_warn("In %s 7\n",__func__);
 
 	rcu_end_inkernel_boot();
 
-	pr_warn("In %s 8\n",__func__);
 	if (ramdisk_execute_command) {
 		ret = run_init_process(ramdisk_execute_command);
 		if (!ret)

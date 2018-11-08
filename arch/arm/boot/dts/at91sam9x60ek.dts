@@ -74,8 +74,8 @@
             pinctrl-names = "default";
             pinctrl-0 = <&pinctrl_sdmmc0_default>;
             status = "okay"; 
-			cd-gpios = <&pioA 23 GPIO_ACTIVE_HIGH>;
-			no-1-8-v;
+			cd-gpios = <&pioA 23 GPIO_ACTIVE_LOW>;
+			disable-wp;
         };
 
         sdmmc1: sdio-host@90000000 {
@@ -136,11 +136,12 @@
 					pinctrl-0 = <&pinctrl_lcd_pwm>;
                 };
 			};
-
-/*0xe000001f 0xc000381F 0x20000000   pioA 
-0x03FC0000 0x03FC1800 0x00000000   pioB 
-0xfdffffff 0x00000000 0x00000000   pioC 
-0x003fffff 0x00000000 0x00000000   pioD */
+            
+			dbgu: serial@fffff200 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_dbgu>;
+				status = "okay";
+			};
 
 			pinctrl@fffff400 {
 				atmel,mux-mask = <
@@ -150,6 +151,14 @@
 					0xfdffffff 0xF83FFFFF 0xB800F3FC  /* pioC */
 					0x003FFFFF 0x003F8000 0x00000000  /* pioD */
 					>;
+
+				dbgu {
+					pinctrl_dbgu: dbgu-0 {
+						atmel,pins =
+							<AT91_PIOA 9 AT91_PERIPH_A AT91_PINCTRL_PULL_UP
+							 AT91_PIOA 10 AT91_PERIPH_A AT91_PINCTRL_NONE>;
+					};
+				};
 
                 sdmmc0 {
                     pinctrl_sdmmc0_default: sdmmc0 {
