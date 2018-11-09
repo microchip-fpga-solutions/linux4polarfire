@@ -111,9 +111,16 @@
 			};
 
 			macb0: ethernet@f802c000 {
+				phy-mode = "rmii";
+				#address-cells = <1>;
+				#size-cells = <0>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_macb0_rmii>;
 			 	status = "okay";
+
+				ethernet-phy@0 {
+					reg = <0x0>;
+				};
 			};
 
             hlcdc: hlcdc@f8038000 {
