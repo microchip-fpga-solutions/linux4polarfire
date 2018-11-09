@@ -111,6 +111,7 @@
 			};
 
 			macb0: ethernet@f802c000 {
+				phy-mode = "rmii";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_macb0_rmii>;
 			 	status = "okay";
