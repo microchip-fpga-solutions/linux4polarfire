@@ -37,9 +37,7 @@ static inline bool clk_system_ready(struct regmap *regmap, int id)
 {
 	unsigned int status;
 
-	pr_warn("In %s \n",__func__);
 	regmap_read(regmap, AT91_PMC_SR, &status);
-	pr_warn("In %s End \n",__func__);
 	return status & (1 << id) ? 1 : 0;
 }
 
@@ -47,7 +45,6 @@ static int clk_system_prepare(struct clk_hw *hw)
 {
 	struct clk_system *sys = to_clk_system(hw);
 
-	pr_warn("In %s: sys->id = %d \n",__func__, sys->id);
 	regmap_write(sys->regmap, AT91_PMC_SCER, 1 << sys->id);
 
 	if (!is_pck(sys->id))
@@ -55,7 +52,6 @@ static int clk_system_prepare(struct clk_hw *hw)
 
 	while (!clk_system_ready(sys->regmap, sys->id))
 		cpu_relax();
-pr_warn("In %s End \n",__func__);
 	return 0;
 }
 
@@ -63,9 +59,7 @@ static void clk_system_unprepare(struct clk_hw *hw)
 {
 	struct clk_system *sys = to_clk_system(hw);
 	
-	pr_warn("In %s: sys->id = %d \n",__func__,sys->id);
 	regmap_write(sys->regmap, AT91_PMC_SCDR, 1 << sys->id);
-	pr_warn("In %s End \n",__func__);
 }
 
 static int clk_system_is_prepared(struct clk_hw *hw)
@@ -73,7 +67,6 @@ static int clk_system_is_prepared(struct clk_hw *hw)
 	struct clk_system *sys = to_clk_system(hw);
 	unsigned int status;
 
-	pr_warn("In %s: sys->id = %d \n",__func__,sys->id);
 	regmap_read(sys->regmap, AT91_PMC_SCSR, &status);
 
 	if (!(status & (1 << sys->id)))
@@ -83,7 +76,6 @@ static int clk_system_is_prepared(struct clk_hw *hw)
 		return 1;
 
 	regmap_read(sys->regmap, AT91_PMC_SR, &status);
-	pr_warn("In %s End \n",__func__);
 	return status & (1 << sys->id) ? 1 : 0;
 }
 
@@ -102,7 +94,6 @@ at91_clk_register_system(struct regmap *regmap, const char *name,
 	struct clk_init_data init;
 	int ret;
 
-	pr_warn("In %s \n",__func__);
 	if (!parent_name || id > SYSTEM_MAX_ID)
 		return ERR_PTR(-EINVAL);
 
@@ -126,7 +117,6 @@ at91_clk_register_system(struct regmap *regmap, const char *name,
 		kfree(sys);
 		hw = ERR_PTR(ret);
 	}
-	pr_warn("In %s End \n",__func__);
 	return hw;
 }
 
@@ -140,7 +130,6 @@ static void __init of_at91rm9200_clk_sys_setup(struct device_node *np)
 	const char *parent_name;
 	struct regmap *regmap;
 	
-	pr_warn("In %s \n",__func__);
 	num = of_get_child_count(np);
 	if (num > (SYSTEM_MAX_ID + 1))
 		return;
@@ -164,7 +153,6 @@ static void __init of_at91rm9200_clk_sys_setup(struct device_node *np)
 
 		of_clk_add_hw_provider(sysclknp, of_clk_hw_simple_get, hw);
 	}
-	pr_warn("In %s End \n",__func__);
 }
 CLK_OF_DECLARE(at91rm9200_clk_sys, "atmel,at91rm9200-clk-system",
 	       of_at91rm9200_clk_sys_setup);

@@ -70,10 +70,8 @@ static inline bool clk_pll_ready(struct regmap *regmap, int id)
 {
 	unsigned int status;
 
-	pr_warn("In %s: \n",__func__);
 	regmap_read(regmap, AT91_PMC_PLL_ISR0, &status);
 
-	pr_warn("In %s: status = %d \n", __func__, (status & PLL_STATUS_MASK(id) ? 1 : 0));
 	return status & PLL_STATUS_MASK(id) ? 1 : 0;
 }
 
@@ -92,7 +90,6 @@ static int clk_pll_prepare(struct clk_hw *hw)
 	u8 div;
 	u16 mul;
 
-	pr_warn("In %s: \n",__func__);
 	regmap_read(regmap, offset, &pllr);
 	div = PLL_DIV(pllr);
 	regmap_read(regmap, offset1, &pllr);
@@ -101,7 +98,6 @@ static int clk_pll_prepare(struct clk_hw *hw)
 	regmap_read(regmap, AT91_PMC_PLL_ISR0, &status);
 	if ((status & mask) &&
 	    (div == pll->div && mul == pll->mul)) {
-		pr_warn("In %s div && mul same \n",__func__);
 		return 0;
 	}
 
@@ -164,7 +160,6 @@ static int clk_pll_prepare(struct clk_hw *hw)
 	while (!clk_pll_ready(regmap, pll->id))
 		cpu_relax();
 
-	pr_warn("In %s: end \n",__func__);
 	return 0;
 }
 
@@ -181,7 +176,6 @@ static void clk_pll_unprepare(struct clk_hw *hw)
 	struct regmap *regmap = pll->regmap;
 	unsigned int reg;
 
-	pr_warn("In %s \n",__func__);
     /* To power-down a PLL, the following sequence must be applied: */
     /* 1. If the PLL drives a section of the system that is active, modify the source clock of the system. */
 
@@ -215,7 +209,6 @@ static void clk_pll_unprepare(struct clk_hw *hw)
 		regmap_write(regmap, AT91_PMC_PLL_ACR, reg);
 	}
 
-	pr_warn("In %s End \n",__func__);
 }
 
 static unsigned long clk_pll_recalc_rate(struct clk_hw *hw,
@@ -223,9 +216,7 @@ static unsigned long clk_pll_recalc_rate(struct clk_hw *hw,
 {
 	unsigned long val;
 	struct clk_pll *pll = to_clk_pll(hw);
-	pr_warn("In %s parent_rate = %ld div = %d mul=%d \n",__func__,parent_rate,pll->div,pll->mul);
 	val = (parent_rate / pll->div) * (pll->mul + 1);
-	pr_warn("In %s clk_pll_recalc_rate = %ld \n",__func__, val);
 	return val;
 }
 
@@ -243,7 +234,6 @@ static long clk_pll_get_best_div_mul(struct clk_pll *pll, unsigned long rate,
 	unsigned long bestmul;
 	int i = 0;
 
-	pr_warn("In %s \n",__func__);
 	/* Check if parent_rate is a valid input rate */
 	if (parent_rate < characteristics->input.min)
 		return -ERANGE;
@@ -337,7 +327,6 @@ static long clk_pll_get_best_div_mul(struct clk_pll *pll, unsigned long rate,
 	if (index)
 		*index = i;
 
-	pr_warn("In %s bestrate = %ld\n",__func__, bestrate);
 	return bestrate;
 }
 
@@ -345,7 +334,6 @@ static long clk_pll_round_rate(struct clk_hw *hw, unsigned long rate,
 					unsigned long *parent_rate)
 {
 	struct clk_pll *pll = to_clk_pll(hw);
-	pr_warn("In %s \n",__func__);
 	return clk_pll_get_best_div_mul(pll, rate, *parent_rate,
 					NULL, NULL, NULL);
 }
@@ -359,18 +347,15 @@ static int clk_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 	u32 mul;
 	u32 index;
 
-	pr_warn("In %s \n",__func__);
 	ret = clk_pll_get_best_div_mul(pll, rate, parent_rate,
 				       &div, &mul, &index);
 	if (ret < 0)
 		return ret;
 
-	pr_warn("In %s div=%d, mul=%d, index=%d \n",__func__,div,mul,index);
 	pll->range = index;
 	pll->div = div;
 	pll->mul = mul;
 
-	pr_warn("In %s end \n",__func__);
 	return 0;
 }
 
@@ -397,7 +382,6 @@ at91_clk_register_pll(struct regmap *regmap, const char *name,
 	unsigned int pllr;
 	int ret;
 
-	pr_warn("In %s: \n",__func__);
 	if (id > PLL_MAX_ID)
 		return ERR_PTR(-EINVAL);
 
@@ -428,7 +412,6 @@ at91_clk_register_pll(struct regmap *regmap, const char *name,
 		hw = ERR_PTR(ret);
 	}
 
-	pr_warn("In %s: End \n",__func__);
 	return hw;
 }
 
@@ -546,7 +529,6 @@ of_at91sam9x60_clk_pll_setup(struct device_node *np,
 	const char *name = np->name;
 	struct clk_pll_characteristics *characteristics;
 
-	pr_warn("In %s: \n",__func__);
 
 	if (of_property_read_u32(np, "reg", &id))
 		return;
@@ -569,7 +551,6 @@ of_at91sam9x60_clk_pll_setup(struct device_node *np,
 		goto out_free_characteristics;
 
 	of_clk_add_hw_provider(np, of_clk_hw_simple_get, hw);
-	pr_warn("In %s: end \n",__func__);
 	return;
 
 out_free_characteristics:

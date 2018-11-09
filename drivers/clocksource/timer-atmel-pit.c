@@ -156,11 +156,9 @@ static irqreturn_t at91sam926x_pit_interrupt(int irq, void *dev_id)
 		data->cnt += data->cycle * PIT_PICNT(pit_read(data->base,
 							      AT91_PIT_PIVR));
 		data->clkevt.event_handler(&data->clkevt);
-		pr_warn("In %s : IRQ_HANDLED \n",__func__);
 		return IRQ_HANDLED;
 	}
 
-	pr_warn("In %s : IRQ_NONE \n",__func__);
 	return IRQ_NONE;
 }
 
