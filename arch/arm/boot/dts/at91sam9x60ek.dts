@@ -13,6 +13,10 @@
 	model = "Atmel AT91SAM9X60 Ek";
 	compatible = "atmel,at91sam9x60ek", "atmel,at91sam9x60", "atmel,at91sam9";
 
+    aliases {
+        i2c0 = &i2c0;
+    };
+
 	ahb {
 		ebi: ebi@10000000 {
 			pinctrl-names = "default";
@@ -100,6 +104,62 @@
 				};
 			};*/
 
+            flx6: flexcom@f8010000 {
+                atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+                status = "okay";
+
+                i2c1: i2c@600 {
+                    compatible = "atmel,sama5d2-i2c";
+                    reg = <0x600 0x200>;
+                    interrupts = <9 IRQ_TYPE_LEVEL_HIGH 7>;
+					dmas = <&dma0
+						(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) |
+						 AT91_XDMAC_DT_PERID(12))>,
+				    	<&dma0
+						(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) |
+						 AT91_XDMAC_DT_PERID(13))>;
+					dma-names = "tx", "rx";
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    clocks = <&flex0_clk>;
+                    pinctrl-names = "default";
+                    pinctrl-0 = <&pinctrl_flx6_default>;
+                    atmel,fifo-size = <16>;
+                    status = "okay";
+
+					gpio_exp: mcp23008@20 {
+						compatible = "microchip,mcp23008";
+						reg = <0x20>;
+    				};
+                };
+            };
+
+
+            flx0: flexcom@f801c000 {
+                atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+                status = "okay";
+
+                i2c0: i2c@600 {
+                    compatible = "atmel,sama5d2-i2c";
+                    reg = <0x600 0x200>;
+                    interrupts = <5 IRQ_TYPE_LEVEL_HIGH 7>;
+					dmas = <&dma0
+						(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) |
+						 AT91_XDMAC_DT_PERID(0))>,
+				    	<&dma0
+						(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1) |
+						 AT91_XDMAC_DT_PERID(1))>;
+					dma-names = "tx", "rx";
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    clocks = <&flex0_clk>;
+                    pinctrl-names = "default";
+                    pinctrl-0 = <&pinctrl_flx0_default>;
+                    atmel,fifo-size = <16>;
+                    status = "okay";
+                };
+            };
+
 			classd: classd@f003c000 {
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_classd_default>;
@@ -163,7 +223,7 @@
 					/*    A         B		  C		*/
 					0xFFFFFE7F 0xc0E0381F 0xEF00019D  /* pioA */
 					0x03FFFFFF 0x02FC3E68 0x00780000  /* pioB */
-					0xfdffffff 0xF83FFFFF 0xB800F3FC  /* pioC */
+					0xffffffff 0xF83FFFFF 0xB800F3FC  /* pioC */
 					0x003FFFFF 0x003F8000 0x00000000  /* pioD */
 					>;
 
@@ -311,7 +371,17 @@
 							 AT91_PIOC 23 AT91_PERIPH_A AT91_PINCTRL_NONE>;	/* LCDD23 pin */
 					};
 				};
+/*
+				pinctrl_qt1070_irq: qt1070_irq {
+					atmel,pins =
+						<AT91_PIOC 25 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;
+				};
 
+				pinctrl_mxt_irq: mxt_irq {
+					atmel,pins =
+						<AT91_PIOB 17 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;
+				};
+*/
 				nand {
 					pinctrl_nand_oe_we: nand-oe-we-0 {
 						atmel,pins =
@@ -370,13 +440,27 @@
 					};
 				};
 
+				flexcom {
+					pinctrl_flx0_default: flx0_twi {
+						atmel,pins =
+							<AT91_PIOA 0 AT91_PERIPH_A AT91_PINCTRL_PULL_UP
+							 AT91_PIOA 1 AT91_PERIPH_A AT91_PINCTRL_PULL_UP>;
+					};
+
+					pinctrl_flx6_default: flx6_twi {
+						atmel,pins =
+							<AT91_PIOA 30 AT91_PERIPH_A AT91_PINCTRL_PULL_UP
+							 AT91_PIOA 31 AT91_PERIPH_A AT91_PINCTRL_PULL_UP>;
+					};
+				};
+
 				classd {
-				pinctrl_classd_default: classd {
-					atmel,pins =
-						<AT91_PIOA 24 AT91_PERIPH_C AT91_PINCTRL_PULL_UP
-						AT91_PIOA 25 AT91_PERIPH_C AT91_PINCTRL_PULL_UP
-						AT91_PIOA 26 AT91_PERIPH_C AT91_PINCTRL_PULL_UP
-						AT91_PIOA 27 AT91_PERIPH_C AT91_PINCTRL_PULL_UP>;
+					pinctrl_classd_default: classd {
+						atmel,pins =
+							<AT91_PIOA 24 AT91_PERIPH_C AT91_PINCTRL_PULL_UP
+							 AT91_PIOA 25 AT91_PERIPH_C AT91_PINCTRL_PULL_UP
+							 AT91_PIOA 26 AT91_PERIPH_C AT91_PINCTRL_PULL_UP
+							 AT91_PIOA 27 AT91_PERIPH_C AT91_PINCTRL_PULL_UP>;
 					};
 				};
 
