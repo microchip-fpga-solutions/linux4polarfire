@@ -39,6 +39,7 @@
 #include <asm/io.h>
 #include <linux/unaligned.h>
 #include <linux/string_choices.h>
+#include "../core/pwrseq.h"
 
 #define ATMCI_MAX_NR_SLOTS	2
 
@@ -2320,9 +2321,13 @@ static int atmci_init_slot(struct atmel_mci *host,
 
 	host->slot[id] = slot;
 	mmc_regulator_get_supply(mmc);
+	mmc_pwrseq_alloc(mmc);
 	ret = mmc_add_host(mmc);
-	if (ret)
+	if (ret) {
+		mmc_pwrseq_free(mmc);
+		mmc_free_host(mmc);
 		return ret;
+	}
 
 	if (slot->detect_pin) {
 		timer_setup(&slot->detect_timer, atmci_detect_change, 0);
