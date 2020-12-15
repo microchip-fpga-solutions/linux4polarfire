@@ -430,6 +430,15 @@
 				};
 			};
 
+			pwm: pwm@e1604000 {
+				compatible = "atmel,sama5d2-pwm";
+				reg = <0xe1604000 0x4000>;
+				interrupts = <GIC_SPI 77 IRQ_TYPE_LEVEL_HIGH>;
+				#pwm-cells = <3>;
+				clocks = <&pmc PMC_TYPE_PERIPHERAL 77>;
+				status = "disabled";
+			};
+
 			sfr: sfr@e1624000 {
 				compatible = "microchip,sama7g5-sfr", "syscon";
 				reg = <0xe1624000 0x4000>;

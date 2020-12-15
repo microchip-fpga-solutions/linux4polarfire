@@ -564,6 +564,11 @@
 		bias-disable;
 	};
 
+	pinctrl_mikrobus1_pwm2_default: mikrobus1_pwm2_default {
+		pinmux = <PIN_PE7__PWMH2>;
+		bias-disable;
+	};
+
 	pinctrl_mikrobus1_spi_cs: mikrobus1_spi_cs {
 		pinmux = <PIN_PB6__FLEXCOM11_IO3>;
 		bias-disable;
@@ -641,6 +646,12 @@
 };
 
 &ps_wdt {
+	status = "okay";
+};
+
+&pwm {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_mikrobus1_pwm2_default>;
 	status = "okay";
 };
 
