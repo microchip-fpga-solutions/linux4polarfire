@@ -266,6 +266,13 @@ static int microchip_xisc_probe(struct platform_device *pdev)
 
 	regmap_read(isc->regmap, ISC_VERSION, &ver);
 	dev_info(dev, "Microchip XISC version %x\n", ver);
+	/* Attempt to put CSI2DC in parallel mode, otherwise parallel image capture cannot work */
+	{
+		u32 *csi2dc_gcfgr = (u32 *) ioremap(0xE1404000, 4);
+		/* second bit of configuration register */
+		*csi2dc_gcfgr = (1 << 1);
+	}
+
 	return 0;
 
 cleanup_subdev:
