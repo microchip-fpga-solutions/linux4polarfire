@@ -75,7 +75,8 @@ dtb-$(CONFIG_SOC_SAM_V7) += \
 	at91-sama5d4ek.dtb \
 	at91-vinco.dtb
 dtb-$(CONFIG_SOC_SAMA7G5) += \
-	at91-sama7g5ek.dtb
+	at91-sama7g5ek.dtb \
+	at91-sama7g5vb-rank1.dtb
 dtb-$(CONFIG_ARCH_ATLAS6) += \
 	atlas6-evb.dtb
 dtb-$(CONFIG_ARCH_ATLAS7) += \

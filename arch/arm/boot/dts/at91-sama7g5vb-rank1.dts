@@ -1,0 +1,302 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * at91-sama7g5vb-rank1.dts - Device Tree file for SAMA7G5-VB board rank1
+ *
+ *  Copyright (c) 2020, Microchip Technology Inc. and its subsidiaries
+ *
+ *  Author: Eugen Hristev <eugen.hristev@microchip.com>
+ *  Author: Claudiu Beznea <claudiu.beznea@microchip.com>
+ *
+ */
+/dts-v1/;
+#include "sama7g5-pinfunc.h"
+#include "sama7g5.dtsi"
+#include <dt-bindings/mfd/atmel-flexcom.h>
+#include <dt-bindings/input/input.h>
+
+/ {
+	model = "Microchip SAMA7G5-VB Rank1";
+	compatible = "microchip,sama7g5vb", "microchip,sama7g5", "microchip,sama7";
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlycon earlyprintk=serial,ttyS0 ignore_loglevel rw root=/dev/mmcblk0p2 memtest=0 rootfstype=ext4 rootwait cma=256m";
+		stdout-path = "serial0:115200n8";
+	};
+
+	aliases {
+		serial0 = &uart3;
+		i2c0 = &i2c1;
+		i2c1 = &i2c8;
+		i2c2 = &i2c9;
+	};
+
+	clocks {
+		slow_xtal {
+			clock-frequency = <32768>;
+		};
+
+		main_xtal {
+			clock-frequency = <24000000>;
+		};
+	};
+};
+
+&dma0 {
+	status = "okay";
+};
+
+&dma1 {
+	status = "okay";
+};
+
+&dma2 {
+	status = "okay";
+};
+
+&flx0 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_USART>;
+	status = "disabled";
+
+	uart0: serial@200 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_flx0_default>;
+		status = "disabled";
+	};
+};
+
+&flx1 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+	status = "okay";
+
+	i2c1: i2c@600 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_i2c1_default>;
+		i2c-analog-filter;
+		i2c-digital-filter;
+		i2c-digital-filter-width-ns = <35>;
+		status = "okay";
+	};
+};
+
+&flx3 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_USART>;
+	status = "okay";
+
+	uart3: serial@200 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_flx3_default>;
+		status = "okay";
+	};
+};
+
+&flx4 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_USART>;
+	status = "okay";
+
+	uart4: serial@200 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_flx4_default>;
+		status = "okay";
+	};
+};
+
+&flx7 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_USART>;
+	status = "okay";
+
+	uart7: serial@200 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_flx7_default>;
+		status = "okay";
+	};
+};
+
+&flx8 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+	status = "okay";
+
+	i2c8: i2c@600 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_i2c8_default>;
+		i2c-analog-filter;
+		i2c-digital-filter;
+		i2c-digital-filter-width-ns = <35>;
+		status = "okay";
+	};
+};
+
+&flx9 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+	status = "okay";
+
+	i2c9: i2c@600 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_i2c9_default>;
+		i2c-analog-filter;
+		i2c-digital-filter;
+		i2c-digital-filter-width-ns = <35>;
+		status = "okay";
+	};
+};
+
+&gic {
+	status = "okay";
+};
+
+&pioA {
+	pinctrl_flx0_default: flx0_default {
+		pinmux = <PIN_PE3__FLEXCOM0_IO0>,
+			 <PIN_PE4__FLEXCOM0_IO1>,
+			 <PIN_PE6__FLEXCOM0_IO3>,
+			 <PIN_PE7__FLEXCOM0_IO4>;
+		bias-disable;
+	};
+
+	pinctrl_flx3_default: flx3_default {
+		pinmux = <PIN_PD16__FLEXCOM3_IO0>,
+			 <PIN_PD17__FLEXCOM3_IO1>;
+		bias-disable;
+	};
+
+	pinctrl_flx4_default: flx4_default {
+		pinmux = <PIN_PD18__FLEXCOM4_IO0>,
+			 <PIN_PD19__FLEXCOM4_IO1>;
+		bias-disable;
+	};
+
+	pinctrl_flx7_default: flx7_default {
+		pinmux = <PIN_PC23__FLEXCOM7_IO0>,
+			 <PIN_PC24__FLEXCOM7_IO1>;
+		bias-disable;
+	};
+
+	pinctrl_i2c1_default: i2c1_default {
+		pinmux = <PIN_PC9__FLEXCOM1_IO0>,
+			 <PIN_PC10__FLEXCOM1_IO1>;
+		bias-disable;
+	};
+
+	pinctrl_i2c8_default: i2c8_default {
+		pinmux = <PIN_PC14__FLEXCOM8_IO0>,
+			 <PIN_PC13__FLEXCOM8_IO1>;
+		bias-disable;
+	};
+
+	pinctrl_i2c9_default: i2c9_default {
+		pinmux = <PIN_PC18__FLEXCOM9_IO0>,
+			 <PIN_PC19__FLEXCOM9_IO1>;
+		bias-disable;
+	};
+
+	pinctrl_sdmmc1_default: sdmmc1_default {
+		cmd_data {
+			pinmux = <PIN_PB29__SDMMC1_CMD>,
+				 <PIN_PB31__SDMMC1_DAT0>,
+				 <PIN_PC0__SDMMC1_DAT1>,
+				 <PIN_PC1__SDMMC1_DAT2>,
+				 <PIN_PC2__SDMMC1_DAT3>;
+			bias-pull-up;
+		};
+
+		ck_cd_rstn_vddsel {
+			pinmux = <PIN_PB30__SDMMC1_CK>,
+				 <PIN_PB28__SDMMC1_RSTN>,
+				 <PIN_PC5__SDMMC1_1V8SEL>,
+				 <PIN_PC4__SDMMC1_CD>;
+			bias-pull-up;
+		};
+	};
+};
+
+&ps_wdt {
+	status = "okay";
+};
+
+&sdmmc1 {
+	bus-width = <4>;
+	mmc-ddr-3_3v;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_sdmmc1_default>;
+	status = "okay";
+};
+
+&trng {
+	status = "okay";
+};
+
+&pioA {
+	pinctrl_isc_base: isc_base {
+		pinmux = <PIN_PA27__ISC_PCK>,
+			 <PIN_PA25__ISC_VSYNC>,
+			 <PIN_PA24__ISC_HSYNC>,
+			 <PIN_PA15__ISC_MCK>;
+		bias-disable;
+	};
+
+	pinctrl_isc_data_8bit: isc_data_8bit {
+		pinmux = <PIN_PA31__ISC_D11>,
+			 <PIN_PA30__ISC_D10>,
+			 <PIN_PA29__ISC_D9>,
+			 <PIN_PA28__ISC_D8>,
+			 <PIN_PA23__ISC_D7>,
+			 <PIN_PA22__ISC_D6>,
+			 <PIN_PA21__ISC_D5>,
+			 <PIN_PA20__ISC_D4>;
+		bias-disable;
+	};
+};
+
+&xisc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_isc_base &pinctrl_isc_data_8bit>;
+	status = "okay";
+
+	port {
+		xisc_0: endpoint@0 {
+			remote-endpoint = <&ov7740_0>;
+			hsync-active = <1>;
+			vsync-active = <0>;
+			pclk-sample = <1>;
+		};
+	};
+};
+
+&i2c1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	ov7740: camera@21 {
+		compatible = "ovti,ov7740";
+		reg = <0x21>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_sensor_power &pinctrl_sensor_reset>;
+		reset-gpios = <&pioA PIN_PA13 GPIO_ACTIVE_LOW>;
+		powerdown-gpios = <&pioA PIN_PA12 GPIO_ACTIVE_HIGH>;
+		clocks = <&xisc>;
+		clock-names = "xvclk";
+		assigned-clocks = <&xisc>;
+		assigned-clock-rates = <24000000>;
+		status = "okay";
+
+		port {
+			ov7740_0: endpoint {
+				remote-endpoint = <&xisc_0>;
+				hsync-active = <1>;
+				vsync-active = <0>;
+				pclk-sample = <1>;
+			};
+		};
+	};
+};
+
+&pioA {
+	pinctrl_sensor_power: sensor_power {
+		pinmux = <PIN_PA12__GPIO>;
+		bias-disable;
+	};
+
+	pinctrl_sensor_reset: sensor_reset {
+		pinmux = <PIN_PA13__GPIO>;
+		bias-disable;
+	};
+};
