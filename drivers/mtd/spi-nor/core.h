@@ -339,6 +339,7 @@ struct flash_info {
 					 * power-up in a write-protected state.
 					 */
 
+#define SPI_NOR_SOFT_RESET	BIT(23)
 	/* Part specific fixup hooks. */
 	const struct spi_nor_fixups *fixups;
 };

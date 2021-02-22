@@ -199,7 +199,7 @@ static const struct flash_info macronix_parts[] = {
 	{ "mx66lm1g45g", INFO(0xc2853b, 0, 64 * 1024, 2048, SECT_4K |
 			      SPI_NOR_OCTAL_DTR_READ | SPI_NOR_OCTAL_DTR_PP |
 			      SPI_NOR_IO_MODE_EN_VOLATILE | SPI_NOR_4B_OPCODES |
-			      SPI_NOR_SKIP_SFDP)
+			      SPI_NOR_SOFT_RESET | SPI_NOR_SKIP_SFDP)
 		.fixups = &mx66lm1g45g_fixups,
 	},
 };
