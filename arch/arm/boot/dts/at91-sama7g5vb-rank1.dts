@@ -41,6 +41,15 @@
 	};
 };
 
+&adc {
+	vddana-supply = <&vddout25>;
+	vref-supply = <&vddout25>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_adc_default>;
+	atmel,trigger-edge-type = <IRQ_TYPE_EDGE_RISING>;
+	status = "okay";
+};
+
 &dma0 {
 	status = "okay";
 };
@@ -431,6 +440,11 @@
 };
 
 &pioA {
+	pinctrl_adc_default: adc_default {
+		pinmux = <PIN_PB2__ADTRG>;
+		bias-pull-up;
+	};
+
 	pinctrl_sensor_power: sensor_power {
 		pinmux = <PIN_PA12__GPIO>;
 		bias-disable;
@@ -501,5 +515,10 @@
 };
 
 &usb_phy2 {
+	status = "okay";
+};
+
+&vddout25 {
+	vin-supply = <&vdd_3v3>;
 	status = "okay";
 };
