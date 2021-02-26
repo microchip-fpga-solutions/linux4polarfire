@@ -431,11 +431,11 @@
 };
 
 &pioA {
-/*	pinctrl_sensor_power: sensor_power {
+	pinctrl_sensor_power: sensor_power {
 		pinmux = <PIN_PA12__GPIO>;
 		bias-disable;
 	};
-*/
+
 	pinctrl_sensor_reset: sensor_reset {
 		pinmux = <PIN_PA13__GPIO>;
 		bias-disable;
