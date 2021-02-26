@@ -323,9 +323,13 @@
 
 		ck_cd_rstn_vddsel {
 			pinmux = <PIN_PA0__SDMMC0_CK>,
-				// <PIN_PA12__SDMMC0_WP>,
 				 <PIN_PA14__SDMMC0_CD>;
 			bias-pull-up;
+		};
+
+		wp {
+			pinmux = <PIN_PA12__SDMMC0_WP>;
+			bias-pull-down;
 		};
 	};
 
