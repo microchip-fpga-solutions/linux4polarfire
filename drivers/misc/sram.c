@@ -4,7 +4,6 @@
  *
  * Copyright (C) 2012 Philipp Zabel, Pengutronix
  */
-
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/genalloc.h>
@@ -21,6 +20,8 @@
 #include "sram.h"
 
 #define SRAM_GRANULARITY	32
+
+struct work_struct	workq_cpu;
 
 static ssize_t sram_read(struct file *filp, struct kobject *kobj,
 			 struct bin_attribute *attr,
@@ -262,6 +263,7 @@ static int sram_reserve_regions(struct sram_dev *sram, struct resource *res)
 
 	cur_start = 0;
 	list_for_each_entry(block, &reserve_list, list) {
+dev_dbg(sram->dev, "un entry !\n");
 		/* can only happen if sections overlap */
 		if (block->start < cur_start) {
 			dev_err(sram->dev,
@@ -277,6 +279,7 @@ static int sram_reserve_regions(struct sram_dev *sram, struct resource *res)
 			ret = sram_add_partition(sram, block,
 						 res->start + block->start);
 			if (ret) {
+dev_dbg(sram->dev, "error add partiotion %d\n", ret);
 				sram_free_partitions(sram);
 				goto err_chunks;
 			}
@@ -284,6 +287,7 @@ static int sram_reserve_regions(struct sram_dev *sram, struct resource *res)
 
 		/* current start is in a reserved block, so continue after it */
 		if (block->start == cur_start) {
+dev_dbg(sram->dev, "dubios 1\n");
 			cur_start = block->start + block->size;
 			continue;
 		}
@@ -311,6 +315,7 @@ static int sram_reserve_regions(struct sram_dev *sram, struct resource *res)
 	}
 
 err_chunks:
+//dev_dbg(sram->dev, "error !!\n");
 	of_node_put(child);
 	kfree(rblocks);
 
@@ -331,10 +336,71 @@ static int atmel_securam_wait(void)
 					10000, 500000);
 }
 
+static void * sram_mem;
+
 static const struct of_device_id sram_dt_ids[] = {
 	{ .compatible = "mmio-sram" },
 	{ .compatible = "atmel,sama5d2-securam", .data = atmel_securam_wait },
 	{}
+};
+
+enum { FOO_SIZE_MAX = 4 };
+static int foo_size;
+static char foo_tmp[FOO_SIZE_MAX];
+
+static struct kobject *kobj;
+static ssize_t foo_show(struct kobject *kobj, struct kobj_attribute *attr,
+        char *buff)
+{
+	strncpy(buff, foo_tmp, foo_size);
+	return foo_size;
+}
+
+static int cpu_work = 0;
+static void * DDR;
+
+static void workq_handler_cpu(struct work_struct *workq)
+{
+	pr_info("starting copy SRAM->DDR, DDR->SRAM\n");
+	while(cpu_work) {
+		memcpy(DDR, sram_mem, 8*1024);
+		memcpy(sram_mem, DDR, 8*1024);
+
+		schedule();
+	}
+
+	pr_info("stopping copy SRAM->DDR, DDR->SRAM\n");
+}
+static ssize_t foo_store(struct  kobject *kobj, struct kobj_attribute *attr,
+        const char *buff, size_t count)
+{
+	unsigned long val;
+
+	foo_size = min(count, (size_t)FOO_SIZE_MAX);
+	strncpy(foo_tmp, buff, foo_size);
+	if (kstrtoul(foo_tmp, 10, &val))
+		return 0;
+
+	if (val == 1) {
+		cpu_work = 1;
+		schedule_work(&workq_cpu);
+	} else if (val == 0) {
+		cpu_work = 0;
+	}
+
+	return count;
+}
+
+static struct kobj_attribute foo_attribute =
+    __ATTR(cpu, S_IRUGO | S_IWUSR, foo_show, foo_store);
+
+static struct attribute *attrs[] = {
+    &foo_attribute.attr,
+    NULL,
+};
+
+static struct attribute_group attr_group = {
+    .attrs = attrs,
 };
 
 static int sram_probe(struct platform_device *pdev)
@@ -386,8 +452,27 @@ static int sram_probe(struct platform_device *pdev)
 	dev_dbg(sram->dev, "SRAM pool: %zu KiB @ 0x%p\n",
 		gen_pool_size(sram->pool) / 1024, sram->virt_base);
 
-	return 0;
+	INIT_WORK(&workq_cpu, workq_handler_cpu);
 
+	memcpy (foo_tmp, "0", sizeof ("0"));
+	kobj = kobject_create_and_add("sram_ops", kernel_kobj);
+	if (!kobj)
+		return -ENOMEM;
+	ret = sysfs_create_group(kobj, &attr_group);
+	if (ret)
+		kobject_put(kobj);
+
+	/* allocating 64 KB */
+	sram_mem  = ioremap(0x100000, 8 * 1024);
+
+	DDR = devm_kzalloc(&pdev->dev, 8*1024, GFP_KERNEL);
+	if (IS_ERR_OR_NULL(sram_mem))
+		dev_err(sram->dev,"sram mem allocation failure !\n");
+
+
+	dev_dbg(sram->dev, "allocated @ %x\n", virt_to_phys(sram_mem));
+
+	return 0;
 err_free_partitions:
 	sram_free_partitions(sram);
 err_disable_clk:
@@ -408,7 +493,7 @@ static int sram_remove(struct platform_device *pdev)
 
 	if (sram->clk)
 		clk_disable_unprepare(sram->clk);
-
+	kobject_put(kobj);
 	return 0;
 }
 
