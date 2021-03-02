@@ -50,6 +50,14 @@
 	status = "okay";
 };
 
+&csi2dc {
+	status = "okay";
+};
+
+&csi2host {
+	status = "okay";
+};
+
 &dma0 {
 	status = "okay";
 };
