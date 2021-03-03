@@ -432,7 +432,7 @@
 		reg = <0x21>;
 	//	pinctrl-names = "default";
 	//	pinctrl-0 = <&pinctrl_sensor_power &pinctrl_sensor_reset>;
-		reset-gpios = <&pioA PIN_PA13 GPIO_ACTIVE_LOW>;
+	//		reset-gpios = <&pioA PIN_PA13 GPIO_ACTIVE_LOW>;
 		//powerdown-gpios = <&pioA PIN_PA12 GPIO_ACTIVE_HIGH>;
 		clocks = <&xisc>;
 		clock-names = "xvclk";
