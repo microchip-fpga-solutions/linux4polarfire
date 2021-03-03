@@ -65,6 +65,7 @@
 #define QSPI_VERSION 0x00FC  /* Version Register */
 
 #define SAMA7G5_QSPI0_MAX_SPEED_HZ	200000000
+#define SAMA7G5_QSPI1_SDR_MAX_SPEED_HZ	133000000
 
 /* Bitfields in QSPI_CR (Control Register) */
 #define QSPI_CR_QSPIEN                  BIT(0)
@@ -260,6 +261,7 @@ static const struct atmel_qspi_pcal pcal[ATMEL_QSPI_PCAL_ARRAY_SIZE] = {
 struct atmel_qspi_caps {
 	u32 max_speed_hz;
 	bool has_qspick;
+	bool has_gclk;
 	bool has_ricr;
 	bool octal;
 	bool has_dma;
@@ -1498,9 +1500,16 @@ static int atmel_qspi_sama7g5_init(struct atmel_qspi *aq)
 	if (ret)
 		return ret;
 
-	ret = atmel_qspi_set_pad_calibration(aq);
-	if (ret)
-		return ret;
+	if (aq->caps->octal) {
+		ret = atmel_qspi_set_pad_calibration(aq);
+		if (ret)
+			return ret;
+	} else {
+		atmel_qspi_write(QSPI_CR_DLLON, aq, QSPI_CR);
+		ret =  readl_poll_timeout(aq->regs + QSPI_SR2, val,
+					  (val & QSPI_SR2_DLOCK), 40,
+					  ATMEL_QSPI_TIMEOUT);
+	}
 
 	/* Set the QSPI controller by default in Serial Memory Mode */
 	atmel_qspi_write(QSPI_MR_SMM | QSPI_MR_DQSDLYEN, aq, QSPI_MR);
@@ -1522,10 +1531,13 @@ static int atmel_qspi_sama7g5_init(struct atmel_qspi *aq)
 	if (ret)
 		return ret;
 
-	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
-				 val & QSPI_SR_RFRSHD, 40,
-				 ATMEL_QSPI_TIMEOUT);
-	dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	if (aq->caps->octal) {
+		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+					 val & QSPI_SR_RFRSHD, 40,
+					 ATMEL_QSPI_TIMEOUT);
+
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	}
 
 	return ret;
 }
@@ -1553,7 +1565,7 @@ static int atmel_qspi_setup(struct spi_device *spi)
 	if (!spi->max_speed_hz)
 		return -EINVAL;
 
-	if (aq->caps->octal)
+	if (aq->caps->has_gclk)
 		return atmel_qspi_sama7g5_setup(spi);
 
 	src_rate = clk_get_rate(aq->pclk);
@@ -1695,9 +1707,10 @@ static int atmel_qspi_probe(struct platform_device *pdev)
 	aq->pdev = pdev;
 
 	ctrl->mode_bits = SPI_RX_DUAL | SPI_RX_QUAD | SPI_TX_DUAL | SPI_TX_QUAD;
-	if (aq->caps->octal) {
+	if (aq->caps->octal)
 		ctrl->mode_bits |= SPI_RX_OCTAL | SPI_TX_OCTAL;
 
+	if (aq->caps->has_gclk) {
 		aq->ops = &atmel_qspi_sama7g5_ops;
 	} else {
 		aq->ops = &atmel_qspi_ops;
@@ -1767,7 +1780,7 @@ static int atmel_qspi_probe(struct platform_device *pdev)
 				"failed to enable the QSPI system clock\n");
 			goto disable_pclk;
 		}
-	} else if (aq->caps->octal) {
+	} else if (aq->caps->has_gclk) {
 		/* Get the QSPI generic clock */
 		aq->gclk = devm_clk_get(&pdev->dev, "gclk");
 		if (IS_ERR(aq->gclk)) {
@@ -1788,7 +1801,7 @@ static int atmel_qspi_probe(struct platform_device *pdev)
 	if (err)
 		goto disable_qspick;
 
-	if (aq->caps->octal) {
+	if (aq->caps->has_gclk) {
 		err = atmel_qspi_reg_sync(aq);
 		if (err)
 			goto disable_qspick;
@@ -1872,7 +1885,7 @@ static int atmel_qspi_remove(struct platform_device *pdev)
 
 	spi_unregister_controller(ctrl);
 
-	if (aq->caps->octal)
+	if (aq->caps->has_gclk)
 		return atmel_qspi_sama7g5_suspend(aq);
 
         if (aq->caps->has_dma)
@@ -1890,7 +1903,7 @@ static int __maybe_unused atmel_qspi_suspend(struct device *dev)
 	struct spi_controller *ctrl = dev_get_drvdata(dev);
 	struct atmel_qspi *aq = spi_controller_get_devdata(ctrl);
 
-	if (aq->caps->octal)
+	if (aq->caps->has_gclk)
 		return atmel_qspi_sama7g5_suspend(aq);
 
 	atmel_qspi_write(QSPI_CR_QSPIDIS, aq, QSPI_CR);
@@ -1906,7 +1919,7 @@ static int __maybe_unused atmel_qspi_resume(struct device *dev)
 	struct atmel_qspi *aq = spi_controller_get_devdata(ctrl);
 
 	clk_prepare_enable(aq->pclk);
-	if (aq->caps->octal)
+	if (aq->caps->has_gclk)
 		return atmel_qspi_sama7g5_init(aq);
 
 	clk_prepare_enable(aq->qspick);
@@ -1930,7 +1943,14 @@ static const struct atmel_qspi_caps atmel_sam9x60_qspi_caps = {
 
 static const struct atmel_qspi_caps atmel_sama7g5_ospi_caps = {
 	.max_speed_hz = SAMA7G5_QSPI0_MAX_SPEED_HZ,
+	.has_gclk = true,
 	.octal = true,
+	.has_dma = true,
+};
+
+static const struct atmel_qspi_caps atmel_sama7g5_qspi_caps = {
+	.max_speed_hz = SAMA7G5_QSPI1_SDR_MAX_SPEED_HZ,
+	.has_gclk = true,
 	.has_dma = true,
 };
 
@@ -1947,6 +1967,11 @@ static const struct of_device_id atmel_qspi_dt_ids[] = {
 		.compatible = "microchip,sama7g5-ospi",
 		.data = &atmel_sama7g5_ospi_caps,
 	},
+	{
+		.compatible = "microchip,sama7g5-qspi",
+		.data = &atmel_sama7g5_qspi_caps,
+	},
+
 	{ /* sentinel */ }
 };
 
