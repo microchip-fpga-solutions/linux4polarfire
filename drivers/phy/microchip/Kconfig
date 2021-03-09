@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Phy drivers for Microchip platforms
+#
+config PHY_MICROCHIP_SAMA7G5_USB
+	tristate "Microchip SAMA7G5 USB 2.0 PHY"
+	depends on ARCH_AT91 || COMPILE_TEST
+	depends on OF
+	select GENERIC_PHY
+	help
+		Enable this to support SAMA7G5 USB 2.0 PHY

@@ -2129,6 +2129,15 @@ T:	git git://github.com/microchip-ung/linux-upstream.git
 F:	arch/arm64/boot/dts/microchip/
 N:	sparx5
 
+ARM/Microchip USB PHY driver
+M:	Cristian Birsan <cristian.birsan@microchip.com>
+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+W:	http://www.linux4sam.org
+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/at91/linux.git
+S:	Supported
+F:	drivers/phy/microchip/
+F:	Documentation/devicetree/bindings/phy/microchip,phy-sama7g5-usb.yaml
+
 ARM/MIOA701 MACHINE SUPPORT
 M:	Robert Jarzmik <robert.jarzmik@free.fr>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)

@@ -3,8 +3,9 @@ Atmel SOC USB controllers
 OHCI
 
 Required properties:
- - compatible: Should be "atmel,at91rm9200-ohci" for USB controllers
-   used in host mode.
+ - compatible: Should be one of the following
+	       "atmel,at91rm9200-udc"
+	       "microchip,sama7g5-ohci"
  - reg: Address and length of the register set for the device
  - interrupts: Should contain ohci interrupt
  - clocks: Should reference the peripheral, host and system clocks
@@ -17,6 +18,10 @@ Required properties:
    activated for the bus to be powered.
  - atmel,oc-gpio: If present, specifies a gpio that needs to be
    activated for the overcurrent detection.
+
+Optional properties:
+- phys: Should reference USB phy nodes for sama7g5 SoC.
+- phy-names: Should be "usb"
 
 usb0: ohci@500000 {
 	compatible = "atmel,at91rm9200-ohci", "usb-ohci";
@@ -83,6 +88,7 @@ Required properties:
 	       "atmel,at91sam9g45-udc"
 	       "atmel,sama5d3-udc"
 	       "microchip,sam9x60-udc"
+	       "microchip,sama7g5-udc"
  - reg: Address and length of the register set for the device
  - interrupts: Should contain usba interrupt
  - clocks: Should reference the peripheral and host clocks
@@ -96,6 +102,8 @@ Deprecated property:
 Optional properties:
  - atmel,vbus-gpio: If present, specifies a gpio that allows to detect whether
    vbus is present (USB is connected).
+- phys: Should reference USB phy node for sama7g5 SoC.
+- phy-names: Should be "usb"
 
 Deprecated child node properties:
  - name: Name of the endpoint.
