@@ -28,6 +28,8 @@
 #include <linux/spi/spi-mem.h>
 
 #define ATMEL_QSPI_POLLING
+#define ATMEL_QSPI_USE_TX_APB
+#define ATMEL_QSPI_USE_TX_APB_DMA
 
 /* QSPI register offsets */
 #define QSPI_CR      0x0000  /* Control Register */
@@ -267,6 +269,7 @@ struct atmel_qspi_ops;
 
 struct atmel_qspi {
 	void __iomem		*regs;
+	phys_addr_t		phybase;
 	void __iomem		*mem;
 	struct clk		*pclk;
 	struct clk		*gclk;
@@ -285,6 +288,8 @@ struct atmel_qspi {
 	dma_addr_t		mmap_phys_base;
 	struct dma_chan		*rx_chan;
 	struct dma_chan		*tx_chan;
+	void			*tx_bb_addr;
+	dma_addr_t		tx_bb_dma_addr;
 };
 
 struct atmel_qspi_ops {
@@ -334,8 +339,6 @@ static const char *atmel_qspi_reg_name(u32 offset, char *tmp, size_t sz)
 		return "MR";
 	case QSPI_RD:
 		return "MR";
-	case QSPI_TD:
-		return "TD";
 	case QSPI_SR:
 		return "SR";
 	case QSPI_IER:
@@ -360,6 +363,8 @@ static const char *atmel_qspi_reg_name(u32 offset, char *tmp, size_t sz)
 		return "SMR";
 	case QSPI_SKR:
 		return "SKR";
+	case QSPI_TD:
+		return "TD";
 	case QSPI_REFRESH:
 		return "REFRESH";
 	case QSPI_WRACNT:
@@ -411,6 +416,30 @@ static void atmel_qspi_write(u32 value, struct atmel_qspi *aq, u32 offset)
 #endif /* VERBOSE_DEBUG */
 
 	writel_relaxed(value, aq->regs + offset);
+}
+
+static void __maybe_unused atmel_qspi_writew(u16 value, struct atmel_qspi *aq, u32 offset)
+{
+#ifdef VERBOSE_DEBUG
+	char tmp[8];
+
+	dev_vdbg(&aq->pdev->dev, "write 0x%04x into %s\n", value,
+		 atmel_qspi_reg_name(offset, tmp, sizeof(tmp)));
+#endif /* VERBOSE_DEBUG */
+
+	writew_relaxed(value, aq->regs + offset);
+}
+
+static void __maybe_unused atmel_qspi_writeb(u8 value, struct atmel_qspi *aq, u32 offset)
+{
+#ifdef VERBOSE_DEBUG
+	char tmp[8];
+
+	dev_vdbg(&aq->pdev->dev, "write 0x%02x into %s\n", value,
+		 atmel_qspi_reg_name(offset, tmp, sizeof(tmp)));
+#endif /* VERBOSE_DEBUG */
+
+	writeb_relaxed(value, aq->regs + offset);
 }
 
 static inline bool atmel_qspi_is_compatible(const struct spi_mem_op *op,
@@ -648,6 +677,7 @@ static int atmel_qspi_reg_sync(struct atmel_qspi *aq)
 	ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 				 !(val & QSPI_SR2_SYNCBSY), 40,
 				 ATMEL_QSPI_SYNC_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 	return ret;
 }
 
@@ -664,12 +694,97 @@ static int atmel_qspi_update_config(struct atmel_qspi *aq)
 	return atmel_qspi_reg_sync(aq);
 }
 
+static int atmel_qspi_sama7g5_set_apb_write_cfg(struct atmel_qspi *aq,
+						const struct spi_mem_op *op,
+						u32 *offset)
+{
+	u32 iar, icr, ifr;
+	int mode, ret;
+
+	iar = 0;
+	icr = FIELD_PREP(QSPI_ICR_INST_MASK_SAMA7G5, op->cmd.opcode);
+	ifr = QSPI_IFR_INSTEN;
+
+	mode = atmel_qspi_sama7g5_find_mode(op);
+	if (mode < 0)
+		return mode;
+	ifr |= atmel_qspi_sama7g5_modes[mode].config;
+
+	if (op->dummy.buswidth && op->dummy.nbytes) {
+		if (op->addr.dtr && op->dummy.dtr && op->data.dtr)
+			ifr |= QSPI_IFR_NBDUM(op->dummy.nbytes * 8 /
+					      (2 * op->dummy.buswidth));
+		else
+			ifr |= QSPI_IFR_NBDUM(op->dummy.nbytes * 8 /
+					      op->dummy.buswidth);
+	}
+
+	if (op->addr.buswidth && op->addr.nbytes) {
+		ifr |= FIELD_PREP(QSPI_IFR_ADDRL_SAMA7G5, op->addr.nbytes - 1) |
+		       QSPI_IFR_ADDREN;
+		iar = FIELD_PREP(QSPI_IAR_ADDR, op->addr.val);
+	}
+
+	if (op->addr.dtr && op->dummy.dtr && op->data.dtr) {
+		ifr |= QSPI_IFR_DDREN;
+		if (op->cmd.dtr)
+			ifr |= QSPI_IFR_DDRCMDEN;
+
+		//ifr |= QSPI_IFR_DQSEN;
+	}
+
+	if (op->cmd.buswidth == 8 || op->addr.buswidth == 8 ||
+	    op->data.buswidth == 8)
+		ifr |= FIELD_PREP(QSPI_IFR_PROTTYP, QSPI_IFR_PROTTYP_OCTAFLASH);
+
+	/* offset of the data access in the QSPI memory space */
+	*offset = iar;
+
+	/* Set data enable */
+	if (op->data.nbytes)
+		ifr |= QSPI_IFR_DATAEN;
+	ifr |= QSPI_IFR_SMRM;
+
+	/*
+	 * If the QSPI controller is set in regular SPI mode, set it in
+	 * Serial Memory Mode (SMM).
+	 */
+	if (aq->mr != QSPI_MR_SMM) {
+		atmel_qspi_write(QSPI_MR_SMM | QSPI_MR_DQSDLYEN, aq, QSPI_MR);
+		aq->mr = QSPI_MR_SMM;
+
+		ret = atmel_qspi_update_config(aq);
+		if (ret)
+			return ret;
+	}
+
+	/* Clear pending interrupts */
+	(void)atmel_qspi_read(aq, QSPI_SR);
+
+	/* Set QSPI Instruction Frame registers */
+	if (op->addr.nbytes)
+		atmel_qspi_write(iar, aq, QSPI_IAR);
+
+	atmel_qspi_write(icr, aq, QSPI_WICR);
+	atmel_qspi_write(ifr, aq, QSPI_IFR);
+
+	return atmel_qspi_update_config(aq);
+}
+
+
 static int atmel_qspi_sama7g5_set_cfg(struct atmel_qspi *aq,
 				      const struct spi_mem_op *op, u32 *offset)
 {
 	u32 iar, icr, ifr;
 	int mode, ret;
 
+	dev_dbg(&aq->pdev->dev, "op->cmd.opcode = %04x, op->addr.nbytes = %d, op->data.nbytes = %d\n",
+		op->cmd.opcode, op->addr.nbytes, op->data.nbytes);
+
+#ifdef ATMEL_QSPI_USE_TX_APB
+	if (op->data.dir == SPI_MEM_DATA_OUT)
+		return atmel_qspi_sama7g5_set_apb_write_cfg(aq, op, offset);
+#endif
 	iar = 0;
 	icr = FIELD_PREP(QSPI_ICR_INST_MASK_SAMA7G5, op->cmd.opcode);
 	ifr = QSPI_IFR_INSTEN;
@@ -749,8 +864,6 @@ static int atmel_qspi_sama7g5_set_cfg(struct atmel_qspi *aq,
 
 	atmel_qspi_write(ifr, aq, QSPI_IFR);
 
-	dev_dbg(&aq->pdev->dev, "op->cmd.opcode = %04x, op->addr.nbytes = %d, op->data.nbytes = %d\n",
-		op->cmd.opcode, op->addr.nbytes, op->data.nbytes);
 
 	return atmel_qspi_update_config(aq);
 }
@@ -871,11 +984,243 @@ static int atmel_qspi_dma_transfer(struct spi_mem *mem,
 	return ret;
 }
 
-static int rx_dma_transfer_count = 0;
-static int tx_dma_transfer_count = 0;
+static int atmel_qspi_dma_slave_config(struct atmel_qspi *aq,
+				       const struct spi_mem_op *op)
+{
+	struct dma_slave_config slave_config = {0};
+	int ret;
 
-static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
-				       const struct spi_mem_op *op, u32 offset)
+	if (op->data.dtr)
+		slave_config.dst_addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
+	else
+		slave_config.dst_addr_width = DMA_SLAVE_BUSWIDTH_1_BYTE;
+
+	slave_config.dst_addr = (dma_addr_t)aq->phybase + QSPI_TD;
+	slave_config.dst_maxburst = 1;
+
+	ret = dmaengine_slave_config(aq->tx_chan, &slave_config);
+	if (ret)
+		dev_err(&aq->pdev->dev, "failed to configure TX DMA channel\n");
+
+	return ret;
+}
+
+static int atmel_qspi_dma_apb_write(struct atmel_qspi *aq,
+				    const struct spi_mem_op *op,
+				    dma_addr_t buf, size_t len)
+{
+	struct dma_async_tx_descriptor *desc;
+	dma_cookie_t cookie;
+	int ret;
+
+	ret = atmel_qspi_dma_slave_config(aq, op);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "atmel_qspi_dma_slave_config failed\n");
+		return ret;
+	}
+
+	desc = dmaengine_prep_slave_single(aq->tx_chan, buf, len,
+					   DMA_MEM_TO_DEV,
+					   DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
+	if (!desc)
+		dmaengine_terminate_sync(aq->tx_chan);
+
+	desc->callback = atmel_qspi_dma_callback;
+	desc->callback_param = aq;
+	reinit_completion(&aq->dma_completion);
+
+	cookie = desc->tx_submit(desc);
+	ret = dma_submit_error(cookie);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "dma_submit_error %d\n", cookie);
+		return ret;
+	}
+
+	dma_async_issue_pending(aq->tx_chan);
+	ret = wait_for_completion_timeout(&aq->dma_completion,
+					  msecs_to_jiffies(20 * ATMEL_QSPI_TIMEOUT));
+	if (ret == 0) {
+		dmaengine_terminate_sync(aq->tx_chan);
+		dev_err(&aq->pdev->dev, "DMA wait_for_completion_timeout\n");
+		return -ETIMEDOUT;
+	}
+
+
+	return 0;
+}
+
+
+static int atmel_qspi_sama7g5_apb_dtr_write(struct atmel_qspi *aq,
+					    const struct spi_mem_op *op,
+					    loff_t loff)
+{
+
+	const u16 *words = (const u16 *)((u8 *)op->data.buf.out);
+	unsigned int nbytes = op->data.nbytes;
+	u32 val;
+	int ret, i = 0;
+
+	while (nbytes >= 2) {
+		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+					 val & QSPI_SR_TDRE, 40,
+					 ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, ret = %d\n", ret);
+			return ret;
+		}
+
+		ret = atmel_qspi_reg_sync(aq);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, syncbusy ret = %d\n", ret);
+			return ret;
+		}
+		//writew_relaxed(*words++, aq->regs + QSPI_TD);
+#ifdef ATMEL_QSPI_USE_TX_APB_DMA
+		memcpy(aq->tx_bb_addr, words++, 2);
+		ret = atmel_qspi_dma_apb_write(aq, op, aq->tx_bb_dma_addr, 2);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "atmel_qspi_dma_apb_write error, ret = %d\n", ret);
+			return ret;
+		}
+#else
+		atmel_qspi_writew(*words++, aq, QSPI_TD);
+#endif
+
+		nbytes -= 2;
+		i += 2;
+	}
+
+	if (nbytes) {
+		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+					 val & QSPI_SR_TDRE, 40,
+					 ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, ret = %d\n", ret);
+			return ret;
+		}
+
+		ret = atmel_qspi_reg_sync(aq);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, syncbusy ret = %d\n", ret);
+			return ret;
+		}
+		//writeb_relaxed(*words, aq->regs + QSPI_TD);
+#ifdef ATMEL_QSPI_USE_TX_APB_DMA
+		memcpy(aq->tx_bb_addr, words, 1);
+		ret = atmel_qspi_dma_apb_write(aq, op, aq->tx_bb_dma_addr, 1);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "atmel_qspi_dma_apb_write error, ret = %d\n", ret);
+			return ret;
+		}
+#else
+		atmel_qspi_writeb(*words, aq, QSPI_TD);
+#endif
+
+		nbytes--;
+		i++;
+	}
+
+	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+				 val & QSPI_SR_TXEMPTY, 40,
+				 ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "QSPI_SR_TXEMPTY, ret = %d\n", ret);
+		return ret;
+	}
+
+	ret = atmel_qspi_reg_sync(aq);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, syncbusy ret = %d\n", ret);
+		return ret;
+	}
+
+	atmel_qspi_write(QSPI_CR_LASTXFER, aq, QSPI_CR);
+
+#ifdef ATMEL_QSPI_POLLING
+	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+				  val & QSPI_SR_CSRA, 40,
+				  ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	return ret;
+#else
+	return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
+#endif
+}
+
+static int atmel_qspi_sama7g5_apb_write(struct atmel_qspi *aq,
+					const struct spi_mem_op *op,
+					loff_t loff)
+{
+	const u8 *bytes = (const u8 *)op->data.buf.out;
+	unsigned int nbytes = op->data.nbytes;
+	u32 val;
+	int ret;
+
+	while (nbytes) {
+		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+					 val & QSPI_SR_TDRE, 40,
+					 ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, ret = %d\n", ret);
+			return ret;
+		}
+
+		ret = atmel_qspi_reg_sync(aq);
+		if (ret) {
+			dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, syncbusy ret = %d\n", ret);
+			return ret;
+		}
+
+#ifdef ATMEL_QSPI_USE_TX_APB_DMA
+		memcpy(aq->tx_bb_addr, bytes, 1);
+		ret = atmel_qspi_dma_apb_write(aq, op, aq->tx_bb_dma_addr, 1);
+
+		if (ret) {
+			dev_err(&aq->pdev->dev, "atmel_qspi_dma_apb_write error, ret = %d\n", ret);
+			return ret;
+		}
+#else
+		atmel_qspi_writeb(*bytes, aq, QSPI_TD);
+#endif
+		bytes++;
+		nbytes--;
+	}
+
+	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+				 val & QSPI_SR_TXEMPTY, 40,
+				 ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "QSPI_SR_TXEMPTY, ret = %d\n", ret);
+		return ret;
+	}
+
+	ret = atmel_qspi_reg_sync(aq);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "QSPI_SR_TDRE, syncbusy ret = %d\n", ret);
+		return ret;
+	}
+
+	atmel_qspi_write(QSPI_CR_LASTXFER, aq, QSPI_CR);
+
+#ifdef ATMEL_QSPI_POLLING
+	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+				  val & QSPI_SR_CSRA, 40,
+				  ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	return ret;
+#else
+	return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
+#endif
+}
+
+static int atmel_qspi_sama7g5_apb_write_transfer(struct spi_mem *mem,
+						 const struct spi_mem_op *op,
+						 u32 offset)
 {
 	struct atmel_qspi *aq =
 		spi_controller_get_devdata(mem->spi->controller);
@@ -890,9 +1235,51 @@ static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
 		atmel_qspi_write(QSPI_CR_STTFR, aq, QSPI_CR);
 
 #ifdef ATMEL_QSPI_POLLING
-		return readl_poll_timeout(aq->regs + QSPI_SR, val,
+		ret =  readl_poll_timeout(aq->regs + QSPI_SR, val,
 					  val & QSPI_SR_CSRA, 40,
 					  ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+		return ret;
+#else
+		return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
+#endif
+	}
+
+	if (op->data.dtr)
+		return atmel_qspi_sama7g5_apb_dtr_write(aq, op, offset);
+
+	return atmel_qspi_sama7g5_apb_write(aq, op, offset);
+}
+
+static int rx_dma_transfer_count = 0;
+static int tx_dma_transfer_count = 0;
+
+static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
+				       const struct spi_mem_op *op, u32 offset)
+{
+	struct atmel_qspi *aq =
+		spi_controller_get_devdata(mem->spi->controller);
+	u32 val;
+	int ret;
+
+#ifdef ATMEL_QSPI_USE_TX_APB
+	if (op->data.dir == SPI_MEM_DATA_OUT)
+		return atmel_qspi_sama7g5_apb_write_transfer(mem, op, offset);
+#endif
+
+	if (!op->data.nbytes) {
+		/* Start the transfer. */
+		ret = atmel_qspi_reg_sync(aq);
+		if (ret)
+			return ret;
+		atmel_qspi_write(QSPI_CR_STTFR, aq, QSPI_CR);
+
+#ifdef ATMEL_QSPI_POLLING
+		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+					  val & QSPI_SR_CSRA, 40,
+					  ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+		return ret;
 #else
 		return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
 #endif
@@ -918,6 +1305,7 @@ static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
 			ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 						 !(val & QSPI_SR2_RBUSY), 40,
 						 ATMEL_QSPI_SYNC_TIMEOUT);
+			dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 			if (ret)
 				return ret;
 		}
@@ -941,6 +1329,7 @@ static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
 		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
 					 val & QSPI_SR_LWRA, 40,
 					 ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
 #else
 		ret = atmel_qspi_wait_for_completion(aq, QSPI_SR_LWRA);
 #endif
@@ -955,8 +1344,10 @@ static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
 	atmel_qspi_write(QSPI_CR_LASTXFER, aq, QSPI_CR);
 
 #ifdef ATMEL_QSPI_POLLING
-	return readl_poll_timeout(aq->regs + QSPI_SR, val,
+	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
 				  val & QSPI_SR_CSRA, 40, ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
+	return ret;
 #else
 	return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
 #endif
@@ -1051,6 +1442,7 @@ static int atmel_qspi_set_pad_calibration(struct atmel_qspi *aq)
 				  (val & QSPI_SR2_DLOCK) &&
 				  !(val & QSPI_SR2_CALBSY), 40,
 				  ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 
 	/* Refresh analogic blocks every 1 ms.*/
 	atmel_qspi_write(FIELD_PREP(QSPI_REFRESH_DELAY_COUNTER,
@@ -1073,6 +1465,7 @@ static int atmel_qspi_set_gclk(struct atmel_qspi *aq)
 		ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 					 !(val & QSPI_SR2_DLOCK), 40,
 					 ATMEL_QSPI_TIMEOUT);
+		dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 		if (ret)
 			return ret;
 	}
@@ -1125,12 +1518,14 @@ static int atmel_qspi_sama7g5_init(struct atmel_qspi *aq)
 	ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 				 val & QSPI_SR2_QSPIENS, 40,
 				 ATMEL_QSPI_SYNC_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 	if (ret)
 		return ret;
 
 	ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
 				 val & QSPI_SR_RFRSHD, 40,
 				 ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from ISR\n", val);
 
 	return ret;
 }
@@ -1228,6 +1623,15 @@ static int atmel_qspi_dma_init(struct spi_controller *ctrl)
 		goto release_rx_chan;
 	}
 
+	aq->tx_bb_addr = dma_alloc_coherent(&aq->pdev->dev, 2,
+					    &aq->tx_bb_dma_addr,
+					    GFP_KERNEL | GFP_DMA);
+        if (!aq->tx_bb_addr) {
+                dev_err(&aq->pdev->dev, "dma_alloc_coherent failed\n");
+		ret = -ENOMEM;
+                goto release_dma_channels;
+        }
+
 	ctrl->dma_rx = aq->rx_chan;
 	ctrl->dma_tx = aq->tx_chan;
 	init_completion(&aq->dma_completion);
@@ -1252,6 +1656,10 @@ static void atmel_qspi_dma_release(struct atmel_qspi *aq)
 		dma_release_channel(aq->rx_chan);
 	if (aq->tx_chan)
 		dma_release_channel(aq->tx_chan);
+	if (aq->tx_bb_addr)
+                dma_free_coherent(&aq->pdev->dev, 2,
+                                  aq->tx_bb_addr,
+                                  aq->tx_bb_dma_addr);
 }
 
 static const struct atmel_qspi_ops atmel_qspi_ops = {
@@ -1311,6 +1719,7 @@ static int atmel_qspi_probe(struct platform_device *pdev)
 		err = PTR_ERR(aq->regs);
 		goto exit;
 	}
+	aq->phybase = res->start;
 
 	/* Map the AHB memory */
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "qspi_mmap");
@@ -1422,6 +1831,7 @@ static int atmel_qspi_sama7g5_suspend(struct atmel_qspi *aq)
 				 !(val & QSPI_SR2_RBUSY) &&
 				 (val & QSPI_SR2_HIDLE), 40,
 				 ATMEL_QSPI_SYNC_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 	if (ret)
 		return ret;
 
@@ -1429,6 +1839,7 @@ static int atmel_qspi_sama7g5_suspend(struct atmel_qspi *aq)
 	ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 				 !(val & QSPI_SR2_QSPIENS), 40,
 				 ATMEL_QSPI_SYNC_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 	if (ret)
 		return ret;
 
@@ -1438,12 +1849,14 @@ static int atmel_qspi_sama7g5_suspend(struct atmel_qspi *aq)
 	ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 				 !(val & QSPI_SR2_DLOCK), 40,
 				 ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 	if (ret)
 		return ret;
 
 	ret =  readl_poll_timeout(aq->regs + QSPI_SR2, val,
 				  !(val & QSPI_SR2_CALBSY), 40,
 				  ATMEL_QSPI_TIMEOUT);
+	dev_dbg(&aq->pdev->dev, "read = %08x from SR\n", val);
 	if (ret)
 		return ret;
 
