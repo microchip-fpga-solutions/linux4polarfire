@@ -689,9 +689,9 @@ csi2host_defer_err:
 	v4l2_device_unregister(csi->vdev.v4l2_dev);
 
 csi2host_reg_err:
-	clk_disable_unprepare(csi->phyclk);
+//	clk_disable_unprepare(csi->phyclk);
 csi2host_phyclk_err:
-	clk_disable_unprepare(csi->perclk);
+//	clk_disable_unprepare(csi->perclk);
 	return ret;
 }
 
