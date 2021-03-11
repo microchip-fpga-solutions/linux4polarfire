@@ -58,6 +58,10 @@
 	status = "okay";
 };
 
+&csi_dphy {
+	status = "okay";
+};
+
 &dma0 {
 	status = "okay";
 };
@@ -409,46 +413,12 @@
 };
 
 &xisc {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_isc_base &pinctrl_isc_data_8bit>;
 	status = "okay";
-
-	port {
-		xisc_0: endpoint@0 {
-			remote-endpoint = <&ov7740_0>;
-			hsync-active = <1>;
-			vsync-active = <0>;
-			pclk-sample = <1>;
-		};
-	};
 };
 
 &i2c1 {
 	#address-cells = <1>;
 	#size-cells = <0>;
-
-	ov7740: camera@21 {
-		compatible = "ovti,ov7740";
-		reg = <0x21>;
-	//	pinctrl-names = "default";
-	//	pinctrl-0 = <&pinctrl_sensor_power &pinctrl_sensor_reset>;
-	//		reset-gpios = <&pioA PIN_PA13 GPIO_ACTIVE_LOW>;
-		//powerdown-gpios = <&pioA PIN_PA12 GPIO_ACTIVE_HIGH>;
-		clocks = <&xisc>;
-		clock-names = "xvclk";
-		assigned-clocks = <&xisc>;
-		assigned-clock-rates = <24000000>;
-		status = "okay";
-
-		port {
-			ov7740_0: endpoint {
-				remote-endpoint = <&xisc_0>;
-				hsync-active = <1>;
-				vsync-active = <0>;
-				pclk-sample = <1>;
-			};
-		};
-	};
 };
 
 &pioA {
