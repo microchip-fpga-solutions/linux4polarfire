@@ -459,7 +459,7 @@
 	pinctrl-0 = <&pinctrl_usba_vbus>;
 	phys = <&usb_phy0>;
 	phy-names = "usb";
-	status = "okay";
+	status = "disabled";
 };
 
 &usb1 {
@@ -468,7 +468,7 @@
 	pinctrl-0 = <&pinctrl_usbb_vbus>;
 	phys = <&usb_phy1>;
 	phy-names = "usb";
-	status = "okay";
+	status = "disabled";
 };
 
 &usb2 {
