@@ -518,6 +518,7 @@
 				#dma-cells = <1>;
 				clocks = <&pmc PMC_TYPE_PERIPHERAL 22>;
 				clock-names = "dma_clk";
+				microchip,bridge-bug;
 				status = "disabled";
 			};
 
@@ -528,6 +529,7 @@
 				#dma-cells = <1>;
 				clocks = <&pmc PMC_TYPE_PERIPHERAL 23>;
 				clock-names = "dma_clk";
+				microchip,bridge-bug;
 				status = "disabled";
 			};
 
