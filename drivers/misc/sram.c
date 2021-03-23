@@ -336,7 +336,7 @@ static int atmel_securam_wait(void)
 					10000, 500000);
 }
 
-static void * sram_mem;
+static void *sram_mem, *sram_mem2;
 
 static const struct of_device_id sram_dt_ids[] = {
 	{ .compatible = "mmio-sram" },
@@ -347,6 +347,11 @@ static const struct of_device_id sram_dt_ids[] = {
 enum { FOO_SIZE_MAX = 4 };
 static int foo_size;
 static char foo_tmp[FOO_SIZE_MAX];
+static char pattern_tmp[5];
+static int pattern_size;
+static u32 pattern;
+
+static u32 noverify = 0;
 
 static struct kobject *kobj;
 static ssize_t foo_show(struct kobject *kobj, struct kobj_attribute *attr,
@@ -355,22 +360,75 @@ static ssize_t foo_show(struct kobject *kobj, struct kobj_attribute *attr,
 	strncpy(buff, foo_tmp, foo_size);
 	return foo_size;
 }
+static ssize_t pattern_show(struct kobject *kobj, struct kobj_attribute *attr,
+        char *buff)
+{
+	strncpy(buff, pattern_tmp, pattern_size);
+	return pattern_size;
+}
+static ssize_t noverify_show(struct kobject *kobj, struct kobj_attribute *attr,
+        char *buff)
+{
+	char tmp[2];
+	tmp[0] = '0';
+	tmp[1] = 0;
+	tmp[0] += noverify;
+	strncpy(buff, tmp, 2);
+	return 2;
+}
 
 static int cpu_work = 0;
 static void * DDR;
 
 static void workq_handler_cpu(struct work_struct *workq)
 {
-	pr_info("starting copy SRAM->DDR, DDR->SRAM\n");
+	pr_info("starting %s copy SRAM->DDR, DDR->SRAM with pattern 0x%x\n",
+		 noverify ? "non-verified": "verified", pattern);
 	while(cpu_work) {
+		u32 *sram1_u32 = (u32*) sram_mem;
+		u32 *sram2_u32 = (u32*) sram_mem2;
+		int i, err = 0;
+
+		/* wiping SRAM1 and SRAM2*/
+		memset(sram_mem, 0, 8*1024);
+		memset(sram_mem2, 0, 8*1024);
+		/* filling sram1 with pattern */
+		for (i = 0; i < 2*1024;i++)
+			*sram1_u32++ = pattern;
+
 		memcpy(DDR, sram_mem, 8*1024);
-		memcpy(sram_mem, DDR, 8*1024);
+		memcpy(sram_mem2, DDR, 8*1024);
+
+		/* check pattern presence in second buffer */
+		if (!noverify)
+		for (i = 0; i < 2*1024;i++)
+			if (*sram2_u32++ != pattern)
+				err = 1;
 
 		schedule();
+
+		if (err)
+			pr_err("Pattern mismatch in SRAM buffers on SRAM->DDR->SRAM copy\n");
 	}
 
 	pr_info("stopping copy SRAM->DDR, DDR->SRAM\n");
 }
+
+static ssize_t pattern_store(struct  kobject *kobj, struct kobj_attribute *attr,
+        const char *buff, size_t count)
+{
+	unsigned long val;
+
+	pattern_size = min(count, (size_t)11);
+	strncpy(pattern_tmp, buff, pattern_size);
+	pattern_tmp[pattern_size] = 0;
+
+	if (kstrtoul(pattern_tmp, 16, &val))
+		return 0;
+	pattern =  val;
+	return count;
+}
+
 static ssize_t foo_store(struct  kobject *kobj, struct kobj_attribute *attr,
         const char *buff, size_t count)
 {
@@ -391,11 +449,33 @@ static ssize_t foo_store(struct  kobject *kobj, struct kobj_attribute *attr,
 	return count;
 }
 
+
+static ssize_t noverify_store(struct  kobject *kobj, struct kobj_attribute *attr,
+        const char *buff, size_t count)
+{
+	unsigned long val;
+	char tmp[2];
+	strncpy(tmp, buff, 1);
+	tmp[1] = 0;
+
+	if (kstrtoul(tmp, 10, &val))
+		return 0;
+	noverify = val;
+
+	return count;
+}
+
 static struct kobj_attribute foo_attribute =
     __ATTR(cpu, S_IRUGO | S_IWUSR, foo_show, foo_store);
 
+static struct kobj_attribute pattern_attribute =
+    __ATTR(pattern, S_IRUGO | S_IWUSR, pattern_show, pattern_store);
+
+static struct kobj_attribute noverify_attribute =
+    __ATTR(noverify, S_IRUGO | S_IWUSR, noverify_show, noverify_store);
+
 static struct attribute *attrs[] = {
-    &foo_attribute.attr,
+    &foo_attribute.attr, &pattern_attribute.attr, &noverify_attribute.attr,
     NULL,
 };
 
@@ -455,6 +535,9 @@ static int sram_probe(struct platform_device *pdev)
 	INIT_WORK(&workq_cpu, workq_handler_cpu);
 
 	memcpy (foo_tmp, "0", sizeof ("0"));
+	memcpy (pattern_tmp, "0x0", sizeof ("0"));
+	pattern_size = 4;
+	pattern = 0;
 	kobj = kobject_create_and_add("sram_ops", kernel_kobj);
 	if (!kobj)
 		return -ENOMEM;
@@ -462,11 +545,12 @@ static int sram_probe(struct platform_device *pdev)
 	if (ret)
 		kobject_put(kobj);
 
-	/* allocating 64 KB */
-	sram_mem  = ioremap(0x100000, 8 * 1024);
+	/* allocating 8 KB */
+	sram_mem = ioremap(0x100000, 8 * 1024);
+	sram_mem2 = ioremap(0x110000, 8 * 1024);
 
 	DDR = devm_kzalloc(&pdev->dev, 8*1024, GFP_KERNEL);
-	if (IS_ERR_OR_NULL(sram_mem))
+	if (IS_ERR_OR_NULL(sram_mem) || IS_ERR_OR_NULL(sram_mem2))
 		dev_err(sram->dev,"sram mem allocation failure !\n");
 
 
