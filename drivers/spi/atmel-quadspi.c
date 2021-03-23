@@ -890,10 +890,10 @@ static int atmel_qspi_dma_xfer(struct atmel_qspi *aq, struct dma_chan *chan,
 		return -EIO;
 	}
 
+	reinit_completion(&aq->dma_completion);
 	tx->callback = atmel_qspi_dma_callback;
 	tx->callback_param = aq;
 	cookie = tx->tx_submit(tx);
-	reinit_completion(&aq->dma_completion);
 
 	ret = dma_submit_error(cookie);
 	if (ret) {
@@ -1025,9 +1025,9 @@ static int atmel_qspi_dma_apb_write(struct atmel_qspi *aq,
 	if (!desc)
 		dmaengine_terminate_sync(aq->tx_chan);
 
+	reinit_completion(&aq->dma_completion);
 	desc->callback = atmel_qspi_dma_callback;
 	desc->callback_param = aq;
-	reinit_completion(&aq->dma_completion);
 
 	cookie = desc->tx_submit(desc);
 	ret = dma_submit_error(cookie);
