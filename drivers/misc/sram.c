@@ -382,9 +382,7 @@ static void * DDR;
 
 static void workq_handler_cpu(struct work_struct *workq)
 {
-	pr_info("starting %s copy SRAM->DDR, DDR->SRAM with pattern 0x%x\n",
-		 noverify ? "non-verified": "verified", pattern);
-	while(cpu_work) {
+	if(cpu_work) {
 		u32 *sram1_u32 = (u32*) sram_mem;
 		u32 *sram2_u32 = (u32*) sram_mem2;
 		int i, err = 0;
@@ -405,13 +403,11 @@ static void workq_handler_cpu(struct work_struct *workq)
 			if (*sram2_u32++ != pattern)
 				err = 1;
 
-		schedule();
+		schedule_work(&workq_cpu);
 
 		if (err)
 			pr_err("Pattern mismatch in SRAM buffers on SRAM->DDR->SRAM copy\n");
-	}
-
-	pr_info("stopping copy SRAM->DDR, DDR->SRAM\n");
+	} else pr_info("stopping copy SRAM->DDR, DDR->SRAM\n");
 }
 
 static ssize_t pattern_store(struct  kobject *kobj, struct kobj_attribute *attr,
@@ -441,6 +437,10 @@ static ssize_t foo_store(struct  kobject *kobj, struct kobj_attribute *attr,
 
 	if (val == 1) {
 		cpu_work = 1;
+
+	pr_info("starting %s copy SRAM->DDR, DDR->SRAM with pattern 0x%x\n",
+		 noverify ? "non-verified": "verified", pattern);
+
 		schedule_work(&workq_cpu);
 	} else if (val == 0) {
 		cpu_work = 0;
