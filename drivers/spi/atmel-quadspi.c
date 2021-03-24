@@ -14,6 +14,8 @@
 #include <linux/bitfield.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
+#include <linux/dma-mapping.h>
+#include <linux/dmaengine.h>
 #include <linux/err.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
@@ -24,6 +26,8 @@
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <linux/spi/spi-mem.h>
+
+#define ATMEL_QSPI_POLLING
 
 /* QSPI register offsets */
 #define QSPI_CR      0x0000  /* Control Register */
@@ -226,6 +230,8 @@
 #define QSPI_DLLCFG_THRESHOLD_FREQ	90000000U
 #define QSPI_CALIB_TIME			2000	/* 2 us */
 
+/* Use PIO for small transfers. */
+#define ATMEL_QSPI_DMA_MIN_BYTES	16
 /**
  * struct atmel_qspi_pcal - Pad Calibration Clock Division
  * @pclk_rate: peripheral clock rate.
@@ -254,6 +260,7 @@ struct atmel_qspi_caps {
 	bool has_qspick;
 	bool has_ricr;
 	bool octal;
+	bool has_dma;
 };
 
 struct atmel_qspi_ops;
@@ -274,12 +281,16 @@ struct atmel_qspi {
 	u32			scr;
 	u32			slave_max_speed_hz;
 	struct completion	cmd_completion;
+	struct completion	dma_completion;
+	dma_addr_t		mmap_phys_base;
+	struct dma_chan		*rx_chan;
+	struct dma_chan		*tx_chan;
 };
 
 struct atmel_qspi_ops {
 	int (*set_cfg)(struct atmel_qspi *aq, const struct spi_mem_op *op,
 		       u32 *offset);
-	int (*transfer)(struct atmel_qspi *aq, const struct spi_mem_op *op,
+	int (*transfer)(struct spi_mem *mem, const struct spi_mem_op *op,
 			u32 offset);
 };
 
@@ -602,9 +613,12 @@ static int atmel_qspi_wait_for_completion(struct atmel_qspi *aq, u32 irq_mask)
 	return err;
 }
 
-static int atmel_qspi_transfer(struct atmel_qspi *aq,
+static int atmel_qspi_transfer(struct spi_mem *mem,
 			       const struct spi_mem_op *op, u32 offset)
 {
+	struct atmel_qspi *aq =
+		spi_controller_get_devdata(mem->spi->controller);
+
 	if (!op->data.nbytes)
 		return atmel_qspi_wait_for_completion(aq,
 						      QSPI_SR_CMD_COMPLETED);
@@ -735,53 +749,217 @@ static int atmel_qspi_sama7g5_set_cfg(struct atmel_qspi *aq,
 
 	atmel_qspi_write(ifr, aq, QSPI_IFR);
 
+	dev_dbg(&aq->pdev->dev, "op->cmd.opcode = %04x, op->addr.nbytes = %d, op->data.nbytes = %d\n",
+		op->cmd.opcode, op->addr.nbytes, op->data.nbytes);
+
 	return atmel_qspi_update_config(aq);
 }
 
-static int atmel_qspi_sama7g5_transfer(struct atmel_qspi *aq,
+static void atmel_qspi_dma_callback(void *param)
+{
+	struct atmel_qspi *aq = param;
+
+	complete(&aq->dma_completion);
+}
+
+static int atmel_qspi_dma_xfer(struct atmel_qspi *aq, struct dma_chan *chan,
+			       dma_addr_t dma_dst, dma_addr_t dma_src,
+			       unsigned int len)
+{
+	struct dma_async_tx_descriptor *tx;
+	dma_cookie_t cookie;
+	int ret;
+
+	tx = dmaengine_prep_dma_memcpy(chan, dma_dst, dma_src, len,
+				       DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
+	if (!tx) {
+		dev_err(&aq->pdev->dev, "device_prep_dma_memcpy error\n");
+		return -EIO;
+	}
+
+	tx->callback = atmel_qspi_dma_callback;
+	tx->callback_param = aq;
+	cookie = tx->tx_submit(tx);
+	reinit_completion(&aq->dma_completion);
+
+	ret = dma_submit_error(cookie);
+	if (ret) {
+		dev_err(&aq->pdev->dev, "dma_submit_error %d\n", cookie);
+		return ret;
+	}
+
+	dma_async_issue_pending(chan);
+	ret = wait_for_completion_timeout(&aq->dma_completion,
+					  msecs_to_jiffies(20 * ATMEL_QSPI_TIMEOUT));
+	if (ret == 0) {
+		dmaengine_terminate_sync(chan);
+		dev_err(&aq->pdev->dev, "DMA wait_for_completion_timeout\n");
+		return -ETIMEDOUT;
+	}
+
+	return 0;
+}
+
+static int atmel_qspi_dma_rx_xfer(struct spi_mem *mem,
+				  const struct spi_mem_op *op,
+				  struct sg_table *sgt, loff_t loff)
+{
+	struct atmel_qspi *aq =
+		spi_controller_get_devdata(mem->spi->controller);
+	struct scatterlist *sg;
+	dma_addr_t dma_src;
+	unsigned int i, len;
+	int ret;
+
+	dma_src = aq->mmap_phys_base + loff;
+
+	for_each_sg(sgt->sgl, sg, sgt->nents, i) {
+		len = sg_dma_len(sg);
+		ret = atmel_qspi_dma_xfer(aq, aq->rx_chan, sg_dma_address(sg),
+					  dma_src, len);
+		if (ret)
+			return ret;
+		dma_src += len;
+	}
+
+	return 0;
+}
+
+static int atmel_qspi_dma_tx_xfer(struct spi_mem *mem,
+				  const struct spi_mem_op *op,
+				  struct sg_table *sgt, loff_t loff)
+{
+	struct atmel_qspi *aq =
+		spi_controller_get_devdata(mem->spi->controller);
+	struct scatterlist *sg;
+	dma_addr_t dma_dst;
+	unsigned int i, len;
+	int ret;
+
+	dma_dst = aq->mmap_phys_base + loff;
+
+	for_each_sg(sgt->sgl, sg, sgt->nents, i) {
+		len = sg_dma_len(sg);
+		ret = atmel_qspi_dma_xfer(aq, aq->tx_chan, dma_dst,
+					  sg_dma_address(sg), len);
+		if (ret)
+			return ret;
+		dma_dst += len;
+	}
+
+	return 0;
+}
+
+static int atmel_qspi_dma_transfer(struct spi_mem *mem,
+				   const struct spi_mem_op *op, loff_t loff)
+{
+	struct sg_table sgt;
+	int ret;
+
+	ret = spi_controller_dma_map_mem_op_data(mem->spi->controller, op,
+						 &sgt);
+	if (ret)
+		return ret;
+
+	if (op->data.dir == SPI_MEM_DATA_IN)
+		ret = atmel_qspi_dma_rx_xfer(mem, op, &sgt, loff);
+	else
+		ret = atmel_qspi_dma_tx_xfer(mem, op, &sgt, loff);
+
+	spi_controller_dma_unmap_mem_op_data(mem->spi->controller, op, &sgt);
+
+	return ret;
+}
+
+static int rx_dma_transfer_count = 0;
+static int tx_dma_transfer_count = 0;
+
+static int atmel_qspi_sama7g5_transfer(struct spi_mem *mem,
 				       const struct spi_mem_op *op, u32 offset)
 {
-	int err;
+	struct atmel_qspi *aq =
+		spi_controller_get_devdata(mem->spi->controller);
 	u32 val;
+	int ret;
 
 	if (!op->data.nbytes) {
 		/* Start the transfer. */
-		err = atmel_qspi_reg_sync(aq);
-		if (err)
-			return err;
+		ret = atmel_qspi_reg_sync(aq);
+		if (ret)
+			return ret;
 		atmel_qspi_write(QSPI_CR_STTFR, aq, QSPI_CR);
 
+#ifdef ATMEL_QSPI_POLLING
+		return readl_poll_timeout(aq->regs + QSPI_SR, val,
+					  val & QSPI_SR_CSRA, 40,
+					  ATMEL_QSPI_TIMEOUT);
+#else
 		return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
+#endif
 	}
 
 	/* Send/Receive data. */
 	if (op->data.dir == SPI_MEM_DATA_IN) {
-		memcpy_fromio(op->data.buf.in, aq->mem + offset,
-			      op->data.nbytes);
+		if (aq->rx_chan && op->addr.nbytes &&
+		    op->data.nbytes > ATMEL_QSPI_DMA_MIN_BYTES) {
+			rx_dma_transfer_count++;
+			dev_dbg(&aq->pdev->dev, "rx-dma rx_dma_transfer_count = %d\n",
+				rx_dma_transfer_count);
+			ret = atmel_qspi_dma_transfer(mem, op, offset);
+			if (ret)
+				return ret;
+		} else {
+			dev_dbg(&aq->pdev->dev, "rx-memcpy\n");
+			memcpy_fromio(op->data.buf.in, aq->mem + offset,
+				      op->data.nbytes);
+		}
 
 		if (op->addr.nbytes) {
-			err = readl_poll_timeout(aq->regs + QSPI_SR2, val,
+			ret = readl_poll_timeout(aq->regs + QSPI_SR2, val,
 						 !(val & QSPI_SR2_RBUSY), 40,
 						 ATMEL_QSPI_SYNC_TIMEOUT);
-			if (err)
-				return err;
+			if (ret)
+				return ret;
 		}
 	} else {
-		memcpy_toio(aq->mem + offset, op->data.buf.out,
-			    op->data.nbytes);
+		if (aq->tx_chan && op->addr.nbytes &&
+		    op->data.nbytes > ATMEL_QSPI_DMA_MIN_BYTES) {
+			tx_dma_transfer_count++;
+			dev_dbg(&aq->pdev->dev, "tx-dma tx_dma_transfer_count = %d\n",
+				tx_dma_transfer_count);
+			ret = atmel_qspi_dma_transfer(mem, op, offset);
+			if (ret)
+				return ret;
+		} else {
+			dev_dbg(&aq->pdev->dev, "tx-memcpy\n");
+			memcpy_toio(aq->mem + offset, op->data.buf.out,
+				    op->data.nbytes);
+		}
 
-		err = atmel_qspi_wait_for_completion(aq, QSPI_SR_LWRA);
-		if (err)
-			return err;
+
+#ifdef ATMEL_QSPI_POLLING
+		ret = readl_poll_timeout(aq->regs + QSPI_SR, val,
+					 val & QSPI_SR_LWRA, 40,
+					 ATMEL_QSPI_TIMEOUT);
+#else
+		ret = atmel_qspi_wait_for_completion(aq, QSPI_SR_LWRA);
+#endif
+		if (ret)
+			return ret;
 	}
 
 	/* Release the chip-select. */
-	err = atmel_qspi_reg_sync(aq);
-	if (err)
-		return err;
+	ret = atmel_qspi_reg_sync(aq);
+	if (ret)
+		return ret;
 	atmel_qspi_write(QSPI_CR_LASTXFER, aq, QSPI_CR);
 
+#ifdef ATMEL_QSPI_POLLING
+	return readl_poll_timeout(aq->regs + QSPI_SR, val,
+				  val & QSPI_SR_CSRA, 40, ATMEL_QSPI_TIMEOUT);
+#else
 	return atmel_qspi_wait_for_completion(aq, QSPI_SR_CSRA);
+#endif
 }
 
 static int atmel_qspi_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
@@ -805,7 +983,7 @@ static int atmel_qspi_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
 	if (err)
 		return err;
 
-	return aq->ops->transfer(aq, op, offset);
+	return aq->ops->transfer(mem, op, offset);
 }
 
 static const char *atmel_qspi_get_name(struct spi_mem *spimem)
@@ -1030,6 +1208,52 @@ static irqreturn_t atmel_qspi_interrupt(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+
+static int atmel_qspi_dma_init(struct spi_controller *ctrl)
+{
+	struct atmel_qspi *aq = spi_controller_get_devdata(ctrl);
+	int ret;
+
+	aq->rx_chan = dma_request_chan(&aq->pdev->dev, "rx");
+	if (IS_ERR(aq->rx_chan)) {
+		aq->rx_chan = NULL;
+		return dev_err_probe(&aq->pdev->dev, PTR_ERR(aq->rx_chan),
+				     "RX DMA channel is not available\n");
+	}
+
+	aq->tx_chan = dma_request_chan(&aq->pdev->dev, "tx");
+	if (IS_ERR(aq->tx_chan)) {
+		ret = dev_err_probe(&aq->pdev->dev, PTR_ERR(aq->tx_chan),
+				    "TX DMA channel is not available\n");
+		goto release_rx_chan;
+	}
+
+	ctrl->dma_rx = aq->rx_chan;
+	ctrl->dma_tx = aq->tx_chan;
+	init_completion(&aq->dma_completion);
+
+	dev_info(&aq->pdev->dev, "Using %s (tx) and %s (rx) for DMA transfers\n",
+		 dma_chan_name(aq->tx_chan), dma_chan_name(aq->rx_chan));
+
+	return 0;
+
+release_dma_channels:
+	dma_release_channel(aq->tx_chan);
+release_rx_chan:
+	dma_release_channel(aq->rx_chan);
+	aq->rx_chan = NULL;
+	aq->tx_chan = NULL;
+	return ret;
+}
+
+static void atmel_qspi_dma_release(struct atmel_qspi *aq)
+{
+	if (aq->rx_chan)
+		dma_release_channel(aq->rx_chan);
+	if (aq->tx_chan)
+		dma_release_channel(aq->tx_chan);
+}
+
 static const struct atmel_qspi_ops atmel_qspi_ops = {
 	.set_cfg = atmel_qspi_set_cfg,
 	.transfer = atmel_qspi_transfer,
@@ -1098,6 +1322,7 @@ static int atmel_qspi_probe(struct platform_device *pdev)
 	}
 
 	aq->mmap_size = resource_size(res);
+	aq->mmap_phys_base = (dma_addr_t)res->start;
 
 	/* Get the peripheral clock */
 	aq->pclk = devm_clk_get(&pdev->dev, "pclk");
@@ -1163,12 +1388,21 @@ static int atmel_qspi_probe(struct platform_device *pdev)
 		atmel_qspi_init(aq);
 	}
 
+	if (aq->caps->has_dma) {
+		err = atmel_qspi_dma_init(ctrl);
+		if (err == -EPROBE_DEFER)
+			goto disable_qspick;
+	}
+
 	err = spi_register_controller(ctrl);
 	if (err)
-		goto disable_qspick;
+		goto dma_release;
 
 	return 0;
 
+dma_release:
+	if (aq->caps->has_dma)
+		atmel_qspi_dma_release(aq);
 disable_qspick:
 	clk_disable_unprepare(aq->qspick);
 disable_pclk:
@@ -1228,9 +1462,13 @@ static int atmel_qspi_remove(struct platform_device *pdev)
 	if (aq->caps->octal)
 		return atmel_qspi_sama7g5_suspend(aq);
 
+        if (aq->caps->has_dma)
+                atmel_qspi_dma_release(aq);
+
 	atmel_qspi_write(QSPI_CR_QSPIDIS, aq, QSPI_CR);
 	clk_disable_unprepare(aq->qspick);
 	clk_disable_unprepare(aq->pclk);
+
 	return 0;
 }
 
@@ -1280,6 +1518,7 @@ static const struct atmel_qspi_caps atmel_sam9x60_qspi_caps = {
 static const struct atmel_qspi_caps atmel_sama7g5_ospi_caps = {
 	.max_speed_hz = SAMA7G5_QSPI0_MAX_SPEED_HZ,
 	.octal = true,
+	.has_dma = true,
 };
 
 static const struct of_device_id atmel_qspi_dt_ids[] = {
