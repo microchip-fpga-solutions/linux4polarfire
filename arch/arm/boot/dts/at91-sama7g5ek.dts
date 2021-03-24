@@ -88,6 +88,8 @@
 &adc {
 	vddana-supply = <&vddout25>;
 	vref-supply = <&vddout25>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_mikrobus1_an_default &pinctrl_mikrobus2_an_default>;
 	status = "okay";
 };
 
@@ -430,6 +432,16 @@
 	pinctrl_key_gpio_default: key_gpio_default {
 		pinmux = <PIN_PC17__GPIO>;
 		bias-pull-up;
+	};
+
+	pinctrl_mikrobus1_an_default: mikrobus1_an_default {
+		pinmux = <PIN_PD0__GPIO>;
+		bias-disable;
+	};
+
+	pinctrl_mikrobus2_an_default: mikrobus2_an_default {
+		pinmux = <PIN_PD1__GPIO>;
+		bias-disable;
 	};
 
 	pinctrl_mikrobus1_spi_cs: mikrobus1_spi_cs {
