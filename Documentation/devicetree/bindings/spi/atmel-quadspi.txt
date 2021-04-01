@@ -4,6 +4,8 @@ Required properties:
 - compatible:     Should be one of the following:
 		  - "atmel,sama5d2-qspi"
 		  - "microchip,sam9x60-qspi"
+		  - "microchip,sama7g5-qspi"
+		  - "microchip,sama7g5-ospi"
 - reg:            Should contain the locations and lengths of the base registers
                   and the mapped memory.
 - reg-names:      Should contain the resource reg names:
@@ -12,8 +14,9 @@ Required properties:
 - interrupts:     Should contain the interrupt for the device.
 - clocks:         Should reference the peripheral clock and the QSPI system
                   clock if available.
-- clock-names:    Should contain "pclk" for the peripheral clock and "qspick"
-                  for the system clock when available.
+- clock-names:    Should contain "pclk" for the peripheral clock, "gclk" for
+                  the generic clock when available or "qspick" for the system
+                  clock when available.
 - #address-cells: Should be <1>.
 - #size-cells:    Should be <0>.
 
