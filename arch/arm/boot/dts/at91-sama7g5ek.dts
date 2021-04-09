@@ -89,7 +89,8 @@
 	vddana-supply = <&vddout25>;
 	vref-supply = <&vddout25>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_mikrobus1_an_default &pinctrl_mikrobus2_an_default>;
+	pinctrl-0 = <&pinctrl_mikrobus1_an_default &pinctrl_mikrobus2_an_default &pinctrl_adtrg_default>;
+	atmel,trigger-edge-type = <IRQ_TYPE_EDGE_RISING>;
 	status = "okay";
 };
 
@@ -475,6 +476,11 @@
 };
 
 &pioA {
+	pinctrl_adtrg_default: adtrg_default {
+		pinmux = <PIN_PB28__ADTRG>;
+		bias-pull-up;
+	};
+
 	pinctrl_flx1_default: flx1_default {
 		pinmux = <PIN_PC9__FLEXCOM1_IO0>,
 			 <PIN_PC10__FLEXCOM1_IO1>;
@@ -605,7 +611,6 @@
 
 		ck_cd_rstn_vddsel {
 			pinmux = <PIN_PB30__SDMMC1_CK>,
-				 <PIN_PB28__SDMMC1_RSTN>,
 				 <PIN_PC5__SDMMC1_1V8SEL>,
 				 <PIN_PC4__SDMMC1_CD>;
 			bias-pull-up;
