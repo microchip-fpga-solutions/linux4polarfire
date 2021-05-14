@@ -2,7 +2,7 @@
 VERSION = 5
 PATCHLEVEL = 4
 SUBLEVEL = 41
-EXTRAVERSION = -sama7g5-early-1.1-rc1
+EXTRAVERSION = -sama7g5-early-1.1
 NAME = Kleptomaniac Octopus
 
 # *DOCUMENTATION*
