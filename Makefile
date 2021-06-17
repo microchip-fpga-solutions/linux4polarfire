@@ -2,7 +2,7 @@
 VERSION = 5
 PATCHLEVEL = 10
 SUBLEVEL = 0
-EXTRAVERSION = sama7g5-validation-async-1.0-rc1
+EXTRAVERSION = sama7g5-validation-async-1.0-rc2
 NAME = Kleptomaniac Octopus
 
 # *DOCUMENTATION*
