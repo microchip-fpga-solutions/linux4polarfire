@@ -464,7 +464,7 @@
 			 <PIN_PB15__QSPI0_SCKN>,
 			 <PIN_PB20__QSPI0_DQS>,
 			 <PIN_PB21__QSPI0_INT>;
-		bias-disable;
+		bias-pull-up;
 		atmel,drive-strength = <ATMEL_PIO_DRVSTR_HI>;
 	};
 
