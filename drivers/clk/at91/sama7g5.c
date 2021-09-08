@@ -9,7 +9,9 @@
  */
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
+#include <linux/cpu.h>
 #include <linux/mfd/syscon.h>
+#include <linux/pm_opp.h>
 #include <linux/slab.h>
 
 #include <dt-bindings/clock/at91.h>
@@ -127,6 +129,8 @@ static const struct clk_pll_characteristics pll_characteristics = {
  * @t:		clock type
  * @f:		clock flags
  * @eid:	export index in sama7g5->chws[] array
+ * @safe_div:	true if intermediate divider need to be set on PRE_RATE_CHANGE
+ * 		notification
  */
 static const struct {
 	const char *n;
@@ -136,6 +140,7 @@ static const struct {
 	unsigned long f;
 	u8 t;
 	u8 eid;
+	u8 safe_div;
 } sama7g5_plls[][PLL_ID_MAX] = {
 	[PLL_ID_CPU] = {
 		{ .n = "cpupll_fracck",
@@ -155,8 +160,9 @@ static const struct {
 		  .c = &cpu_pll_characteristics,
 		  .t = PLL_TYPE_DIV,
 		   /* This feeds CPU. It should not be disabled. */
-		  .f = CLK_IS_CRITICAL | CLK_SET_RATE_PARENT,
-		  .eid = PMC_CPUPLL, },
+		  .f = CLK_IS_CRITICAL | CLK_SET_RATE_PARENT | CLK_RECALC_NEW_RATES,
+		  .eid = PMC_CPUPLL,
+		  .safe_div = 1, },
 	},
 
 	[PLL_ID_SYS] = {
@@ -871,6 +877,31 @@ static const struct clk_pcr_layout sama7g5_pcr_layout = {
 	.pid_mask = GENMASK(6, 0),
 };
 
+static u32 __init sama7g5_get_cpupll_safe_div(void)
+{
+	struct dev_pm_opp *opp;
+	struct device *dev;
+	unsigned long min_rate, max_rate;
+
+	dev = get_cpu_device(0);
+	if (!dev)
+		return 0;
+
+	/*
+	 * Find max and min frequency to determine the best safe divider for
+	 * CPUPLL DIV.
+	 */
+	opp = dev_pm_opp_find_freq_floor(dev, &min_rate);
+	if (IS_ERR(opp))
+		return 0;
+
+	opp = dev_pm_opp_find_freq_ceil(dev, &max_rate);
+	if (IS_ERR(opp))
+		return 0;
+
+	return DIV_ROUND_UP_ULL(max_rate, min_rate);
+}
+
 static void __init sama7g5_pmc_setup(struct device_node *np)
 {
 	const char *td_slck_name, *md_slck_name, *mainxtal_name;
@@ -880,6 +911,7 @@ static void __init sama7g5_pmc_setup(struct device_node *np)
 	int alloc_mem_size = 0;
 	struct regmap *regmap;
 	struct clk_hw *hw;
+	u32 safe_div;
 	bool bypass;
 	int i, j;
 
@@ -962,12 +994,17 @@ static void __init sama7g5_pmc_setup(struct device_node *np)
 				break;
 
 			case PLL_TYPE_DIV:
+				if (!sama7g5_plls[i][j].safe_div)
+					safe_div = 0;
+				else
+					safe_div = sama7g5_get_cpupll_safe_div();
+
 				hw = sam9x60_clk_register_div_pll(regmap,
 					&pmc_pll_lock, sama7g5_plls[i][j].n,
 					sama7g5_plls[i][j].p, i,
 					sama7g5_plls[i][j].c,
 					sama7g5_plls[i][j].l,
-					sama7g5_plls[i][j].f);
+					sama7g5_plls[i][j].f, safe_div);
 				break;
 
 			default:
@@ -983,18 +1020,9 @@ static void __init sama7g5_pmc_setup(struct device_node *np)
 	}
 
 	parent_names[0] = "cpupll_divpmcck";
-	hw = at91_clk_register_master_pres(regmap, "cpuck", 1, parent_names,
-					   &mck0_layout, &mck0_characteristics,
-					   &pmc_mck0_lock,
-					   CLK_SET_RATE_PARENT, 0);
-	if (IS_ERR(hw))
-		goto err_free;
-
-	sama7g5_pmc->chws[PMC_CPU] = hw;
-
-	hw = at91_clk_register_master_div(regmap, "mck0", "cpuck",
+	hw = at91_clk_register_master_div(regmap, "mck0", "cpupll_divpmcck",
 					  &mck0_layout, &mck0_characteristics,
-					  &pmc_mck0_lock, 0);
+					  &pmc_mck0_lock, CLK_GET_RATE_NOCACHE, 5);
 	if (IS_ERR(hw))
 		goto err_free;
 
