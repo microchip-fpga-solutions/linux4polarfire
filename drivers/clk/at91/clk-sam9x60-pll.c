@@ -245,12 +245,6 @@ static int sam9x60_frac_pll_set_rate_chg(struct clk_hw *hw, unsigned long rate,
 
 	spin_lock_irqsave(core->lock, irqflags);
 
-	if (core->id == 0) {
-		void *ckr = ioremap(0x28 + 0xe0018000, 4);
-		printk("Switching the CPU to the 12 Mhz internal RC!\n");
-		*(u32*)ckr= (*(u32*)ckr & 0xFFFFFFF0) | 1;
-	}
-
 	regmap_update_bits(regmap, AT91_PMC_PLL_UPDT, AT91_PMC_PLL_UPDT_ID_MSK,
 			   core->id);
 	regmap_read(regmap, AT91_PMC_PLL_CTRL1, &val);
@@ -483,11 +477,6 @@ static int sam9x60_div_pll_set_rate_chg(struct clk_hw *hw, unsigned long rate,
 		cpu_relax();
 
 unlock:
-	if (core->id == 0) {
-		void *ckr =ioremap(0x28 + 0xe0018000, 4);
-		printk("Switching the CPU back to CPUPLL !\n");
-		*(u32*)ckr= (*(u32*)ckr & 0xFFFFFFF0) | 2;
-	}
 	spin_unlock_irqrestore(core->lock, irqflags);
 
 	return 0;
