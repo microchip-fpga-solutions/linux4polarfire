@@ -38,14 +38,12 @@ struct sam9x60_pll_core {
 
 struct sam9x60_frac {
 	struct sam9x60_pll_core core;
-	struct at91_clk_pms pms;
 	u32 frac;
 	u16 mul;
 };
 
 struct sam9x60_div {
 	struct sam9x60_pll_core core;
-	struct at91_clk_pms pms;
 	u8 div;
 };
 
@@ -77,8 +75,9 @@ static unsigned long sam9x60_frac_pll_recalc_rate(struct clk_hw *hw,
 		((u64)parent_rate * frac->frac >> 22));
 }
 
-static int sam9x60_frac_pll_set(struct sam9x60_pll_core *core)
+static int sam9x60_frac_pll_prepare(struct clk_hw *hw)
 {
+	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
 	struct sam9x60_frac *frac = to_sam9x60_frac(core);
 	struct regmap *regmap = core->regmap;
 	unsigned int val, cfrac, cmul;
@@ -140,13 +139,6 @@ unlock:
 	spin_unlock_irqrestore(core->lock, flags);
 
 	return 0;
-}
-
-static int sam9x60_frac_pll_prepare(struct clk_hw *hw)
-{
-	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
-
-	return sam9x60_frac_pll_set(core);
 }
 
 static void sam9x60_frac_pll_unprepare(struct clk_hw *hw)
@@ -288,25 +280,6 @@ unlock:
 	return ret;
 }
 
-static int sam9x60_frac_pll_save_context(struct clk_hw *hw)
-{
-	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
-	struct sam9x60_frac *frac = to_sam9x60_frac(core);
-
-	frac->pms.status = sam9x60_pll_ready(core->regmap, core->id);
-
-	return 0;
-}
-
-static void sam9x60_frac_pll_restore_context(struct clk_hw *hw)
-{
-	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
-	struct sam9x60_frac *frac = to_sam9x60_frac(core);
-
-	if (frac->pms.status)
-		sam9x60_frac_pll_set(core);
-}
-
 static const struct clk_ops sam9x60_frac_pll_ops = {
 	.prepare = sam9x60_frac_pll_prepare,
 	.unprepare = sam9x60_frac_pll_unprepare,
@@ -314,8 +287,6 @@ static const struct clk_ops sam9x60_frac_pll_ops = {
 	.recalc_rate = sam9x60_frac_pll_recalc_rate,
 	.round_rate = sam9x60_frac_pll_round_rate,
 	.set_rate = sam9x60_frac_pll_set_rate,
-	.save_context = sam9x60_frac_pll_save_context,
-	.restore_context = sam9x60_frac_pll_restore_context,
 };
 
 static const struct clk_ops sam9x60_frac_pll_ops_chg = {
@@ -325,12 +296,11 @@ static const struct clk_ops sam9x60_frac_pll_ops_chg = {
 	.recalc_rate = sam9x60_frac_pll_recalc_rate,
 	.round_rate = sam9x60_frac_pll_round_rate,
 	.set_rate = sam9x60_frac_pll_set_rate_chg,
-	.save_context = sam9x60_frac_pll_save_context,
-	.restore_context = sam9x60_frac_pll_restore_context,
 };
 
-static int sam9x60_div_pll_set(struct sam9x60_pll_core *core)
+static int sam9x60_div_pll_prepare(struct clk_hw *hw)
 {
+	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
 	struct sam9x60_div *div = to_sam9x60_div(core);
 	struct regmap *regmap = core->regmap;
 	unsigned long flags;
@@ -362,13 +332,6 @@ unlock:
 	spin_unlock_irqrestore(core->lock, flags);
 
 	return 0;
-}
-
-static int sam9x60_div_pll_prepare(struct clk_hw *hw)
-{
-	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
-
-	return sam9x60_div_pll_set(core);
 }
 
 static void sam9x60_div_pll_unprepare(struct clk_hw *hw)
@@ -519,25 +482,6 @@ unlock:
 	return 0;
 }
 
-static int sam9x60_div_pll_save_context(struct clk_hw *hw)
-{
-	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
-	struct sam9x60_div *div = to_sam9x60_div(core);
-
-	div->pms.status = sam9x60_div_pll_is_prepared(hw);
-
-	return 0;
-}
-
-static void sam9x60_div_pll_restore_context(struct clk_hw *hw)
-{
-	struct sam9x60_pll_core *core = to_sam9x60_pll_core(hw);
-	struct sam9x60_div *div = to_sam9x60_div(core);
-
-	if (div->pms.status)
-		sam9x60_div_pll_set(core);
-}
-
 static const struct clk_ops sam9x60_div_pll_ops = {
 	.prepare = sam9x60_div_pll_prepare,
 	.unprepare = sam9x60_div_pll_unprepare,
@@ -545,8 +489,6 @@ static const struct clk_ops sam9x60_div_pll_ops = {
 	.recalc_rate = sam9x60_div_pll_recalc_rate,
 	.round_rate = sam9x60_div_pll_round_rate,
 	.set_rate = sam9x60_div_pll_set_rate,
-	.save_context = sam9x60_div_pll_save_context,
-	.restore_context = sam9x60_div_pll_restore_context,
 };
 
 static const struct clk_ops sam9x60_div_pll_ops_chg = {
@@ -556,8 +498,6 @@ static const struct clk_ops sam9x60_div_pll_ops_chg = {
 	.recalc_rate = sam9x60_div_pll_recalc_rate,
 	.round_rate = sam9x60_div_pll_round_rate,
 	.set_rate = sam9x60_div_pll_set_rate_chg,
-	.save_context = sam9x60_div_pll_save_context,
-	.restore_context = sam9x60_div_pll_restore_context,
 };
 
 struct clk_hw * __init
