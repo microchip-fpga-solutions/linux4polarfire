@@ -39,6 +39,12 @@
 			clock-frequency = <24000000>;
 		};
 	};
+
+	cpus {
+		cpu0: cpu@0 {
+			cpu-supply = <&vddcpu>;
+		};
+	};
 };
 
 &dma0 {
