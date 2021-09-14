@@ -132,7 +132,7 @@ static void __init at91sam9rl_pmc_setup(struct device_node *np)
 					  "masterck_pres",
 					  &at91rm9200_master_layout,
 					  &sam9rl_mck_characteristics,
-					  &sam9rl_mck_lock, CLK_SET_RATE_GATE);
+					  &sam9rl_mck_lock, CLK_SET_RATE_GATE, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 
@@ -186,4 +186,5 @@ static void __init at91sam9rl_pmc_setup(struct device_node *np)
 err_free:
 	kfree(at91sam9rl_pmc);
 }
-CLK_OF_DECLARE_DRIVER(at91sam9rl_pmc, "atmel,at91sam9rl-pmc", at91sam9rl_pmc_setup);
+
+CLK_OF_DECLARE(at91sam9rl_pmc, "atmel,at91sam9rl-pmc", at91sam9rl_pmc_setup);

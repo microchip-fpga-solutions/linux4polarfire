@@ -31,7 +31,7 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
 			reg = <0x0>;
-			clocks = <&pmc PMC_TYPE_CORE PMC_CPU>;
+			clocks = <&pmc PMC_TYPE_CORE PMC_CPUPLL>;
 			clock-names = "cpu";
 			operating-points-v2 = <&cpu_opp_table>;
 		};
@@ -66,7 +66,7 @@
 
 		opp-900000000 {
 			opp-hz = /bits/ 64 <900000000>;
-			opp-microvolt = <1275000 1225000 1300000>;
+			opp-microvolt = <1300000 1225000 1300000>;
 			clock-latency-ns = <50000>;
 		};
 

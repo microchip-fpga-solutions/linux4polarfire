@@ -429,7 +429,7 @@ static void __init at91sam926x_pmc_setup(struct device_node *np,
 					  &at91rm9200_master_layout,
 					  data->mck_characteristics,
 					  &at91sam9260_mck_lock,
-					  CLK_SET_RATE_GATE);
+					  CLK_SET_RATE_GATE, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 
@@ -491,26 +491,26 @@ static void __init at91sam9260_pmc_setup(struct device_node *np)
 {
 	at91sam926x_pmc_setup(np, &at91sam9260_data);
 }
-CLK_OF_DECLARE_DRIVER(at91sam9260_pmc, "atmel,at91sam9260-pmc",
-		      at91sam9260_pmc_setup);
+
+CLK_OF_DECLARE(at91sam9260_pmc, "atmel,at91sam9260-pmc", at91sam9260_pmc_setup);
 
 static void __init at91sam9261_pmc_setup(struct device_node *np)
 {
 	at91sam926x_pmc_setup(np, &at91sam9261_data);
 }
-CLK_OF_DECLARE_DRIVER(at91sam9261_pmc, "atmel,at91sam9261-pmc",
-		      at91sam9261_pmc_setup);
+
+CLK_OF_DECLARE(at91sam9261_pmc, "atmel,at91sam9261-pmc", at91sam9261_pmc_setup);
 
 static void __init at91sam9263_pmc_setup(struct device_node *np)
 {
 	at91sam926x_pmc_setup(np, &at91sam9263_data);
 }
-CLK_OF_DECLARE_DRIVER(at91sam9263_pmc, "atmel,at91sam9263-pmc",
-		      at91sam9263_pmc_setup);
+
+CLK_OF_DECLARE(at91sam9263_pmc, "atmel,at91sam9263-pmc", at91sam9263_pmc_setup);
 
 static void __init at91sam9g20_pmc_setup(struct device_node *np)
 {
 	at91sam926x_pmc_setup(np, &at91sam9g20_data);
 }
-CLK_OF_DECLARE_DRIVER(at91sam9g20_pmc, "atmel,at91sam9g20-pmc",
-		      at91sam9g20_pmc_setup);
+
+CLK_OF_DECLARE(at91sam9g20_pmc, "atmel,at91sam9g20-pmc", at91sam9g20_pmc_setup);

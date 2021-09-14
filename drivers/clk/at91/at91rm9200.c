@@ -152,7 +152,7 @@ static void __init at91rm9200_pmc_setup(struct device_node *np)
 					  "masterck_pres",
 					  &at91rm9200_master_layout,
 					  &rm9200_mck_characteristics,
-					  &rm9200_mck_lock, CLK_SET_RATE_GATE);
+					  &rm9200_mck_lock, CLK_SET_RATE_GATE, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 
@@ -215,5 +215,4 @@ err_free:
  * deferring properly. Once this is fixed, this can be switched to a platform
  * driver.
  */
-CLK_OF_DECLARE_DRIVER(at91rm9200_pmc, "atmel,at91rm9200-pmc",
-		      at91rm9200_pmc_setup);
+CLK_OF_DECLARE(at91rm9200_pmc, "atmel,at91rm9200-pmc", at91rm9200_pmc_setup);

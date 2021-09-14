@@ -175,7 +175,6 @@ static void __init sam9x60_pmc_setup(struct device_node *np)
 	struct regmap *regmap;
 	struct clk_hw *hw;
 	int i;
-	bool bypass;
 
 	i = of_property_match_string(np, "clock-names", "td_slck");
 	if (i < 0)
@@ -210,10 +209,7 @@ static void __init sam9x60_pmc_setup(struct device_node *np)
 	if (IS_ERR(hw))
 		goto err_free;
 
-	bypass = of_property_read_bool(np, "atmel,osc-bypass");
-
-	hw = at91_clk_register_main_osc(regmap, "main_osc", mainxtal_name,
-					bypass);
+	hw = at91_clk_register_main_osc(regmap, "main_osc", mainxtal_name, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 	main_osc_hw = hw;
@@ -246,7 +242,7 @@ static void __init sam9x60_pmc_setup(struct device_node *np)
 					    * This feeds CPU. It should not
 					    * be disabled.
 					    */
-					  CLK_IS_CRITICAL | CLK_SET_RATE_GATE);
+					  CLK_IS_CRITICAL | CLK_SET_RATE_GATE, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 
@@ -264,7 +260,7 @@ static void __init sam9x60_pmc_setup(struct device_node *np)
 					  &pll_div_layout,
 					  CLK_SET_RATE_GATE |
 					  CLK_SET_PARENT_GATE |
-					  CLK_SET_RATE_PARENT);
+					  CLK_SET_RATE_PARENT, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 
@@ -283,7 +279,7 @@ static void __init sam9x60_pmc_setup(struct device_node *np)
 	hw = at91_clk_register_master_div(regmap, "masterck_div",
 					  "masterck_pres", &sam9x60_master_layout,
 					  &mck_characteristics, &mck_lock,
-					  CLK_SET_RATE_GATE);
+					  CLK_SET_RATE_GATE, 0);
 	if (IS_ERR(hw))
 		goto err_free;
 
