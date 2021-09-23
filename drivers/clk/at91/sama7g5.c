@@ -9,9 +9,7 @@
  */
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
-#include <linux/cpu.h>
 #include <linux/mfd/syscon.h>
-#include <linux/pm_opp.h>
 #include <linux/slab.h>
 
 #include <dt-bindings/clock/at91.h>
@@ -162,7 +160,7 @@ static const struct {
 		   /* This feeds CPU. It should not be disabled. */
 		  .f = CLK_IS_CRITICAL | CLK_SET_RATE_PARENT,
 		  .eid = PMC_CPUPLL,
-		  .safe_div = 1, },
+		  .safe_div = 255, },
 	},
 
 	[PLL_ID_SYS] = {
@@ -877,32 +875,6 @@ static const struct clk_pcr_layout sama7g5_pcr_layout = {
 	.pid_mask = GENMASK(6, 0),
 };
 
-static u32 __init sama7g5_get_cpupll_safe_div(void)
-{
-	struct dev_pm_opp *opp;
-	struct device *dev;
-	unsigned long min_rate, max_rate;
-
-	/* We are single core. */
-	dev = get_cpu_device(0);
-	if (!dev)
-		return 0;
-
-	/*
-	 * Find max and min frequency to determine the best safe divider for
-	 * CPUPLL DIV.
-	 */
-	opp = dev_pm_opp_find_freq_floor(dev, &min_rate);
-	if (IS_ERR(opp))
-		return 0;
-
-	opp = dev_pm_opp_find_freq_ceil(dev, &max_rate);
-	if (IS_ERR(opp))
-		return 0;
-
-	return DIV_ROUND_UP_ULL(max_rate, min_rate);
-}
-
 static void __init sama7g5_pmc_setup(struct device_node *np)
 {
 	const char *td_slck_name, *md_slck_name, *mainxtal_name;
@@ -912,7 +884,6 @@ static void __init sama7g5_pmc_setup(struct device_node *np)
 	int alloc_mem_size = 0;
 	struct regmap *regmap;
 	struct clk_hw *hw;
-	u32 safe_div;
 	bool bypass;
 	int i, j;
 
@@ -995,17 +966,13 @@ static void __init sama7g5_pmc_setup(struct device_node *np)
 				break;
 
 			case PLL_TYPE_DIV:
-				if (sama7g5_plls[i][j].safe_div)
-					safe_div = sama7g5_get_cpupll_safe_div();
-				else
-					safe_div = 0;
-
 				hw = sam9x60_clk_register_div_pll(regmap,
 					&pmc_pll_lock, sama7g5_plls[i][j].n,
 					sama7g5_plls[i][j].p, i,
 					sama7g5_plls[i][j].c,
 					sama7g5_plls[i][j].l,
-					sama7g5_plls[i][j].f, safe_div);
+					sama7g5_plls[i][j].f,
+					sama7g5_plls[i][j].safe_div);
 				break;
 
 			default:
