@@ -3191,6 +3191,8 @@ static void gem_enable_flow_filters(struct macb *bp, bool enable)
 		return;
 
 	num_t2_scr = GEM_BFEXT(T2SCR, gem_readl(bp, DCFG8));
+	if (bp->bridge_bug && num_t2_scr > MACB_SCREENER_SCRT2_MAX)
+		return;
 
 	list_for_each_entry(item, &bp->rx_fs_list.list, list) {
 		struct ethtool_rx_flow_spec *fs = &item->fs;
@@ -3199,7 +3201,10 @@ static void gem_enable_flow_filters(struct macb *bp, bool enable)
 		if (fs->location >= num_t2_scr)
 			continue;
 
-		t2_scr = gem_readl_n(bp, SCRT2, fs->location);
+		if (bp->bridge_bug)
+			t2_scr = bp->screeners.scrt2[fs->location];
+		else
+			t2_scr = gem_readl_n(bp, SCRT2, fs->location);
 
 		/* enable/disable screener regs for the flow entry */
 		t2_scr = GEM_BFINS(ETHTEN, enable, t2_scr);
@@ -3223,6 +3228,8 @@ static void gem_enable_flow_filters(struct macb *bp, bool enable)
 			t2_scr = GEM_BFINS(CMPCEN, 0, t2_scr);
 
 		gem_writel_n(bp, SCRT2, fs->location, t2_scr);
+		if (bp->bridge_bug)
+			bp->screeners.scrt2[fs->location] = t2_scr;
 	}
 }
 
@@ -3234,6 +3241,9 @@ static void gem_prog_cmp_regs(struct macb *bp, struct ethtool_rx_flow_spec *fs)
 	bool cmp_a = false;
 	bool cmp_b = false;
 	bool cmp_c = false;
+
+	if (!macb_is_gem(bp))
+		return;
 
 	tp4sp_v = &(fs->h_u.tcp_ip4_spec);
 	tp4sp_m = &(fs->m_u.tcp_ip4_spec);
@@ -3304,6 +3314,9 @@ static void gem_prog_cmp_regs(struct macb *bp, struct ethtool_rx_flow_spec *fs)
 	if (cmp_c)
 		t2_scr = GEM_BFINS(CMPC, GEM_PORT_CMP(index), t2_scr);
 	gem_writel_n(bp, SCRT2, index, t2_scr);
+
+	if (bp->bridge_bug)
+		bp->screeners.scrt2[index] = t2_scr;
 }
 
 static int gem_add_flow_filter(struct net_device *netdev,
@@ -3383,6 +3396,8 @@ static int gem_del_flow_filter(struct net_device *netdev,
 					htons(fs->h_u.tcp_ip4_spec.pdst));
 
 			gem_writel_n(bp, SCRT2, fs->location, 0);
+			if (bp->bridge_bug)
+				bp->screeners.scrt2[fs->location] = 0;
 
 			list_del(&item->list);
 			bp->rx_fs_list.count--;
@@ -3603,6 +3618,7 @@ static void macb_restore_features(struct macb *bp)
 {
 	struct net_device *netdev = bp->dev;
 	netdev_features_t features = netdev->features;
+	struct ethtool_rx_fs_item *item;
 
 	/* TX checksum offload */
 	macb_set_txcsum_feature(bp, features);
@@ -3611,6 +3627,9 @@ static void macb_restore_features(struct macb *bp)
 	macb_set_rxcsum_feature(bp, features);
 
 	/* RX Flow Filters */
+	list_for_each_entry(item, &bp->rx_fs_list.list, list)
+		gem_prog_cmp_regs(bp, &item->fs);
+
 	macb_set_rxflow_feature(bp, features);
 }
 
@@ -3907,6 +3926,7 @@ static int macb_init(struct platform_device *pdev)
 	reg = gem_readl(bp, DCFG8);
 	bp->max_tuples = min((GEM_BFEXT(SCR2CMP, reg) / 3),
 			GEM_BFEXT(T2SCR, reg));
+	INIT_LIST_HEAD(&bp->rx_fs_list.list);
 	if (bp->max_tuples > 0) {
 		/* also needs one ethtype match to check IPv4 */
 		if (GEM_BFEXT(SCR2ETH, reg) > 0) {
@@ -3914,10 +3934,11 @@ static int macb_init(struct platform_device *pdev)
 			reg = 0;
 			reg = GEM_BFINS(ETHTCMP, (uint16_t)ETH_P_IP, reg);
 			gem_writel_n(bp, ETHT, SCRT2_ETHT, reg);
+			if (bp->bridge_bug)
+				bp->screeners.etht[SCRT2_ETHT] = reg;
 			/* Filtering is supported in hw but don't enable it in kernel now */
 			dev->hw_features |= NETIF_F_NTUPLE;
 			/* init Rx flow definitions */
-			INIT_LIST_HEAD(&bp->rx_fs_list.list);
 			bp->rx_fs_list.count = 0;
 			spin_lock_init(&bp->rx_fs_lock);
 		} else
@@ -4754,12 +4775,19 @@ static int macb_probe(struct platform_device *pdev)
 	if (bp->caps & MACB_CAPS_NEEDS_RSTONUBR)
 		bp->rx_intr_mask |= MACB_BIT(RXUBR);
 
+	bp->bridge_bug = of_property_read_bool(pdev->dev.of_node,
+					       "microchip,bridge-bug");
+
 	mac = of_get_mac_address(np);
 	if (PTR_ERR(mac) == -EPROBE_DEFER) {
 		err = -EPROBE_DEFER;
 		goto err_out_free_netdev;
 	} else if (!IS_ERR_OR_NULL(mac)) {
 		ether_addr_copy(bp->dev->dev_addr, mac);
+	} else if (bp->bridge_bug) {
+		dev_err(&pdev->dev, "Workaround for bridge bug needs MACs provided from EEPROMs\n");
+		err = -EINVAL;
+		goto err_out_free_netdev;
 	} else {
 		macb_get_hwaddr(bp);
 	}
@@ -4919,7 +4947,7 @@ static int __maybe_unused macb_suspend(struct device *dev)
 	if (!(bp->caps & MACB_CAPS_USRIO_DISABLED))
 		bp->pm_data.usrio = macb_or_gem_readl(bp, USRIO);
 
-	if (netdev->hw_features & NETIF_F_NTUPLE)
+	if (!bp->bridge_bug && netdev->hw_features & NETIF_F_NTUPLE)
 		bp->pm_data.scrt2 = gem_readl_n(bp, ETHT, SCRT2_ETHT);
 
 	if (bp->ptp_info)
@@ -4986,8 +5014,13 @@ static int __maybe_unused macb_resume(struct device *dev)
 	     ++q, ++queue)
 		napi_enable(&queue->napi);
 
-	if (netdev->hw_features & NETIF_F_NTUPLE)
-		gem_writel_n(bp, ETHT, SCRT2_ETHT, bp->pm_data.scrt2);
+	if (netdev->hw_features & NETIF_F_NTUPLE) {
+		if (bp->bridge_bug)
+			gem_writel_n(bp, ETHT, SCRT2_ETHT,
+				     bp->screeners.etht[SCRT2_ETHT]);
+		else
+			gem_writel_n(bp, ETHT, SCRT2_ETHT, bp->pm_data.scrt2);
+	}
 
 	if (!(bp->caps & MACB_CAPS_USRIO_DISABLED))
 		macb_or_gem_writel(bp, USRIO, bp->pm_data.usrio);
