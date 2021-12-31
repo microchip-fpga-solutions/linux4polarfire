@@ -735,6 +735,27 @@ static const struct at91_pinctrl_mux_ops sam9x60_ops = {
 	.irq_type	= alt_gpio_irq_type,
 };
 
+static const struct at91_pinctrl_mux_ops sam9x7_ops = {
+	.get_periph	= at91_mux_pio3_get_periph,
+	.mux_A_periph	= at91_mux_pio3_set_A_periph,
+	.mux_B_periph	= at91_mux_pio3_set_B_periph,
+	.mux_C_periph	= at91_mux_pio3_set_C_periph,
+	.mux_D_periph	= at91_mux_pio3_set_D_periph,
+	.get_deglitch	= at91_mux_pio3_get_deglitch,
+	.set_deglitch	= at91_mux_pio3_set_deglitch,
+	.get_debounce	= at91_mux_pio3_get_debounce,
+	.set_debounce	= at91_mux_pio3_set_debounce,
+	.get_pulldown	= at91_mux_pio3_get_pulldown,
+	.set_pulldown	= at91_mux_pio3_set_pulldown,
+	.get_schmitt_trig = at91_mux_pio3_get_schmitt_trig,
+	.disable_schmitt_trig = at91_mux_pio3_disable_schmitt_trig,
+	.get_drivestrength = at91_mux_sam9x60_get_drivestrength,
+	.set_drivestrength = at91_mux_sam9x60_set_drivestrength,
+	.get_slewrate   = at91_mux_sam9x60_get_slewrate,
+	.set_slewrate   = at91_mux_sam9x60_set_slewrate,
+	.irq_type	= alt_gpio_irq_type,
+};
+
 static struct at91_pinctrl_mux_ops sama5d3_ops = {
 	.get_periph	= at91_mux_pio3_get_periph,
 	.mux_A_periph	= at91_mux_pio3_set_A_periph,
@@ -1266,6 +1287,7 @@ static const struct of_device_id at91_pinctrl_of_match[] = {
 	{ .compatible = "atmel,at91sam9x5-pinctrl", .data = &at91sam9x5_ops },
 	{ .compatible = "atmel,at91rm9200-pinctrl", .data = &at91rm9200_ops },
 	{ .compatible = "microchip,sam9x60-pinctrl", .data = &sam9x60_ops },
+	{ .compatible = "microchip,sam9x7-pinctrl", .data = &sam9x60_ops },
 	{ /* sentinel */ }
 };
 
@@ -1808,6 +1830,7 @@ static const struct of_device_id at91_gpio_of_match[] = {
 	{ .compatible = "atmel,at91sam9x5-gpio", .data = &at91sam9x5_ops, },
 	{ .compatible = "atmel,at91rm9200-gpio", .data = &at91rm9200_ops },
 	{ .compatible = "microchip,sam9x60-gpio", .data = &sam9x60_ops },
+	{ .compatible = "microchip,sam9x7-gpio", .data = &sam9x60_ops },
 	{ /* sentinel */ }
 };
 
