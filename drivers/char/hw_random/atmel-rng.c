@@ -167,6 +167,10 @@ static const struct atmel_trng_data sam9x60_config = {
 	.has_half_rate = true,
 };
 
+static const struct atmel_trng_data sam9x7_config = {
+	.has_half_rate = true,
+};
+
 static const struct of_device_id atmel_trng_dt_ids[] = {
 	{
 		.compatible = "atmel,at91sam9g45-trng",
@@ -174,6 +178,9 @@ static const struct of_device_id atmel_trng_dt_ids[] = {
 	}, {
 		.compatible = "microchip,sam9x60-trng",
 		.data = &sam9x60_config,
+	}, {
+		.compatible = "microchip,sam9x7-trng",
+		.data = &sam9x7_config,
 	}, {
 		/* sentinel */
 	}
