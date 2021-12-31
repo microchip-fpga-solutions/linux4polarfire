@@ -89,6 +89,7 @@ static int gfx2d_remove(struct platform_device *pdev)
 
 static const struct of_device_id dt_match[] = {
 	{ .compatible = "microchip,sam9x60-gfx2d" },
+	{ .compatible = "microchip,sam9x7-gfx2d" },
 	{}
 };
 
