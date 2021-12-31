@@ -34,6 +34,7 @@ struct sama5d4_wdt {
 	unsigned long		last_ping;
 	bool			need_irq;
 	bool			sam9x60_support;
+	bool			sam9x7_support;
 };
 
 static int wdt_timeout;
@@ -82,7 +83,7 @@ static int sama5d4_wdt_start(struct watchdog_device *wdd)
 {
 	struct sama5d4_wdt *wdt = watchdog_get_drvdata(wdd);
 
-	if (wdt->sam9x60_support) {
+	if (wdt->sam9x60_support || wdt->sam9x7_support) {
 		writel_relaxed(wdt->ir, wdt->reg_base + AT91_SAM9X60_IER);
 		wdt->mr &= ~AT91_SAM9X60_WDDIS;
 	} else {
@@ -97,7 +98,7 @@ static int sama5d4_wdt_stop(struct watchdog_device *wdd)
 {
 	struct sama5d4_wdt *wdt = watchdog_get_drvdata(wdd);
 
-	if (wdt->sam9x60_support) {
+	if (wdt->sam9x60_support|| wdt->sam9x7_support) {
 		writel_relaxed(wdt->ir, wdt->reg_base + AT91_SAM9X60_IDR);
 		wdt->mr |= AT91_SAM9X60_WDDIS;
 	} else {
@@ -123,7 +124,7 @@ static int sama5d4_wdt_set_timeout(struct watchdog_device *wdd,
 	struct sama5d4_wdt *wdt = watchdog_get_drvdata(wdd);
 	u32 value = WDT_SEC2TICKS(timeout);
 
-	if (wdt->sam9x60_support) {
+	if (wdt->sam9x60_support || wdt->sam9x7_support) {
 		wdt_write(wdt, AT91_SAM9X60_WLR,
 			  AT91_SAM9X60_SET_COUNTER(value));
 
@@ -167,7 +168,7 @@ static irqreturn_t sama5d4_wdt_irq_handler(int irq, void *dev_id)
 	struct sama5d4_wdt *wdt = platform_get_drvdata(dev_id);
 	u32 reg;
 
-	if (wdt->sam9x60_support)
+	if (wdt->sam9x60_support || wdt->sam9x7_support)
 		reg = wdt_read(wdt, AT91_SAM9X60_ISR);
 	else
 		reg = wdt_read(wdt, AT91_WDT_SR);
@@ -185,7 +186,7 @@ static int of_sama5d4_wdt_init(struct device_node *np, struct sama5d4_wdt *wdt)
 {
 	const char *tmp;
 
-	if (wdt->sam9x60_support)
+	if (wdt->sam9x60_support || wdt->sam9x7_support)
 		wdt->mr = AT91_SAM9X60_WDDIS;
 	else
 		wdt->mr = AT91_WDT_WDDIS;
@@ -216,16 +217,16 @@ static int sama5d4_wdt_init(struct sama5d4_wdt *wdt)
 	 */
 	if (!wdt_enabled) {
 		reg = wdt_read(wdt, AT91_WDT_MR);
-		if (wdt->sam9x60_support && (!(reg & AT91_SAM9X60_WDDIS)))
+		if ((wdt->sam9x60_support || wdt->sam9x7_support) && (!(reg & AT91_SAM9X60_WDDIS)))
 			wdt_write_nosleep(wdt, AT91_WDT_MR,
 					  reg | AT91_SAM9X60_WDDIS);
-		else if (!wdt->sam9x60_support &&
+		else if ((!wdt->sam9x60_support || !wdt->sam9x7_support) &&
 			 (!(reg & AT91_WDT_WDDIS)))
 			wdt_write_nosleep(wdt, AT91_WDT_MR,
 					  reg | AT91_WDT_WDDIS);
 	}
 
-	if (wdt->sam9x60_support) {
+	if (wdt->sam9x60_support || wdt->sam9x7_support) {
 		if (wdt->need_irq)
 			wdt->ir = AT91_SAM9X60_PERINT;
 		else
@@ -270,6 +271,8 @@ static int sama5d4_wdt_probe(struct platform_device *pdev)
 	wdt->last_ping = jiffies;
 	wdt->sam9x60_support = of_device_is_compatible(dev->of_node,
 						       "microchip,sam9x60-wdt");
+	wdt->sam9x7_support = of_device_is_compatible(dev->of_node,
+						       "microchip,sam9x7-wdt");
 
 	watchdog_set_drvdata(wdd, wdt);
 
@@ -328,6 +331,9 @@ static const struct of_device_id sama5d4_wdt_of_match[] = {
 	},
 	{
 		.compatible = "microchip,sam9x60-wdt",
+	},
+	{
+		.compatible = "microchip,sam9x7-wdt",
 	},
 	{ }
 };
