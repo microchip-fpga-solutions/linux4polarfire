@@ -713,6 +713,7 @@ static void __init at91_pm_use_default_mode(int pm_mode)
 static const struct of_device_id atmel_shdwc_ids[] = {
 	{ .compatible = "atmel,sama5d2-shdwc" },
 	{ .compatible = "microchip,sam9x60-shdwc" },
+	{ .compatible = "microchip,sam9x7-shdwc" },
 	{ /* sentinel. */ }
 };
 

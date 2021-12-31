@@ -277,6 +277,19 @@ static const struct reg_config sam9x60_reg_config = {
 	},
 };
 
+static const struct reg_config sam9x7_reg_config = {
+	.shdwc = {
+		.wkup_pin_input = 0,
+		.mr_rtcwk_shift = 17,
+		.mr_rttwk_shift = 16,
+		.sr_rtcwk_shift = 5,
+		.sr_rttwk_shift = 4,
+	},
+	.pmc = {
+		.mckr		= 0x28,
+	},
+};
+
 static const struct of_device_id at91_shdwc_of_match[] = {
 	{
 		.compatible = "atmel,sama5d2-shdwc",
@@ -285,6 +298,10 @@ static const struct of_device_id at91_shdwc_of_match[] = {
 	{
 		.compatible = "microchip,sam9x60-shdwc",
 		.data = &sam9x60_reg_config,
+        },
+        {
+		.compatible = "microchip,sam9x7-shdwc",
+		.data = &sam9x7_reg_config,
 	}, {
 		/*sentinel*/
 	}
@@ -294,6 +311,7 @@ MODULE_DEVICE_TABLE(of, at91_shdwc_of_match);
 static const struct of_device_id at91_pmc_ids[] = {
 	{ .compatible = "atmel,sama5d2-pmc" },
 	{ .compatible = "microchip,sam9x60-pmc" },
+	{ .compatible = "microchip,sam9x7-pmc" },
 	{ /* Sentinel. */ }
 };
 
