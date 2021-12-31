@@ -689,6 +689,11 @@ static const struct atmel_qspi_caps atmel_sam9x60_qspi_caps = {
 	.has_ricr = true,
 };
 
+static const struct atmel_qspi_caps atmel_sam9x7_qspi_caps = {
+	.has_qspick = true,
+	.has_ricr = true,
+};
+
 static const struct of_device_id atmel_qspi_dt_ids[] = {
 	{
 		.compatible = "atmel,sama5d2-qspi",
@@ -697,6 +702,10 @@ static const struct of_device_id atmel_qspi_dt_ids[] = {
 	{
 		.compatible = "microchip,sam9x60-qspi",
 		.data = &atmel_sam9x60_qspi_caps,
+	},
+	{
+		.compatible = "microchip,sam9x7-qspi",
+		.data = &atmel_sam9x7_qspi_caps,
 	},
 	{ /* sentinel */ }
 };
