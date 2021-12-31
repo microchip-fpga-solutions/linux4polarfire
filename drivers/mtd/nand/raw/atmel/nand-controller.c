@@ -1935,6 +1935,11 @@ static const struct atmel_smc_nand_ebi_csa_cfg sam9x60_ebi_csa = {
 	.nfd0_on_d16 = AT91_SFR_CCFG_NFD0_ON_D16,
 };
 
+static const struct atmel_smc_nand_ebi_csa_cfg sam9x7_ebi_csa = {
+	.offs = AT91_SFR_CCFG_EBICSA,
+	.nfd0_on_d16 = AT91_SFR_CCFG_NFD0_ON_D16,
+};
+
 static const struct of_device_id atmel_ebi_csa_regmap_of_ids[] = {
 	{
 		.compatible = "atmel,at91sam9260-matrix",
@@ -1967,6 +1972,10 @@ static const struct of_device_id atmel_ebi_csa_regmap_of_ids[] = {
 	{
 		.compatible = "microchip,sam9x60-sfr",
 		.data = &sam9x60_ebi_csa,
+	},
+	{
+		.compatible = "microchip,sam9x7-sfr",
+		.data = &sam9x7_ebi_csa,
 	},
 	{ /* sentinel */ },
 };
@@ -2495,6 +2504,14 @@ static const struct atmel_nand_controller_caps microchip_sam9x60_nc_caps = {
 	.ops = &atmel_smc_nc_ops,
 };
 
+static const struct atmel_nand_controller_caps microchip_sam9x7_nc_caps = {
+	.has_dma = true,
+	.ale_offs = BIT(21),
+	.cle_offs = BIT(22),
+	.ebi_csa_regmap_name = "microchip,sfr",
+	.ops = &atmel_smc_nc_ops,
+};
+
 /* Only used to parse old bindings. */
 static const struct atmel_nand_controller_caps atmel_rm9200_nand_caps = {
 	.ale_offs = BIT(21),
@@ -2542,6 +2559,10 @@ static const struct of_device_id atmel_nand_controller_of_ids[] = {
 	{
 		.compatible = "microchip,sam9x60-nand-controller",
 		.data = &microchip_sam9x60_nc_caps,
+	},
+	{
+		.compatible = "microchip,sam9x7-nand-controller",
+		.data = &microchip_sam9x7_nc_caps,
 	},
 	/* Support for old/deprecated bindings: */
 	{
