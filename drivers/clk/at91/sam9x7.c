@@ -1,0 +1,801 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * SAM9X7 PMC code.
+ *
+ * Copyright (C) 2021 Microchip Technology Inc. and its subsidiaries
+ *
+ * Author: Varshini Rajendran <varshini.rajendran@microchip.com>
+ *
+ */
+#include <linux/clk.h>
+#include <linux/clk-provider.h>
+#include <linux/mfd/syscon.h>
+#include <linux/slab.h>
+
+#include <dt-bindings/clock/at91.h>
+
+#include "pmc.h"
+
+#define SAM9X7_INIT_TABLE(_table, _count)		\
+	do {						\
+		u8 _i;					\
+		for (_i = 0; _i < (_count); _i++)	\
+			(_table)[_i] = _i;		\
+	} while (0)
+
+#define SAM9X7_FILL_TABLE(_to, _from, _count)		\
+	do {						\
+		u8 _i;					\
+		for (_i = 0; _i < (_count); _i++) {	\
+			(_to)[_i] = (_from)[_i];	\
+		}					\
+	} while (0)
+
+
+static DEFINE_SPINLOCK(pmc_pll_lock);
+
+/**
+ * PLL clocks identifiers
+ * @PLL_ID_PLLA:        PLLA identifier
+ * @PLL_ID_UPLL:        UPLL identifier
+ * @PLL_ID_AUDIO:       Audio PLL identifier
+ * @PLL_ID_LVDS:        LVDS PLL identifier
+ * @PLL_ID_PLLA_DIV2:	PLLA DIV2 identifier
+ */
+enum pll_ids {
+	PLL_ID_PLLA,
+	PLL_ID_UPLL,
+	PLL_ID_AUDIO,
+	PLL_ID_LVDS,
+	PLL_ID_PLLA_DIV2,
+	PLL_ID_MAX,
+};
+
+/**
+ * PLL type identifiers
+ * @PLL_TYPE_FRAC:	fractional PLL identifier
+ * @PLL_TYPE_DIV:	divider PLL identifier
+ */
+enum pll_type {
+	PLL_TYPE_FRAC,
+	PLL_TYPE_DIV,
+};
+
+static const struct clk_master_characteristics mck_characteristics = {
+	.output = { .min = 140000000, .max = 266666666 },
+	.divisors = { 1, 2, 4, 3, 5 },
+	.have_div3_pres = 1,
+};
+
+static const struct clk_master_layout sam9x7_master_layout = {
+	.mask = 0x373,
+	.pres_shift = 4,
+	.offset = 0x28,
+};
+
+static const struct clk_range plla_outputs[] = {
+	{ .min = 2343750, .max = 1600000000 },
+};
+
+static const struct clk_pll_characteristics plla_characteristics = {
+	.input = { .min = 20000000, .max = 50000000 },
+	.num_output = ARRAY_SIZE(plla_outputs),
+	.output = plla_outputs,
+};
+
+static const struct clk_range upll_outputs[] = {
+	{ .min = 300000000, .max = 500000000 },
+};
+
+static const struct clk_pll_characteristics upll_characteristics = {
+	.input = { .min = 20000000, .max = 50000000 },
+	.num_output = ARRAY_SIZE(upll_outputs),
+	.output = upll_outputs,
+	.upll = true,
+};
+
+static const struct clk_pll_layout pll_frac_layout = {
+	.mul_mask = GENMASK(31, 24),
+	.frac_mask = GENMASK(21, 0),
+	.mul_shift = 24,
+	.frac_shift = 0,
+};
+
+static const struct clk_pll_layout pll_divpmc_layout = {
+	.div_mask = GENMASK(7, 0),
+	.endiv_mask = BIT(29),
+	.div_shift = 0,
+	.endiv_shift = 29,
+};
+
+/* Layout for DIVIO dividers. */
+static const struct clk_pll_layout pll_divio_layout = {
+	.div_mask	= GENMASK(19, 12),
+	.endiv_mask	= BIT(30),
+	.div_shift	= 12,
+	.endiv_shift	= 30,
+};
+
+/**
+ * PLL clocks description
+ * @n:		clock name
+ * @p:		clock parent
+ * @l:		clock layout
+ * @t:		clock type
+ * @c:		pll characteristics
+ * @f:		true if clock is critical and cannot be disabled
+ * @eid:	export index in sam9x7->chws[] array
+ */
+static const struct {
+	const char *n;
+	const char *p;
+	const struct clk_pll_layout *l;
+	u8 t;
+	const struct clk_pll_characteristics *c;
+	u8 f;
+	u8 eid;
+} sam9x7_plls[][PLL_ID_MAX] = {
+	[PLL_ID_PLLA] = {
+		{ .n = "plla_fracck",
+		  .p = "mainck",
+		  .l = &pll_frac_layout,
+		  .t = PLL_TYPE_FRAC,
+                  .f = 1,
+		  .c = &plla_characteristics, },
+
+		{ .n = "plla_divpmcck",
+		  .p = "plla_fracck",
+		  .l = &pll_divpmc_layout,
+		  .t = PLL_TYPE_DIV,
+                  .f = 1,
+		  .c = &plla_characteristics, },
+	},
+
+	[PLL_ID_UPLL] = {
+		{ .n = "upll_fracck",
+		  .p = "main_osc",
+		  .l = &pll_frac_layout,
+		  .t = PLL_TYPE_FRAC,
+                  .f = 1,
+		  .c = &upll_characteristics, },
+
+		{ .n = "upll_divpmcck",
+		  .p = "upll_fracck",
+		  .l = &pll_divpmc_layout,
+		  .t = PLL_TYPE_DIV,
+                  .f = 1,
+		  .c = &upll_characteristics, },
+	},
+
+	[PLL_ID_AUDIO] = {
+		{ .n = "audiopll_fracck",
+		  .p = "main_osc",
+		  .l = &pll_frac_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_FRAC, },
+
+		{ .n = "audiopll_divpmcck",
+		  .p = "audiopll_fracck",
+		  .l = &pll_divpmc_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_DIV, },
+
+		{ .n = "audiopll_diviock",
+		  .p = "audiopll_fracck",
+		  .l = &pll_divio_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_DIV, },
+	},
+
+	[PLL_ID_LVDS] = {
+		{ .n = "lvdspll_fracck",
+		  .p = "main_osc",
+		  .l = &pll_frac_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_FRAC, },
+
+		{ .n = "lvdspll_divpmcck",
+		  .p = "lvdspll_fracck",
+		  .l = &pll_divpmc_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_DIV, },
+	},
+
+	[PLL_ID_PLLA_DIV2] = {
+		{ .n = "plla_div2fracck",
+		  .p = "mainck",
+		  .l = &pll_frac_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_FRAC, },
+
+		{ .n = "plla_div2pmcck",
+		  .p = "plla_div2fracck",
+		  .l = &pll_divpmc_layout,
+                  .f = 1,
+		  .t = PLL_TYPE_DIV, },
+	},
+};
+
+static const struct clk_programmable_layout sam9x7_programmable_layout = {
+	.pres_mask = 0xff,
+	.pres_shift = 8,
+	.css_mask = 0x1f,
+	.have_slck_mck = 0,
+	.is_pres_direct = 1,
+};
+
+static const struct clk_pcr_layout sam9x7_pcr_layout = {
+	.offset = 0x88,
+	.cmd = BIT(31),
+	.gckcss_mask = GENMASK(12, 8),
+	.pid_mask = GENMASK(6, 0),
+};
+
+static const struct {
+	char *n;
+	char *p;
+	u8 id;
+} sam9x7_systemck[] = {
+	{ .n = "ddrck",  .p = "masterck", .id = 2 },
+	{ .n = "uhpck",  .p = "usbck",    .id = 6 },
+	{ .n = "pck0",   .p = "prog0",    .id = 8 },
+	{ .n = "pck1",   .p = "prog1",    .id = 9 },
+	{ .n = "pck2",   .p = "prog2",    .id = 10 },
+	{ .n = "pck3",   .p = "prog3",    .id = 11 },
+	{ .n = "pck4",   .p = "prog4",    .id = 12 },
+	{ .n = "pck5",   .p = "prog5",    .id = 13 },
+	{ .n = "pck6",   .p = "prog6",    .id = 14 },
+};
+
+static const struct {
+	char *n;
+	u8 id;
+} sam9x7_periphck[] = {
+	{ .n = "pioA_clk",   	.id = 2, },
+	{ .n = "pioB_clk",   	.id = 3, },
+	{ .n = "pioC_clk",   	.id = 4, },
+	{ .n = "flex0_clk",  	.id = 5, },
+	{ .n = "flex1_clk",  	.id = 6, },
+	{ .n = "flex2_clk",  	.id = 7, },
+	{ .n = "flex3_clk",  	.id = 8, },
+	{ .n = "flex6_clk",  	.id = 9, },
+	{ .n = "flex7_clk",  	.id = 10, },
+	{ .n = "flex8_clk",  	.id = 11, },
+	{ .n = "sdmmc0_clk", 	.id = 12, },
+	{ .n = "flex4_clk",  	.id = 13, },
+	{ .n = "flex5_clk",  	.id = 14, },
+	{ .n = "flex9_clk",  	.id = 15, },
+	{ .n = "flex10_clk", 	.id = 16, },
+	{ .n = "tcb0_clk",   	.id = 17, },
+	{ .n = "pwm_clk",    	.id = 18, },
+	{ .n = "adc_clk",    	.id = 19, },
+	{ .n = "dma0_clk",   	.id = 20, },
+	{ .n = "matrix_clk", 	.id = 21, },
+	{ .n = "uhphs_clk",  	.id = 22, },
+	{ .n = "udphs_clk",  	.id = 23, },
+	{ .n = "macb0_clk",  	.id = 24, },
+	{ .n = "lcd_clk",    	.id = 25, },
+	{ .n = "sdmmc1_clk", 	.id = 26, },
+	{ .n = "macb1_clk",  	.id = 27, },
+	{ .n = "ssc_clk",    	.id = 28, },
+	{ .n = "can0_clk",   	.id = 29, },
+	{ .n = "can1_clk",   	.id = 30, },
+	{ .n = "flex11_clk", 	.id = 32, },
+	{ .n = "flex12_clk", 	.id = 33, },
+	{ .n = "i2s_clk",    	.id = 34, },
+	{ .n = "qspi_clk",   	.id = 35, },
+	{ .n = "gfx2d_clk",  	.id = 36, },
+	{ .n = "pit64b_clk", 	.id = 37, },
+	{ .n = "trng_clk",   	.id = 38, },
+	{ .n = "aes_clk",    	.id = 39, },
+	{ .n = "tdes_clk",   	.id = 40, },
+	{ .n = "sha_clk",    	.id = 41, },
+	{ .n = "classd_clk", 	.id = 42, },
+	{ .n = "isi_clk",    	.id = 43, },
+	{ .n = "pioD_clk",   	.id = 44, },
+	{ .n = "tcb1_clk",   	.id = 45, },
+	{ .n = "dbgu_clk",   	.id = 47, },
+	{ .n = "mpddr_clk",	.id = 49, },
+        { .n = "csi2dc_clk",	.id = 52, },
+        { .n = "csi4l_clk",	.id = 53, },
+        { .n = "dsi4l_clk",	.id = 54, },
+        { .n = "mipiphy_clk",	.id = 55, },
+        { .n = "lvdsc_clk",	.id = 56, },
+        { .n = "pit64b1_clk",	.id = 58, },
+        { .n = "puf_clk",	.id = 59, },
+        { .n = "gmactsu_clk",	.id = 67, },
+
+};
+
+static const struct {
+	const char *n;
+        const char *pp[8];
+        const char pp_mux_table[8];
+	struct clk_range r;
+        int pp_chg_id;
+        u8 pp_count;
+	u8 id;
+} sam9x7_gck[] = {
+	{
+        .n = "flex0_gclk",
+        .id = 5,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex1_gclk",
+        .id = 6,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex2_gclk",
+        .id = 7,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex3_gclk",
+        .id = 8,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex6_gclk",
+        .id = 9,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex7_gclk",
+        .id = 10,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex8_gclk",
+        .id = 11,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "sdmmc0_gclk",
+        .id = 12,
+        .r = { .max = 105000000 },
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex4_gclk",
+        .id = 13,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex5_gclk",
+        .id = 14,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex9_gclk",
+        .id = 15,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex10_gclk",
+        .id = 16,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "tcb0_gclk",
+        .id = 17,
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "adc_gclk",
+        .id = 19,
+        .pp = { "upll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 5, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "lcd_gclk",
+        .id = 25,
+        .r = { .max = 75000000 },
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "sdmmc1_gclk",
+        .id = 26,
+        .r = { .max = 105000000 },
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "mcan0_gclk",
+        .id = 29,
+        .r = { .max = 80000000 },
+        .pp = { "upll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 5, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "mcan1_gclk",
+        .id = 30,
+        .r = { .max = 80000000 },
+        .pp = { "upll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 5, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex11_gclk",
+        .id = 32,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "flex12_gclk",
+        .id = 33,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "i2s_gclk",
+        .id = 34,
+        .r = { .max = 100000000 },
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "pit64b0_gclk",
+        .id = 37,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "classd_gclk",
+        .id = 42,
+        .r = { .max = 100000000 },
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "tcb1_gclk",
+        .id = 45,
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "dbgu_gclk",
+        .id = 47,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "mipiphy_gclk",
+        .id = 55,
+        .r = { .max = 27000000 },
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "pit64b1_gclk",
+        .id = 58,
+        .pp = { "plla_div2pmcck", },
+        .pp_mux_table = { 8, },
+        .pp_count = 1,
+        .pp_chg_id = INT_MIN,
+    },
+
+	{
+        .n = "gmac_gclk",
+        .id = 67,
+        .pp = { "audiopll_divpmcck", "plla_div2pmcck", },
+        .pp_mux_table = { 6, 8, },
+        .pp_count = 2,
+        .pp_chg_id = INT_MIN,
+    },
+
+};
+
+static void __init sam9x7_pmc_setup(struct device_node *np)
+{
+	struct clk_range range = CLK_RANGE(0, 0);
+	const char *td_slck_name, *md_slck_name, *mainxtal_name;
+	struct pmc_data *sam9x7_pmc;
+	const char *parent_names[10];
+	void **alloc_mem = NULL;
+	int alloc_mem_size = 0;
+	struct clk_hw *main_osc_hw;
+	struct regmap *regmap;
+	struct clk_hw *hw;
+	int i, j;
+
+	i = of_property_match_string(np, "clock-names", "td_slck");
+	if (i < 0)
+		return;
+
+	td_slck_name = of_clk_get_parent_name(np, i);
+
+	i = of_property_match_string(np, "clock-names", "md_slck");
+	if (i < 0)
+		return;
+
+	md_slck_name = of_clk_get_parent_name(np, i);
+
+	i = of_property_match_string(np, "clock-names", "main_xtal");
+	if (i < 0)
+		return;
+	mainxtal_name = of_clk_get_parent_name(np, i);
+
+	regmap = device_node_to_regmap(np);
+	if (IS_ERR(regmap))
+		return;
+
+	sam9x7_pmc = pmc_data_allocate(PMC_PLLACK + 1,
+					nck(sam9x7_systemck),
+					nck(sam9x7_periphck),
+					nck(sam9x7_gck), 8);
+	if (!sam9x7_pmc)
+		return;
+
+	alloc_mem = kmalloc(sizeof(void *) *
+			    (ARRAY_SIZE(sam9x7_gck)),
+			    GFP_KERNEL);
+	if (!alloc_mem)
+		goto err_free;
+
+	hw = at91_clk_register_main_rc_osc(regmap, "main_rc_osc", 12000000,
+					   50000000);
+	if (IS_ERR(hw))
+		goto err_free;
+
+	hw = at91_clk_register_main_osc(regmap, "main_osc", mainxtal_name, 0);
+	if (IS_ERR(hw))
+		goto err_free;
+	main_osc_hw = hw;
+
+	parent_names[0] = "main_rc_osc";
+	parent_names[1] = "main_osc";
+	hw = at91_clk_register_sam9x5_main(regmap, "mainck", parent_names, 2);
+	if (IS_ERR(hw))
+		goto err_free;
+
+	sam9x7_pmc->chws[PMC_MAIN] = hw;
+
+	for (i = 0; i < PLL_ID_MAX; i++) {
+		for (j = 0; j < 3; j++) {
+			struct clk_hw *parent_hw;
+
+			if (!sam9x7_plls[i][j].n)
+				continue;
+
+			switch (sam9x7_plls[i][j].t) {
+			case PLL_TYPE_FRAC:
+				if (!strcmp(sam9x7_plls[i][j].p, "mainck"))
+					parent_hw = sam9x7_pmc->chws[PMC_MAIN];
+				else
+					parent_hw = __clk_get_hw(of_clk_get_by_name(np,
+						sam9x7_plls[i][j].p));
+
+				hw = sam9x60_clk_register_frac_pll(regmap,
+					&pmc_pll_lock, sam9x7_plls[i][j].n,
+					sam9x7_plls[i][j].p, parent_hw, i,
+					sam9x7_plls[i][j].c,
+					sam9x7_plls[i][j].l,
+					sam9x7_plls[i][j].f);
+				break;
+
+			case PLL_TYPE_DIV:
+				hw = sam9x60_clk_register_div_pll(regmap,
+					&pmc_pll_lock, sam9x7_plls[i][j].n,
+					sam9x7_plls[i][j].p, i,
+					sam9x7_plls[i][j].c,
+					sam9x7_plls[i][j].l,
+					sam9x7_plls[i][j].f);
+				break;
+
+			default:
+				continue;
+			}
+
+			if (IS_ERR(hw))
+				goto err_free;
+
+			if (sam9x7_plls[i][j].eid)
+				sam9x7_pmc->chws[sam9x7_plls[i][j].eid] = hw;
+		}
+	}
+
+	parent_names[0] = md_slck_name;
+	parent_names[1] = "mainck";
+	parent_names[2] = "plla_divpmcck";
+	parent_names[3] = "upll_divpmcck";
+	hw = at91_clk_register_master(regmap, "masterck", 4, parent_names,
+				      &sam9x7_master_layout,
+				      &mck_characteristics);
+	if (IS_ERR(hw))
+		goto err_free;
+
+	sam9x7_pmc->chws[PMC_MCK] = hw;
+
+	parent_names[0] = "plla_divpmcck";
+	parent_names[1] = "upll_divpmcck";
+	parent_names[2] = "main_osc";
+	hw = sam9x60_clk_register_usb(regmap, "usbck", parent_names, 3);
+	if (IS_ERR(hw))
+		goto err_free;
+
+	parent_names[0] = md_slck_name;
+	parent_names[1] = td_slck_name;
+	parent_names[2] = "mainck";
+	parent_names[3] = "masterck";
+	parent_names[4] = "plla_divpmcck";
+	parent_names[5] = "upll_divpmcck";
+	parent_names[6] = "audiopll_divpmcck";
+	for (i = 0; i < 7; i++) {
+		char name[6];
+
+		snprintf(name, sizeof(name), "prog%d", i);
+
+		hw = at91_clk_register_programmable(regmap, name,
+						    parent_names, 7, i,
+						    &sam9x7_programmable_layout,
+						    NULL);
+		if (IS_ERR(hw))
+			goto err_free;
+
+		sam9x7_pmc->pchws[i] = hw;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(sam9x7_systemck); i++) {
+		hw = at91_clk_register_system(regmap, sam9x7_systemck[i].n,
+					      sam9x7_systemck[i].p,
+					      sam9x7_systemck[i].id);
+		if (IS_ERR(hw))
+			goto err_free;
+
+		sam9x7_pmc->shws[sam9x7_systemck[i].id] = hw;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(sam9x7_periphck); i++) {
+		hw = at91_clk_register_sam9x5_peripheral(regmap, &pmc_pcr_lock,
+							 &sam9x7_pcr_layout,
+							 sam9x7_periphck[i].n,
+							 "masterck",
+							 sam9x7_periphck[i].id,
+							 &range, INT_MIN);
+		if (IS_ERR(hw))
+			goto err_free;
+
+		sam9x7_pmc->phws[sam9x7_periphck[i].id] = hw;
+	}
+
+	parent_names[0] = md_slck_name;
+	parent_names[1] = td_slck_name;
+	parent_names[2] = "mainck";
+	parent_names[3] = "masterck";
+	for (i = 0; i < ARRAY_SIZE(sam9x7_gck); i++) {
+		u8 num_parents = 4 + sam9x7_gck[i].pp_count;
+		u32 *mux_table;
+
+		mux_table = kmalloc_array(num_parents, sizeof(*mux_table),
+					  GFP_KERNEL);
+		if (!mux_table)
+			goto err_free;
+
+		SAM9X7_INIT_TABLE(mux_table, 4);
+		SAM9X7_FILL_TABLE(&mux_table[4], sam9x7_gck[i].pp_mux_table,
+				   sam9x7_gck[i].pp_count);
+		SAM9X7_FILL_TABLE(&parent_names[4], sam9x7_gck[i].pp,
+				   sam9x7_gck[i].pp_count);
+
+		hw = at91_clk_register_generated(regmap, &pmc_pcr_lock,
+						 &sam9x7_pcr_layout,
+						 sam9x7_gck[i].n,
+						 parent_names, mux_table,
+						 num_parents,
+						 sam9x7_gck[i].id,
+						 &sam9x7_gck[i].r,
+						 sam9x7_gck[i].pp_chg_id);
+		if (IS_ERR(hw))
+			goto err_free;
+
+		sam9x7_pmc->ghws[sam9x7_gck[i].id] = hw;
+		alloc_mem[alloc_mem_size++] = mux_table;
+	}
+
+	of_clk_add_hw_provider(np, of_clk_hw_pmc_get, sam9x7_pmc);
+
+	return;
+
+err_free:
+	if (alloc_mem) {
+		for (i = 0; i < alloc_mem_size; i++)
+			kfree(alloc_mem[i]);
+		kfree(alloc_mem);
+	}
+	kfree(sam9x7_pmc);
+}
+/* Some clks are used for a clocksource */
+CLK_OF_DECLARE(sam9x7_pmc, "microchip,sam9x7-pmc", sam9x7_pmc_setup);
