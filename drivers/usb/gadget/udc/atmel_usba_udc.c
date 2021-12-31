@@ -2112,11 +2112,18 @@ static const struct usba_udc_config udc_sam9x60_cfg = {
 	.ep_prealloc = false,
 };
 
+static const struct usba_udc_config udc_sam9x7_cfg = {
+	.num_ep = ARRAY_SIZE(ep_config_sam9),
+	.config = ep_config_sam9,
+	.ep_prealloc = false,
+};
+
 static const struct of_device_id atmel_udc_dt_ids[] = {
 	{ .compatible = "atmel,at91sam9rl-udc", .data = &udc_at91sam9rl_cfg },
 	{ .compatible = "atmel,at91sam9g45-udc", .data = &udc_at91sam9g45_cfg },
 	{ .compatible = "atmel,sama5d3-udc", .data = &udc_sama5d3_cfg },
 	{ .compatible = "microchip,sam9x60-udc", .data = &udc_sam9x60_cfg },
+	{ .compatible = "microchip,sam9x7-udc", .data = &udc_sam9x7_cfg },
 	{ /* sentinel */ }
 };
 
