@@ -152,9 +152,16 @@ static const struct sdhci_at91_soc_data soc_data_sam9x60 = {
 	.divider_for_baseclk = 2,
 };
 
+static const struct sdhci_at91_soc_data soc_data_sam9x7 = {
+	.pdata = &sdhci_sama5d2_pdata,
+	.baseclk_is_generated_internally = true,
+	.divider_for_baseclk = 2,
+};
+
 static const struct of_device_id sdhci_at91_dt_match[] = {
 	{ .compatible = "atmel,sama5d2-sdhci", .data = &soc_data_sama5d2 },
 	{ .compatible = "microchip,sam9x60-sdhci", .data = &soc_data_sam9x60 },
+	{ .compatible = "microchip,sam9x7-sdhci", .data = &soc_data_sam9x7 },
 	{}
 };
 MODULE_DEVICE_TABLE(of, sdhci_at91_dt_match);
