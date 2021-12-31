@@ -177,6 +177,10 @@ static const struct of_device_id at91_reset_of_match[] = {
 		.compatible = "microchip,sam9x60-rstc",
 		.data = (void *)(AT91_RSTC_KEY | AT91_RSTC_PROCRST)
 	},
+	{
+		.compatible = "microchip,sam9x7-rstc",
+		.data = (void *)(AT91_RSTC_KEY | AT91_RSTC_PROCRST)
+	},
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, at91_reset_of_match);
@@ -230,6 +234,13 @@ static int __init at91_reset_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, reset);
 
 	if (of_device_is_compatible(pdev->dev.of_node, "microchip,sam9x60-rstc")) {
+		u32 val = readl(reset->rstc_base + AT91_RSTC_MR);
+
+		writel(AT91_RSTC_KEY | AT91_RSTC_URSTASYNC | val,
+		       reset->rstc_base + AT91_RSTC_MR);
+	}
+
+	if (of_device_is_compatible(pdev->dev.of_node, "microchip,sam9x7-rstc")) {
 		u32 val = readl(reset->rstc_base + AT91_RSTC_MR);
 
 		writel(AT91_RSTC_KEY | AT91_RSTC_URSTASYNC | val,
