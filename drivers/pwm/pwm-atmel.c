@@ -379,6 +379,19 @@ static const struct atmel_pwm_data mchp_sam9x60_pwm_data = {
 	},
 };
 
+static const struct atmel_pwm_data mchp_sam9x7_pwm_data = {
+	.regs = {
+		.period		= PWMV1_CPRD,
+		.period_upd	= PWMV1_CUPD,
+		.duty		= PWMV1_CDTY,
+		.duty_upd	= PWMV1_CUPD,
+	},
+	.cfg = {
+		/* 32 bits to keep period and duty. */
+		.period_bits	= 32,
+	},
+};
+
 static const struct of_device_id atmel_pwm_dt_ids[] = {
 	{
 		.compatible = "atmel,at91sam9rl-pwm",
@@ -392,6 +405,9 @@ static const struct of_device_id atmel_pwm_dt_ids[] = {
 	}, {
 		.compatible = "microchip,sam9x60-pwm",
 		.data = &mchp_sam9x60_pwm_data,
+	}, {
+		.compatible = "microchip,sam9x7-pwm",
+		.data = &mchp_sam9x7_pwm_data,
 	}, {
 		/* sentinel */
 	},
