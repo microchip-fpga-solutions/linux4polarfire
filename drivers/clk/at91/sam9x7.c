@@ -63,7 +63,7 @@ enum pll_type {
 
 static const struct clk_master_characteristics mck_characteristics = {
 	.output = { .min = 140000000, .max = 266666666 },
-	.divisors = { 1, 2, 4, 3, 5 },
+	.divisors = { 1, 2, 4, 3 },
 	.have_div3_pres = 1,
 };
 
@@ -148,6 +148,7 @@ static const struct {
 		  .l = &pll_divpmc_layout,
 		  .t = PLL_TYPE_DIV,
                   .f = 1,
+                  .eid = PMC_PLLACK,
 		  .c = &plla_characteristics, },
 	},
 
@@ -172,18 +173,21 @@ static const struct {
 		  .p = "main_osc",
 		  .l = &pll_frac_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_FRAC, },
 
 		{ .n = "audiopll_divpmcck",
 		  .p = "audiopll_fracck",
 		  .l = &pll_divpmc_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_DIV, },
 
 		{ .n = "audiopll_diviock",
 		  .p = "audiopll_fracck",
 		  .l = &pll_divio_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_DIV, },
 	},
 
@@ -192,12 +196,14 @@ static const struct {
 		  .p = "main_osc",
 		  .l = &pll_frac_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_FRAC, },
 
 		{ .n = "lvdspll_divpmcck",
 		  .p = "lvdspll_fracck",
 		  .l = &pll_divpmc_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_DIV, },
 	},
 
@@ -206,12 +212,14 @@ static const struct {
 		  .p = "mainck",
 		  .l = &pll_frac_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_FRAC, },
 
 		{ .n = "plla_div2pmcck",
 		  .p = "plla_div2fracck",
 		  .l = &pll_divpmc_layout,
                   .f = 1,
+                  .c = &plla_characteristics,
 		  .t = PLL_TYPE_DIV, },
 	},
 };
