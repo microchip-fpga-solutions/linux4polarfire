@@ -654,6 +654,8 @@ static void __init sam9x7_pmc_setup(struct device_node *np)
 			case PLL_TYPE_FRAC:
 				if (!strcmp(sam9x7_plls[i][j].p, "mainck"))
 					parent_hw = sam9x7_pmc->chws[PMC_MAIN];
+                                else if (!strcmp(sam9x7_plls[i][j].p, "main_osc"))
+					parent_hw = main_osc_hw;
 				else
 					parent_hw = __clk_get_hw(of_clk_get_by_name(np,
 						sam9x7_plls[i][j].p));
