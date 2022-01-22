@@ -154,7 +154,7 @@
 	nand_controller: nand-controller {
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_nand_oe_we &pinctrl_nand_cs &pinctrl_nand_rb>;
-		status = "okay";
+		status = "disabled";
 
 		nand@3 {
 			reg = <0x3 0x0 0x800000>;
