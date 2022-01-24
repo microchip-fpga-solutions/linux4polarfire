@@ -313,6 +313,7 @@ static const struct {
 	{ .n = "pck4",   .p = "prog4",    .id = 12 },
 	{ .n = "pck5",   .p = "prog5",    .id = 13 },
 	{ .n = "pck6",   .p = "prog6",    .id = 14 },
+	{ .n = "qspick", .p = "masterck", .id = 19 },
 };
 
 static const struct {
