@@ -582,7 +582,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_sdmmc0_default>;
 	status = "okay";
-	cd-gpios = <&pioA 23 GPIO_ACTIVE_LOW>;
+	cd-gpios = <&pioA 13 GPIO_ACTIVE_LOW>;
 	disable-wp;
 };
 
