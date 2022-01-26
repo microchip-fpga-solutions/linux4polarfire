@@ -414,7 +414,7 @@ static int __init sam9x60_aic5_of_init(struct device_node *node,
 }
 IRQCHIP_DECLARE(sam9x60_aic5, "microchip,sam9x60-aic", sam9x60_aic5_of_init);
 
-#define NR_SAM9X7_IRQS     61
+#define NR_SAM9X7_IRQS     70
 
 static int __init sam9x7_aic5_of_init(struct device_node *node,
                        struct device_node *parent)
