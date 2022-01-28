@@ -584,7 +584,7 @@
 &pwm0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_pwm0_0 &pinctrl_pwm0_1 &pinctrl_pwm0_2 &pinctrl_pwm0_3>;
-	status = "okay"; /* Conflict with leds. */
+	status = "disabled"; /* Conflict with gmac. */
 };
 
 &sdmmc0 {
