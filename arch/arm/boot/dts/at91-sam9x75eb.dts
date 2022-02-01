@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
- * at91-sam9x7eb.dts - Device Tree file for Microchip SAM9X7-EB board
+ * at91-sam9x75eb.dts - Device Tree file for Microchip SAM9X75-EB board
  *
  * Copyright (C) 2021 Microchip Technology Inc. and its subsidiaries
  *
@@ -11,8 +11,8 @@
 #include <dt-bindings/input/input.h>
 
 / {
-	model = "Microchip SAM9X7-EB";
-	compatible = "microchip,sam9x7eb", "microchip,sam9x7", "atmel,at91sam9";
+	model = "Microchip SAM9X75-EB";
+	compatible = "microchip,sam9x75eb", "microchip,sam9x7", "atmel,at91sam9";
 
 	aliases {
 		i2c0 = &i2c0;
