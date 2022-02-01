@@ -217,14 +217,14 @@ static const struct {
 		  .p = "main_osc",
 		  .l = &pll_frac_layout,
 		  .t = PLL_TYPE_FRAC,
-                  .f = 1,
+                  .f = 0,
 		  .c = &upll_characteristics, },
 
 		{ .n = "upll_divpmcck",
 		  .p = "upll_fracck",
 		  .l = &pll_divpmc_layout,
 		  .t = PLL_TYPE_DIV,
-                  .f = 1,
+                  .f = 0,
 		  .c = &upll_characteristics, },
 	},
 
