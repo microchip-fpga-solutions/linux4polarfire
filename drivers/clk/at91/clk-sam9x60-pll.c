@@ -33,20 +33,6 @@
 
 #define PLL_MAX_ID		7
 
-/* TODO: Fix this SOC specific functionality with compatibility strings.
- * This is just a workaround done for debugging purpose. */
-
-#define SAM9X7_CIDR_MATCH               0x09750020
-
-#define SAM9X75_EXID_MATCH              0x00000000
-#define SAM9X72_EXID_MATCH              0x00000004
-#define SAM9X70_EXID_MATCH              0x00000005
-#define SAM9X75_D1G_EXID_MATCH          0x00000001
-#define SAM9X75_D5M_EXID_MATCH          0x00000002
-#define SAM9X75_D1M_EXID_MATCH          0x00000003
-#define SAM9X75_D2G_EXID_MATCH          0x00000006
-
-
 struct sam9x60_pll_core {
 	struct regmap *regmap;
 	spinlock_t *lock;
@@ -70,41 +56,6 @@ struct sam9x60_div {
 #define to_sam9x60_pll_core(hw)	container_of(hw, struct sam9x60_pll_core, hw)
 #define to_sam9x60_frac(core)	container_of(core, struct sam9x60_frac, core)
 #define to_sam9x60_div(core)	container_of(core, struct sam9x60_div, core)
-
-/* TODO: Fix this SOC specific functionality with compatibility strings.
- * This is just a workaround done for debugging purpose. */
-
-static int is_chipid_sam9x7(void)
-{
-        struct device_node *np;
-        void __iomem *regs;
-        u32 cidr;
-
-        np = of_find_compatible_node(NULL, NULL, "atmel,at91rm9200-dbgu");
-        if (!np)
-                np = of_find_compatible_node(NULL, NULL,
-                                             "atmel,at91sam9260-dbgu");
-        if (!np)
-                return -ENODEV;
-
-        regs = of_iomap(np, 0);
-        of_node_put(np);
-
-        if (!regs) {
-                pr_warn("Could not map DBGU iomem range");
-                return -ENXIO;
-        }
-
-        cidr = readl(regs + 0x40);
-
-        iounmap(regs);
-
-        if((cidr & GENMASK(30,5)) == SAM9X7_CIDR_MATCH){
-                return 1;
-        }else{
-                return 0;
-        }
-}
 
 static inline bool sam9x60_pll_ready(struct regmap *regmap, int id)
 {
@@ -130,10 +81,7 @@ static unsigned long sam9x60_frac_pll_recalc_rate(struct clk_hw *hw,
         freq = (parent_rate * (frac->mul + 1) +
                         ((u64)parent_rate * frac->frac >> 22));
 
-        if (is_chipid_sam9x7())  /* TODO: Fix this SOC specific functionality with compatibility strings.
-                                  * This is just a workaround done for debugging purpose. */
-
-        {
+        if (of_machine_is_compatible("microchip,sam9x7")){
                 if(core->id == PLL_ID_PLLA || core->id == PLL_ID_PLLA_DIV2){
                         freq = core->id?(freq >> 2):(freq >> 1);
                 }
