@@ -225,6 +225,7 @@ static const struct {
 		  .l = &pll_divpmc_layout,
 		  .t = PLL_TYPE_DIV,
                   .f = 0,
+		  .eid = PMC_UTMI,
 		  .c = &upll_characteristics, },
 	},
 
