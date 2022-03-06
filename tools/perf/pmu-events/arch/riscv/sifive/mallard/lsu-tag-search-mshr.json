@@ -1,0 +1,117 @@
+[
+  {
+    "EventName": "L1_DATA_CACHE_TAG_MSHR_DATA_FORWARD_WRITE_BLOCKED",
+    "EventCode": "0x10d",
+    "BriefDescription": "L1 data cache tag MSHR data forward write blocked"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_TAG_MSHR_L1_ARBITRATION_WINNER_READ_BLOCKED",
+    "EventCode": "0x20d",
+    "BriefDescription": "L1 data cache tag MSHR L1 arbitration winner read blocked"
+  },
+  {
+    "EventName": "PROBE_L1_DATA_CACHE_MISS",
+    "EventCode": "0x40d",
+    "BriefDescription": "Probe L1 data cache miss"
+  },
+  {
+    "EventName": "PROBE_L1_DATA_CACHE_HIT",
+    "EventCode": "0x80d",
+    "BriefDescription": "Probe L1 data cache hit"
+  },
+  {
+    "EventName": "PROBE_MSHR_MATCH",
+    "EventCode": "0x100d",
+    "BriefDescription": "Probe MSHR match"
+  },
+  {
+    "EventName": "TAG_SEARCH_WRITE_HOLD_FOR_L1_DATA_CACHE_TAG_PROTECTED",
+    "EventCode": "0x200d",
+    "BriefDescription": "Tag search write hold for L1 data cache tag protected"
+  },
+  {
+    "EventName": "TAG_SEARCH_WRITE_CANNOT_ESTABLISH_RELEASE_QUEUE_FULL",
+    "EventCode": "0x400d",
+    "BriefDescription": "Tag search write cannot establish release queue full"
+  },
+  {
+    "EventName": "TAG_SEARCH_WRITE_CANNOT_ESTABLISH_RELEASE_QUEUE_MATCH",
+    "EventCode": "0x800d",
+    "BriefDescription": "Tag search write cannot establish release queue match"
+  },
+  {
+    "EventName": "TAG_SEARCH_WRITE_L1_DATA_CACHE_TAG_CORRECTABLE_ERROR",
+    "EventCode": "0x1000d",
+    "BriefDescription": "Tag search write L1 data cache tag correctable error"
+  },
+  {
+    "EventName": "TAG_SEARCH_WRITE_L1_DATA_CACHE_TAG_UNCORRECTABLE_ERROR",
+    "EventCode": "0x2000d",
+    "BriefDescription": "Tag search write L1 data cache tag uncorrectable error"
+  },
+  {
+    "EventName": "MSHR_ALLOCATE_L1_DATA_CACHE",
+    "EventCode": "0x4000d",
+    "BriefDescription": "MSHR allocate L1 data cache"
+  },
+  {
+    "EventName": "MSHR_ALLOCATE_L1_DATA_CACHE_OVER",
+    "EventCode": "0x8000d",
+    "BriefDescription": "MSHR allocate L1 data cache over"
+  },
+  {
+    "EventName": "MSHR_UPGRADE_L1_DATA_CACHE_TAG",
+    "EventCode": "0x10000d",
+    "BriefDescription": "MSHR upgrade L1 data cache tag"
+  },
+  {
+    "EventName": "MSHR_WRITE_L1_DATA_CACHE_WAY_PREDICTOR_BLOCKED",
+    "EventCode": "0x20000d",
+    "BriefDescription": "MSHR write L1 data cache way predictor blocked"
+  },
+  {
+    "EventName": "MSHR_DATA_TAG_SEARCH_WRITE_READ_BLOCKED",
+    "EventCode": "0x40000d",
+    "BriefDescription": "MSHR data tag search write read blocked"
+  },
+  {
+    "EventName": "MSHR_DATA_MSHR_DATA_READ_BLOCKED",
+    "EventCode": "0x80000d",
+    "BriefDescription": "MSHR data MSHR data read blocked"
+  },
+  {
+    "EventName": "MSHR_DATA_STORE_QUEUE_WRITE_GATHER_WRITE_BLOCKED",
+    "EventCode": "0x100000d",
+    "BriefDescription": "MSHR data store queue write gather write blocked"
+  },
+  {
+    "EventName": "MSHR_DATA_MSHR_L2_ARBITRATION_WINNER_READ_BLOCKED",
+    "EventCode": "0x200000d",
+    "BriefDescription": "MSHR data MSHR L2 arbitration winner read blocked"
+  },
+  {
+    "EventName": "MSHR_DATA_LOAD_QUEUE_WRITE_BACK_READ_BLOCKED",
+    "EventCode": "0x400000d",
+    "BriefDescription": "MSHR data load queue write_back read blocked"
+  },
+  {
+    "EventName": "MSHR_DATA_MSHR_L1_ARBITRATION_WINNER_READ_BLOCKED",
+    "EventCode": "0x800000d",
+    "BriefDescription": "MSHR data MSHR L1 arbitration winner read blocked"
+  },
+  {
+    "EventName": "MSHR_FENCE_WAITING_FOR_PREDECESSOR",
+    "EventCode": "0x1000000d",
+    "BriefDescription": "MSHR fence waiting for predecessor"
+  },
+  {
+    "EventName": "MSHR_SUCCESSOR_WAITING_FOR_FENCE",
+    "EventCode": "0x2000000d",
+    "BriefDescription": "MSHR successor waiting for fence"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_TAG_SEARCH_WRITE_BLOCKED",
+    "EventCode": "0x4000000d",
+    "BriefDescription": "L1 data cache tag search write blocked"
+  }
+]
