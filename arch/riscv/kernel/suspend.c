@@ -4,7 +4,9 @@
  * Copyright (c) 2022 Ventana Micro Systems Inc.
  */
 
+#include <linux/cpu_pm.h>
 #include <linux/ftrace.h>
+#include <linux/thread_info.h>
 #include <asm/csr.h>
 #include <asm/suspend.h>
 
@@ -85,3 +87,54 @@ int cpu_suspend(unsigned long arg,
 
 	return rc;
 }
+
+#ifdef CONFIG_CPU_PM
+static int cpu_ext_suspend(struct notifier_block *self, unsigned long cmd,
+			   void *v)
+{
+	struct task_struct *cur_task = get_current();
+	struct pt_regs *regs = task_pt_regs(cur_task);
+
+	switch (cmd) {
+	case CPU_PM_ENTER:
+#ifdef CONFIG_FPU
+		if (has_fpu()) {
+			if (unlikely(regs->status & SR_SD))
+				fstate_save(cur_task, regs);
+		}
+#endif
+#ifdef CONFIG_VECTOR
+		if (has_vector()) {
+			if (unlikely(regs->status & SR_SD))
+				vstate_save(cur_task, regs);
+		}
+#endif
+
+		break;
+	case CPU_PM_ENTER_FAILED:
+	case CPU_PM_EXIT:
+#ifdef CONFIG_FPU
+		if (has_fpu())
+			fstate_restore(cur_task, regs);
+#endif
+#ifdef CONFIG_VECTOR
+		if (has_vector())
+			vstate_restore(cur_task, regs);
+#endif
+		break;
+	}
+	return NOTIFY_OK;
+}
+
+static struct notifier_block cpu_pm_notifier_block = {
+	.notifier_call = cpu_ext_suspend,
+};
+
+void cpu_pm_suspend_init(void)
+{
+	cpu_pm_register_notifier(&cpu_pm_notifier_block);
+}
+
+#else
+static inline void cpu_pm_suspend_init(void) { }
+#endif /* CONFIG_CPU_PM */
