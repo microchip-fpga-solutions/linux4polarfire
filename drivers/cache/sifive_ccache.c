@@ -21,6 +21,8 @@
 #include <linux/of_address.h>
 #include <linux/device.h>
 #include <linux/bitfield.h>
+#include <linux/cpu_pm.h>
+
 #include <asm/cacheflush.h>
 #include <asm/cacheinfo.h>
 #include <asm/dma-noncoherent.h>
@@ -575,6 +577,62 @@ static int sifive_ccache_pmu_offline_cpu(unsigned int cpu, struct hlist_node *no
 	return 0;
 }
 
+#ifdef CONFIG_CPU_PM
+static int sifive_ccache_pmu_pm_notify(struct notifier_block *b, unsigned long cmd,
+				       void *v)
+{
+	struct sifive_ccache_pmu_event *ptr = &sifive_ccache_pmu_event;
+	struct perf_event *event;
+	int idx;
+	int enabled_event = bitmap_weight(ptr->used_mask, ptr->counters);
+
+	if (!enabled_event)
+		return NOTIFY_OK;
+
+	for (idx = 0; idx < ptr->counters; idx++) {
+		event = ptr->events[idx];
+		if (!event)
+			continue;
+
+		switch (cmd) {
+		case CPU_PM_ENTER:
+			/* Stop and update the counter */
+			sifive_ccache_pmu_stop(event, PERF_EF_UPDATE);
+			break;
+		case CPU_PM_ENTER_FAILED:
+		case CPU_PM_EXIT:
+			 /*
+			  * Restore and enable the counter.
+			  *
+			  * Requires RCU read locking to be functional,
+			  * wrap the call within RCU_NONIDLE to make the
+			  * RCU subsystem aware this cpu is not idle from
+			  * an RCU perspective for the sifive_ccache_pmu_start() call
+			  * duration.
+			  */
+			RCU_NONIDLE(sifive_ccache_pmu_start(event, PERF_EF_RELOAD));
+			break;
+		default:
+			break;
+		}
+	}
+
+	return NOTIFY_OK;
+}
+
+static struct notifier_block sifive_ccache_pmu_pm_notifier_block = {
+	.notifier_call = sifive_ccache_pmu_pm_notify,
+};
+
+void sifive_ccache_pmu_pm_init(void)
+{
+	cpu_pm_register_notifier(&sifive_ccache_pmu_pm_notifier_block);
+}
+
+#else
+static inline void sifive_ccache_pmu_pm_init(void) { }
+#endif /* CONFIG_CPU_PM */
+
 static int sifive_ccache_pmu_dev_probe(struct platform_device *pdev)
 {
 	struct resource *res;
@@ -906,6 +964,8 @@ static int __init sifive_ccache_init(void)
 	rc = platform_driver_register(&sifive_ccache_pmu_driver);
 	if (rc)
 		pr_err("Failed to register sifive_ccache_pmu_driver: %d\n", rc);
+
+	sifive_ccache_pmu_pm_init();
 
 #ifdef CONFIG_DEBUG_FS
 	setup_sifive_debug();
