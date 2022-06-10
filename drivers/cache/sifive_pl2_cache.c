@@ -17,6 +17,7 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
+#include <linux/cpu_pm.h>
 
 #define SIFIVE_PL2_PMU_MAX_COUNTERS 64
 #define SIFIVE_PL2_SELECT_BASE_OFFSET 0x2000
@@ -32,6 +33,8 @@ struct sifive_pl2_pmu_event {
 
 struct sifive_pl2_pmu {
 	struct pmu *pmu;
+	struct hlist_node node;
+	cpumask_t cpumask;
 };
 
 static bool pl2pmu_init_done;
@@ -60,9 +63,28 @@ static inline void writeq(unsigned long long v, void __iomem *addr)
  * - formats, used by perf user space and other tools to configure events
  * - events, used by perf user space and other tools to create events
  *   symbolically, e.g.:
- *     perf stat -a -e sifive_pl2_pmu/event=innerPutPartialDataHit/ ls
+ *     perf stat -a -e sifive_pl2_pmu/inner_put_partial_data_hit/ ls
  *     perf stat -a -e sifive_pl2_pmu/event=0x101/ ls
+ * - cpumask, used by perf user space and other tools to know on which CPUs
  */
+
+/* cpumask */
+static ssize_t cpumask_show(struct device *dev,
+			    struct device_attribute *attr, char *buf)
+{
+	return cpumap_print_to_pagebuf(true, buf, &sifive_pl2_pmu.cpumask);
+};
+
+static DEVICE_ATTR_RO(cpumask);
+
+static struct attribute *sifive_pl2_pmu_cpumask_attrs[] = {
+	&dev_attr_cpumask.attr,
+	NULL,
+};
+
+static const struct attribute_group sifive_pl2_pmu_cpumask_attr_group = {
+	.attrs = sifive_pl2_pmu_cpumask_attrs,
+};
 
 /* formats */
 
@@ -318,6 +340,7 @@ static struct attribute_group sifive_pl2_pmu_events_group = {
 static const struct attribute_group *sifive_pl2_pmu_attr_grps[] = {
 	&sifive_pl2_pmu_format_group,
 	&sifive_pl2_pmu_events_group,
+	&sifive_pl2_pmu_cpumask_attr_group,
 	NULL,
 };
 
@@ -526,6 +549,88 @@ static struct sifive_pl2_pmu sifive_pl2_pmu = {
 	.pmu = &sifive_pl2_generic_pmu,
 };
 
+/*
+ * CPU Hotplug call back function
+ */
+static int sifive_pl2_pmu_online_cpu(unsigned int cpu, struct hlist_node *node)
+{
+	struct sifive_pl2_pmu *ptr = hlist_entry_safe(node, struct sifive_pl2_pmu, node);
+
+	if (!cpumask_test_cpu(cpu, &ptr->cpumask))
+		cpumask_set_cpu(cpu, &ptr->cpumask);
+
+	return 0;
+}
+
+static int sifive_pl2_pmu_offline_cpu(unsigned int cpu, struct hlist_node *node)
+{
+	struct sifive_pl2_pmu *ptr = hlist_entry_safe(node, struct sifive_pl2_pmu, node);
+
+	/* Clear this cpu in cpumask */
+	cpumask_test_and_clear_cpu(cpu, &ptr->cpumask);
+
+	return 0;
+}
+
+/*
+ *  PM notifer for suspend to ram
+ */
+#ifdef CONFIG_CPU_PM
+static int sifive_pl2_pmu_pm_notify(struct notifier_block *b, unsigned long cmd,
+				    void *v)
+{
+	struct sifive_pl2_pmu_event *ptr = this_cpu_ptr(&sifive_pl2_pmu_event);
+	struct perf_event *event;
+	int idx;
+	int enabled_event = bitmap_weight(ptr->used_mask, ptr->counters);
+
+	if (!enabled_event)
+		return NOTIFY_OK;
+
+	for (idx = 0; idx < ptr->counters; idx++) {
+		event = ptr->events[idx];
+		if (!event)
+			continue;
+
+		switch (cmd) {
+		case CPU_PM_ENTER:
+			/* Stop and update the counter */
+			sifive_pl2_pmu_stop(event, PERF_EF_UPDATE);
+			break;
+		case CPU_PM_ENTER_FAILED:
+		case CPU_PM_EXIT:
+			 /*
+			  * Restore and enable the counter.
+			  *
+			  * Requires RCU read locking to be functional,
+			  * wrap the call within RCU_NONIDLE to make the
+			  * RCU subsystem aware this cpu is not idle from
+			  * an RCU perspective for the sifive_pl2_pmu_start() call
+			  * duration.
+			  */
+			RCU_NONIDLE(sifive_pl2_pmu_start(event, PERF_EF_RELOAD));
+			break;
+		default:
+			break;
+		}
+	}
+
+	return NOTIFY_OK;
+}
+
+static struct notifier_block sifive_pl2_pmu_pm_notifier_block = {
+	.notifier_call = sifive_pl2_pmu_pm_notify,
+};
+
+void sifive_pl2_pmu_pm_init(void)
+{
+	cpu_pm_register_notifier(&sifive_pl2_pmu_pm_notifier_block);
+}
+
+#else
+static inline void sifive_pl2_pmu_pm_init(void) { }
+#endif /* CONFIG_CPU_PM */
+
 static const struct of_device_id sifive_pl2_pmu_of_ids[] = {
 	{ .compatible = "sifive,pL2Cache0" },
 	{ .compatible = "sifive,pL2Cache1" },
@@ -597,12 +702,22 @@ static int sifive_pl2_pmu_dev_probe(struct platform_device *pdev)
 	ptr->event_select_base = pl2_base + SIFIVE_PL2_SELECT_BASE_OFFSET;
 	ptr->event_counter_base = pl2_base + SIFIVE_PL2_COUNTER_BASE_OFFSET;
 
+	ret = cpuhp_state_add_instance(CPUHP_AP_PERF_RISCV_SIFIVE_PL2_ONLINE,
+				       &sifive_pl2_pmu.node);
+	if (ret) {
+		pr_err("Failed to add hotplug instance: %d\n", ret);
+		goto probe_err;
+	}
+
 	if (!pl2pmu_init_done) {
 		ret = perf_pmu_register(sifive_pl2_pmu.pmu, sifive_pl2_pmu.pmu->name, -1);
 		if (ret) {
+			cpuhp_state_remove_instance(CPUHP_AP_PERF_RISCV_SIFIVE_PL2_ONLINE,
+						    &sifive_pl2_pmu.node);
 			pr_err("Failed to register sifive_pl2_pmu.pmu: %d\n", ret);
 			goto probe_err;
 		}
+		sifive_pl2_pmu_pm_init();
 		pl2pmu_init_done = true;
 	}
 
@@ -611,7 +726,6 @@ static int sifive_pl2_pmu_dev_probe(struct platform_device *pdev)
 probe_err:
 	/* Free memory. */
 	kfree(ptr->events);
-
 early_err:
 	return ret;
 }
@@ -627,6 +741,13 @@ static struct platform_driver sifive_pl2_pmu_driver = {
 static int __init sifive_pl2_pmu_init(void)
 {
 	int ret;
+
+	ret = cpuhp_setup_state_multi(CPUHP_AP_PERF_RISCV_SIFIVE_PL2_ONLINE,
+				      "perf/sifive/pl2:online",
+				      sifive_pl2_pmu_online_cpu,
+				      sifive_pl2_pmu_offline_cpu);
+	if (ret)
+		pr_err("Failed to register CPU hotplug notifier %d\n", ret);
 
 	ret = platform_driver_register(&sifive_pl2_pmu_driver);
 	if (ret)
