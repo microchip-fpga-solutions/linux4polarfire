@@ -511,7 +511,16 @@ static int start_cpu_kthread(unsigned int cpu)
 static void hwlat_hotplug_workfn(struct work_struct *dummy)
 {
 	struct trace_array *tr = hwlat_trace;
-	unsigned int cpu = smp_processor_id();
+	unsigned int cpu;
+
+	/*
+	 * If the work is scheduled after CPU hotplug offline being invoked,
+	 * then it would be queued into UNBOUNDED workqueue
+	 */
+	if (!is_percpu_thread())
+		return;
+
+	cpu = smp_processor_id();
 
 	mutex_lock(&trace_types_lock);
 	mutex_lock(&hwlat_data.lock);
