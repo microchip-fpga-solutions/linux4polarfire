@@ -2068,7 +2068,12 @@ static int start_per_cpu_kthreads(void)
 #ifdef CONFIG_HOTPLUG_CPU
 static void osnoise_hotplug_workfn(struct work_struct *dummy)
 {
-	unsigned int cpu = smp_processor_id();
+	unsigned int cpu;
+
+	if (!is_percpu_thread())
+		return;
+
+	cpu = smp_processor_id();
 
 	mutex_lock(&trace_types_lock);
 
