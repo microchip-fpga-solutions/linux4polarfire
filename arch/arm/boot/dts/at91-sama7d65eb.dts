@@ -77,7 +77,7 @@
 		button {
 				label = "PB_USER";
 				gpios = <&pioA PIN_PA16 GPIO_ACTIVE_LOW>;
-				linux,code = <KEY_PROG1>;
+				linux,code = <KEY_0>;
 				wakeup-source;
 		};
 	};
