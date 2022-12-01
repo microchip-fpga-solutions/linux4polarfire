@@ -14,4 +14,13 @@ config SIFIVE_CCACHE
 	help
 	  Support for the composable cache controller on SiFive platforms.
 
+config SIFIVE_ECACHE_PMU
+	bool "Sifive Extensible Cache PMU"
+	depends on PERF_EVENTS
+	help
+	  Support for the extensible cache pmu on SiFive platforms.
+	  SiFive extensible cache is shared by all cores. User can
+	  use the perf tool to select the extensible cache pmu events
+	  to monitor program or whole system cache performance.
+
 endmenu
