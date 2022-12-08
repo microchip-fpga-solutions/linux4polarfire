@@ -19,9 +19,13 @@
 #include <linux/platform_device.h>
 #include <linux/cpu_pm.h>
 
-#define SIFIVE_PL2_PMU_MAX_COUNTERS 64
-#define SIFIVE_PL2_SELECT_BASE_OFFSET 0x2000
-#define SIFIVE_PL2_COUNTER_BASE_OFFSET 0x3000
+#define SIFIVE_PL2_PMU_MAX_COUNTERS	64
+
+#define SIFIVE_PL2_CONFIG1_OFFSET	0x1000
+#define SIFIVE_PL2_CONFIG0_OFFSET	0x1008
+#define SIFIVE_PL2_SELECT_BASE_OFFSET	0x2000
+#define SIFIVE_PL2_PMCLIENT_OFFSET	0x2800
+#define SIFIVE_PL2_COUNTER_BASE_OFFSET	0x3000
 
 struct sifive_pl2_pmu_event {
 	struct perf_event **events;
@@ -37,9 +41,17 @@ struct sifive_pl2_pmu {
 	cpumask_t cpumask;
 };
 
+struct sifive_pl2_state {
+	void __iomem *pl2_base;
+	u32 config1;
+	u32 config0;
+	u64 pmclientfilter;
+};
+
 static bool pl2pmu_init_done;
 static struct sifive_pl2_pmu sifive_pl2_pmu;
 static DEFINE_PER_CPU(struct sifive_pl2_pmu_event, sifive_pl2_pmu_event);
+static DEFINE_PER_CPU(struct sifive_pl2_state, sifive_pl2_state);
 
 #ifndef readq
 static inline unsigned long long readq(void __iomem *addr)
@@ -549,13 +561,39 @@ static struct sifive_pl2_pmu sifive_pl2_pmu = {
 	.pmu = &sifive_pl2_generic_pmu,
 };
 
+static void sifive_pl2_state_save(struct sifive_pl2_state *pl2_state)
+{
+	void __iomem *pl2_base = pl2_state->pl2_base;
+
+	if (!pl2_base)
+		return;
+
+	pl2_state->config1 = readl(pl2_base + SIFIVE_PL2_CONFIG1_OFFSET);
+	pl2_state->config0 = readl(pl2_base + SIFIVE_PL2_CONFIG0_OFFSET);
+	pl2_state->pmclientfilter = readq(pl2_base + SIFIVE_PL2_PMCLIENT_OFFSET);
+}
+
+static void sifive_pl2_state_restore(struct sifive_pl2_state *pl2_state)
+{
+	void __iomem *pl2_base = pl2_state->pl2_base;
+
+	if (!pl2_base)
+		return;
+
+	writel(pl2_state->config1, pl2_base + SIFIVE_PL2_CONFIG1_OFFSET);
+	writel(pl2_state->config0, pl2_base + SIFIVE_PL2_CONFIG0_OFFSET);
+	writeq(pl2_state->pmclientfilter, pl2_base + SIFIVE_PL2_PMCLIENT_OFFSET);
+}
+
 /*
  * CPU Hotplug call back function
  */
 static int sifive_pl2_pmu_online_cpu(unsigned int cpu, struct hlist_node *node)
 {
 	struct sifive_pl2_pmu *ptr = hlist_entry_safe(node, struct sifive_pl2_pmu, node);
+	struct sifive_pl2_state *pl2_state = this_cpu_ptr(&sifive_pl2_state);
 
+	sifive_pl2_state_restore(pl2_state);
 	if (!cpumask_test_cpu(cpu, &ptr->cpumask))
 		cpumask_set_cpu(cpu, &ptr->cpumask);
 
@@ -565,7 +603,10 @@ static int sifive_pl2_pmu_online_cpu(unsigned int cpu, struct hlist_node *node)
 static int sifive_pl2_pmu_offline_cpu(unsigned int cpu, struct hlist_node *node)
 {
 	struct sifive_pl2_pmu *ptr = hlist_entry_safe(node, struct sifive_pl2_pmu, node);
+	struct sifive_pl2_state *pl2_state = this_cpu_ptr(&sifive_pl2_state);
 
+	/* Save the pl2 state */
+	sifive_pl2_state_save(pl2_state);
 	/* Clear this cpu in cpumask */
 	cpumask_test_and_clear_cpu(cpu, &ptr->cpumask);
 
@@ -618,13 +659,38 @@ static int sifive_pl2_pmu_pm_notify(struct notifier_block *b, unsigned long cmd,
 	return NOTIFY_OK;
 }
 
+static int sifive_pl2_pm_notify(struct notifier_block *b, unsigned long cmd,
+				void *v)
+{
+	struct sifive_pl2_state *pl2_state = this_cpu_ptr(&sifive_pl2_state);
+
+	switch (cmd) {
+	case CPU_PM_ENTER:
+		/* Save the pl2 state */
+		sifive_pl2_state_save(pl2_state);
+		break;
+	case CPU_PM_ENTER_FAILED:
+	case CPU_PM_EXIT:
+		sifive_pl2_state_restore(pl2_state);
+		break;
+	default:
+		break;
+	}
+	return NOTIFY_OK;
+}
+
 static struct notifier_block sifive_pl2_pmu_pm_notifier_block = {
 	.notifier_call = sifive_pl2_pmu_pm_notify,
+};
+
+static struct notifier_block sifive_pl2_pm_notifier_block = {
+	.notifier_call = sifive_pl2_pm_notify,
 };
 
 void sifive_pl2_pmu_pm_init(void)
 {
 	cpu_pm_register_notifier(&sifive_pl2_pmu_pm_notifier_block);
+	cpu_pm_register_notifier(&sifive_pl2_pm_notifier_block);
 }
 
 #else
@@ -660,6 +726,7 @@ static int sifive_pl2_pmu_dev_probe(struct platform_device *pdev)
 	int cpu, ret = -EINVAL;
 	struct device_node *cpu_node, *pl2_node;
 	struct sifive_pl2_pmu_event *ptr = NULL;
+	struct sifive_pl2_state *pl2_state = NULL;
 	void __iomem *pl2_base;
 
 	/* Traverse all cpu nodes to find the one mapping to its pl2 node. */
@@ -671,9 +738,11 @@ static int sifive_pl2_pmu_dev_probe(struct platform_device *pdev)
 		if (dev_of_node(&pdev->dev) == pl2_node) {
 			/* Use cpu to get its percpu data sifive_pl2_pmu_event. */
 			ptr = per_cpu_ptr(&sifive_pl2_pmu_event, cpu);
+			pl2_state = per_cpu_ptr(&sifive_pl2_state, cpu);
 			break;
 		}
 	}
+
 	if (!ptr) {
 		pr_err("Not found the corresponding cpu_node in dts.\n");
 		goto early_err;
@@ -701,6 +770,7 @@ static int sifive_pl2_pmu_dev_probe(struct platform_device *pdev)
 	pl2_config_read(pl2_base, cpu);
 	ptr->event_select_base = pl2_base + SIFIVE_PL2_SELECT_BASE_OFFSET;
 	ptr->event_counter_base = pl2_base + SIFIVE_PL2_COUNTER_BASE_OFFSET;
+	pl2_state->pl2_base = pl2_base;
 
 	ret = cpuhp_state_add_instance(CPUHP_AP_PERF_RISCV_SIFIVE_PL2_ONLINE,
 				       &sifive_pl2_pmu.node);
