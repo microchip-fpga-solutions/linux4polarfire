@@ -22,6 +22,7 @@
 #include <linux/device.h>
 #include <linux/bitfield.h>
 #include <linux/cpu_pm.h>
+#include <linux/pm.h>
 
 #include <asm/cacheflush.h>
 #include <asm/cacheinfo.h>
@@ -61,6 +62,8 @@
 
 #define SIFIVE_CCACHE_WAYENABLE 0x08
 #define SIFIVE_CCACHE_ECCINJECTERR 0x40
+#define SIFIVE_CCACHE_WAYMASKS 0x800
+#define SIFIVE_CCACHE_FEATUREDISABLE 0x1000
 
 #define SIFIVE_CCACHE_MAX_ECCINTR 4
 #define SIFIVE_CCACHE_LINE_SIZE 64
@@ -80,8 +83,17 @@ struct sifive_ccache_pmu {
 	cpumask_t cpumask;
 };
 
+struct sifive_ccache_state {
+	u32 masters;
+	u32 wayenable;
+	u32 featuredisable;
+	u32 *waymask;
+	u64 pmclientfilter;
+};
+
 static struct sifive_ccache_pmu sifive_ccache_pmu;
 static struct sifive_ccache_pmu_event sifive_ccache_pmu_event;
+static struct sifive_ccache_state sifive_ccache_state;
 
 /* ccache */
 static void __iomem *ccache_base;
@@ -539,9 +551,11 @@ static struct sifive_ccache_pmu sifive_ccache_pmu = {
 	.pmu = &sifive_ccache_generic_pmu,
 };
 
-static const struct of_device_id sifive_ccache_pmu_of_ids[] = {
+static const struct of_device_id sifive_ccache_ids[] = {
+	{ .compatible = "sifive,fu540-c000-ccache" },
+	{ .compatible = "sifive,fu740-c000-ccache" },
 	{ .compatible = "sifive,ccache0" },
-	{ /* sentinel value */ }
+	{ /* end of table */ }
 };
 
 static int sifive_ccache_pmu_online_cpu(unsigned int cpu, struct hlist_node *node)
@@ -577,68 +591,72 @@ static int sifive_ccache_pmu_offline_cpu(unsigned int cpu, struct hlist_node *no
 	return 0;
 }
 
-#ifdef CONFIG_CPU_PM
-static int sifive_ccache_pmu_pm_notify(struct notifier_block *b, unsigned long cmd,
-				       void *v)
+static int sifive_ccache_suspend(void)
 {
 	struct sifive_ccache_pmu_event *ptr = &sifive_ccache_pmu_event;
+	static struct sifive_ccache_state *state = &sifive_ccache_state;
 	struct perf_event *event;
 	int idx;
 	int enabled_event = bitmap_weight(ptr->used_mask, ptr->counters);
 
+	state->wayenable = readl(ccache_base + SIFIVE_CCACHE_WAYENABLE);
+	state->featuredisable = readl(ccache_base + SIFIVE_CCACHE_FEATUREDISABLE);
+	for (idx = 0; idx < state->masters; idx++)
+		state->waymask[idx] = readl(ccache_base + SIFIVE_CCACHE_WAYMASKS +
+						idx * sizeof(u64));
+
 	if (!enabled_event)
-		return NOTIFY_OK;
+		return 0;
 
 	for (idx = 0; idx < ptr->counters; idx++) {
 		event = ptr->events[idx];
 		if (!event)
 			continue;
 
-		switch (cmd) {
-		case CPU_PM_ENTER:
-			/* Stop and update the counter */
-			sifive_ccache_pmu_stop(event, PERF_EF_UPDATE);
-			break;
-		case CPU_PM_ENTER_FAILED:
-		case CPU_PM_EXIT:
-			 /*
-			  * Restore and enable the counter.
-			  *
-			  * Requires RCU read locking to be functional,
-			  * wrap the call within RCU_NONIDLE to make the
-			  * RCU subsystem aware this cpu is not idle from
-			  * an RCU perspective for the sifive_ccache_pmu_start() call
-			  * duration.
-			  */
-			RCU_NONIDLE(sifive_ccache_pmu_start(event, PERF_EF_RELOAD));
-			break;
-		default:
-			break;
-		}
+		sifive_ccache_pmu_stop(event, PERF_EF_UPDATE);
 	}
-
-	return NOTIFY_OK;
+	state->pmclientfilter = readq(ccache_base +
+				      SIFIVE_CCACHE_CLIENT_FILTER_BASE_OFFSET);
+	return 0;
 }
 
-static struct notifier_block sifive_ccache_pmu_pm_notifier_block = {
-	.notifier_call = sifive_ccache_pmu_pm_notify,
-};
-
-void sifive_ccache_pmu_pm_init(void)
+static int sifive_ccache_resume(void)
 {
-	cpu_pm_register_notifier(&sifive_ccache_pmu_pm_notifier_block);
+	struct sifive_ccache_pmu_event *ptr = &sifive_ccache_pmu_event;
+	static struct sifive_ccache_state *state = &sifive_ccache_state;
+	struct perf_event *event;
+	int idx;
+	int enabled_event = bitmap_weight(ptr->used_mask, ptr->counters);
+
+	writel(state->wayenable, ccache_base + SIFIVE_CCACHE_WAYENABLE);
+	writel(state->featuredisable, ccache_base + SIFIVE_CCACHE_FEATUREDISABLE);
+	for (idx = 0; idx < state->masters; idx++)
+		writel(state->waymask[idx], ccache_base + SIFIVE_CCACHE_WAYMASKS +
+						idx * sizeof(u64));
+
+	if (!enabled_event)
+		return 0;
+
+	for (idx = 0; idx < ptr->counters; idx++) {
+		event = ptr->events[idx];
+		if (!event)
+			continue;
+
+		RCU_NONIDLE(sifive_ccache_pmu_start(event, PERF_EF_RELOAD));
+	}
+	writeq(state->pmclientfilter, ccache_base +
+		SIFIVE_CCACHE_CLIENT_FILTER_BASE_OFFSET);
+
+	return 0;
 }
 
-#else
-static inline void sifive_ccache_pmu_pm_init(void) { }
-#endif /* CONFIG_CPU_PM */
-
-static int sifive_ccache_pmu_dev_probe(struct platform_device *pdev)
+static int sifive_ccache_dev_probe(struct platform_device *pdev)
 {
 	struct resource *res;
 	int ret = -EINVAL;
 	struct device_node *ccache_node = pdev->dev.of_node;
 	struct sifive_ccache_pmu_event *ptr = &sifive_ccache_pmu_event;
+	static struct sifive_ccache_state *state = &sifive_ccache_state;
 	void __iomem *ccache_base;
 
 	/* Get counter numbers. */
@@ -651,6 +669,15 @@ static int sifive_ccache_pmu_dev_probe(struct platform_device *pdev)
 
 	/* Allocate perf_event. */
 	ptr->events = kcalloc(ptr->counters, sizeof(struct perf_event), GFP_KERNEL);
+
+	/* Get master numbers. */
+	ret = of_property_read_u32(ccache_node, "sifive,max-master-id", &state->masters);
+	if (ret) {
+		pr_err("Not found sifive,max-master-id property\n");
+		goto early_err;
+	}
+	pr_info("masters: %d\n", state->masters);
+	state->waymask = kcalloc(state->masters, sizeof(u32), GFP_KERNEL);
 
 	/* Set base address of select and counter registers. */
 	ccache_base = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
@@ -688,12 +715,29 @@ early_err:
 	return ret;
 }
 
-static struct platform_driver sifive_ccache_pmu_driver = {
+
+enum {
+	QUIRK_NONSTANDARD_CACHE_OPS	= BIT(0),
+	QUIRK_BROKEN_DATA_UNCORR	= BIT(1),
+};
+
+static const struct of_device_id sifive_ccache_ids[] = {
+	{ .compatible = "sifive,fu540-c000-ccache" },
+	{ .compatible = "sifive,fu740-c000-ccache" },
+	{ .compatible = "starfive,jh7100-ccache",
+	  .data = (void *)(QUIRK_NONSTANDARD_CACHE_OPS | QUIRK_BROKEN_DATA_UNCORR) },
+	{ .compatible = "microchip,mpfs-ccache",
+	  .data = (void *)(QUIRK_NONSTANDARD_CACHE_OPS) },
+	{ .compatible = "sifive,ccache0" },
+	{ /* end of table */ }
+};
+
+static struct platform_driver sifive_ccache_driver = {
 	.driver = {
-		   .name = "SiFive-CCACHE-PMU",
-		   .of_match_table = sifive_ccache_pmu_of_ids,
+		   .name = "SiFive-CCACHE",
+		   .of_match_table = sifive_ccache_ids,
 		   },
-	.probe = sifive_ccache_pmu_dev_probe,
+	.probe = sifive_ccache_dev_probe,
 };
 
 enum {
@@ -701,11 +745,6 @@ enum {
 	DATA_CORR,
 	DATA_UNCORR,
 	DIR_UNCORR,
-};
-
-enum {
-	QUIRK_NONSTANDARD_CACHE_OPS	= BIT(0),
-	QUIRK_BROKEN_DATA_UNCORR	= BIT(1),
 };
 
 #ifdef CONFIG_DEBUG_FS
@@ -755,17 +794,7 @@ static void ccache_config_read(void)
 	pr_info("Index of the largest way enabled: %u\n", cfg);
 }
 
-static const struct of_device_id sifive_ccache_ids[] = {
-	{ .compatible = "sifive,fu540-c000-ccache" },
-	{ .compatible = "sifive,fu740-c000-ccache" },
-	{ .compatible = "starfive,jh7100-ccache",
-	  .data = (void *)(QUIRK_NONSTANDARD_CACHE_OPS | QUIRK_BROKEN_DATA_UNCORR) },
-	{ .compatible = "microchip,mpfs-ccache",
-	  .data = (void *)(QUIRK_NONSTANDARD_CACHE_OPS) },
-	{ .compatible = "sifive,ccache0" },
-	{ /* end of table */ }
-};
-
+>>>>>>> 84df159e9296 (soc: sifive ccache: Add state save and restore function):drivers/soc/sifive/sifive_ccache.c
 static ATOMIC_NOTIFIER_HEAD(ccache_err_chain);
 
 int register_sifive_ccache_error_notifier(struct notifier_block *nb)
@@ -889,6 +918,30 @@ static irqreturn_t ccache_int_handler(int irq, void *device)
 	return IRQ_HANDLED;
 }
 
+#ifdef CONFIG_CPU_PM
+static int sifive_ccache_pm_notify(struct notifier_block *b, unsigned long cmd,
+				   void *v)
+{
+	switch (cmd) {
+	case CPU_CLUSTER_PM_ENTER:
+		sifive_ccache_suspend();
+		break;
+	case CPU_CLUSTER_PM_ENTER_FAILED:
+	case CPU_CLUSTER_PM_EXIT:
+		sifive_ccache_resume();
+		break;
+	default:
+		break;
+	}
+
+	return NOTIFY_OK;
+}
+
+static struct notifier_block sifive_ccache_pm_notifier_block = {
+	.notifier_call = sifive_ccache_pm_notify,
+};
+#endif
+
 static int __init sifive_ccache_init(void)
 {
 	struct device_node *np;
@@ -961,11 +1014,13 @@ static int __init sifive_ccache_init(void)
 	if (rc)
 		pr_err("Failed to register CPU hotplug notifier %d\n", rc);
 
-	rc = platform_driver_register(&sifive_ccache_pmu_driver);
+	rc = platform_driver_register(&sifive_ccache_driver);
 	if (rc)
 		pr_err("Failed to register sifive_ccache_pmu_driver: %d\n", rc);
 
-	sifive_ccache_pmu_pm_init();
+#ifdef CONFIG_CPU_PM
+	cpu_pm_register_notifier(&sifive_ccache_pm_notifier_block);
+#endif
 
 #ifdef CONFIG_DEBUG_FS
 	setup_sifive_debug();
