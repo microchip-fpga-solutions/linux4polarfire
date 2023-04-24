@@ -318,7 +318,7 @@ int kvm_riscv_aia_aplic_inject(struct kvm *kvm, u32 source, bool level)
 
 	target = irqd->target;
 	if (ie && ((irqd->state & APLIC_IRQ_STATE_ENPEND) ==
-		   APLIC_IRQ_STATE_ENPEND)) {
+		   APLIC_IRQ_STATE_ENPEND) && (irqd->state & APLIC_IRQ_STATE_INPUT)) {
 		irqd->state &= ~APLIC_IRQ_STATE_PENDING;
 		inject = true;
 	}
