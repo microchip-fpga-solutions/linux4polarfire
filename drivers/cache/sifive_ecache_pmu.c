@@ -9,6 +9,7 @@
 
 #define pr_fmt(fmt) "ECACHE_PMU: " fmt
 
+#include <linux/cpu_pm.h>
 #include <linux/kdebug.h>
 #include <linux/bitmap.h>
 #include <linux/perf_event.h>
@@ -21,6 +22,13 @@
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
 #include <linux/device.h>
+
+#ifdef CONFIG_CPU_PM
+#define SIFIVE_EC_CHICKEN_OFF	0x100
+
+u32 sifive_ec_chicken;
+void __iomem *ec_base;
+#endif
 
 /* ecache pmu counter */
 #define ECACHE_PMU_MAX_COUNTERS		32
@@ -527,6 +535,45 @@ static int sifive_ecache_pmu_offline_cpu(unsigned int cpu, struct hlist_node *no
 	return 0;
 }
 
+#ifdef CONFIG_CPU_PM
+#define SIFIVE_EC_CHICKEN_OFF	0x100
+static int sifive_ec_suspend(void)
+{
+	sifive_ec_chicken = readl((char *)ec_base + SIFIVE_EC_CHICKEN_OFF);
+
+	return 0;
+}
+
+static int sifive_ec_resume(void)
+{
+	writel(sifive_ec_chicken, (char *)ec_base + SIFIVE_EC_CHICKEN_OFF);
+
+	return 0;
+}
+
+static int sifive_ec_pm_notify(struct notifier_block *b, unsigned long cmd,
+			       void *v)
+{
+	switch (cmd) {
+	case CPU_CLUSTER_PM_ENTER:
+		sifive_ec_suspend();
+		break;
+	case CPU_CLUSTER_PM_ENTER_FAILED:
+	case CPU_CLUSTER_PM_EXIT:
+		sifive_ec_resume();
+		break;
+	default:
+		break;
+	}
+
+	return NOTIFY_OK;
+}
+
+static struct notifier_block sifive_ec_pm_notifier_block = {
+	.notifier_call = sifive_ec_pm_notify,
+};
+#endif
+
 static void sifive_ec_pmu_init(struct sifive_ecache_pmu *ecache_pmu)
 {
 	int i;
@@ -619,6 +666,10 @@ static int sifive_ecache_pmu_dev_probe(struct platform_device *pdev)
 
 	ecache_pmu->slice_count = slice_count;
 	sifive_ec_pmu_init(ecache_pmu);
+#ifdef CONFIG_CPU_PM
+	ec_base = ecache_pmu->slice[0].base;
+	cpu_pm_register_notifier(&sifive_ec_pm_notifier_block);
+#endif
 
 	return 0;
 
