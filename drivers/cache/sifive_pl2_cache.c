@@ -772,13 +772,6 @@ static int sifive_pl2_pmu_dev_probe(struct platform_device *pdev)
 	ptr->event_counter_base = pl2_base + SIFIVE_PL2_COUNTER_BASE_OFFSET;
 	pl2_state->pl2_base = pl2_base;
 
-	ret = cpuhp_state_add_instance(CPUHP_AP_PERF_RISCV_SIFIVE_PL2_ONLINE,
-				       &sifive_pl2_pmu.node);
-	if (ret) {
-		pr_err("Failed to add hotplug instance: %d\n", ret);
-		goto probe_err;
-	}
-
 	if (!pl2pmu_init_done) {
 		ret = perf_pmu_register(sifive_pl2_pmu.pmu, sifive_pl2_pmu.pmu->name, -1);
 		if (ret) {
@@ -818,6 +811,11 @@ static int __init sifive_pl2_pmu_init(void)
 				      sifive_pl2_pmu_offline_cpu);
 	if (ret)
 		pr_err("Failed to register CPU hotplug notifier %d\n", ret);
+
+	ret = cpuhp_state_add_instance(CPUHP_AP_PERF_RISCV_SIFIVE_PL2_ONLINE,
+				       &sifive_pl2_pmu.node);
+	if (ret)
+		pr_err("Failed to add hotplug instance: %d\n", ret);
 
 	ret = platform_driver_register(&sifive_pl2_pmu_driver);
 	if (ret)
