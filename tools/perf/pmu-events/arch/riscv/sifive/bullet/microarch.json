@@ -40,7 +40,7 @@
     "BriefDescription": "Counts the number of times the core pipeline was flushed. Common causes include fence.i and certain CSR accesses"
   },
   {
-    "EventName": "RELAY",
+    "EventName": "REPLAY",
     "EventCode": "0x0010001",
     "BriefDescription": "Counts the number of times a replay was performed for memory accesses"
   },

@@ -1,0 +1,12 @@
+[
+  {
+    "EventName": "SD_STORE_DATA_AFTER_ADDRESS",
+    "EventCode": "0x10b",
+    "BriefDescription": "Counts occurrences of store addresses available before store data"
+  },
+  {
+    "EventName": "SD_REPLAY_STORE_DATA",
+    "EventCode": "0x20b",
+    "BriefDescription": "Counts replays in the Store Data Pipeline"
+  }
+]

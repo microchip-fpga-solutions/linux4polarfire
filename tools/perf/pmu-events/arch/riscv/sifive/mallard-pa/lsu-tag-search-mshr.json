@@ -1,0 +1,112 @@
+[
+  {
+    "EventName": "L1_DCACHE_TAG_MDF_WRITE_BLOCKED",
+    "EventCode": "0x10d",
+    "BriefDescription": "Counts cycles in which an L1 Data Cache Tag write is blocked waiting for a Miss Status Holding Register data forward"
+  },
+  {
+    "EventName": "L1_DCACHE_TAG_ML1AW_READ_BLOCKED",
+    "EventCode": "0x20d",
+    "BriefDescription": "Counts cycles in which an L1 Data Cache Tag read is blocked waiting for Miss Status Holding Register arbitration"
+  },
+  {
+    "EventName": "PROBE_L1_DCACHE_MISS",
+    "EventCode": "0x40d",
+    "BriefDescription": "Counts cache probes that miss the L1 Data Cache"
+  },
+  {
+    "EventName": "PROBE_L1_DCACHE_HIT",
+    "EventCode": "0x80d",
+    "BriefDescription": "Counts cache probes that hit the L1 Data Cache"
+  },
+  {
+    "EventName": "PROBE_MSHR_HIT",
+    "EventCode": "0x100d",
+    "BriefDescription": "Counts cache probes that hit a Miss Status Holding Register"
+  },
+  {
+    "EventName": "TSW_HOLD_L1_TAG_PROTECTED",
+    "EventCode": "0x200d",
+    "BriefDescription": "Counts cycles in which a Tag Search Write is held due to a protected L1 Data Cache Tag"
+  },
+  {
+    "EventName": "TSW_RELQ_FULL",
+    "EventCode": "0x400d",
+    "BriefDescription": "Counts cycles in which a Tag Search Write is held waiting for a free Release Queue entry"
+  },
+  {
+    "EventName": "TSW_RELQ_MATCH",
+    "EventCode": "0x800d",
+    "BriefDescription": "Counts cycles in which a Tag Search Write is held waiting due to a matching entry in the Release Queue"
+  },
+  {
+    "EventName": "TSW_L1_DCACHE_TAG_ERROR_CORRECTABLE",
+    "EventCode": "0x1000d",
+    "BriefDescription": "Counts correctable errors in the L1 Data Cache Tag array detected by a Tag Search Write"
+  },
+  {
+    "EventName": "TSW_L1_DCACHE_TAG_ERROR_UNCORRECTABLE",
+    "EventCode": "0x2000d",
+    "BriefDescription": "Counts uncorrectable errors in the L1 Data Cache Tag array detected by a Tag Search Write"
+  },
+  {
+    "EventName": "MSHR_ALLOCATE_L1",
+    "EventCode": "0x4000d",
+    "BriefDescription": "Counts allocations in the L1 Data Cache from Miss Status Holding Register data forwarding"
+  },
+  {
+    "EventName": "MSHR_ALLOCATE_L1_OVER",
+    "EventCode": "0x8000d",
+    "BriefDescription": "Counts allocations to valid lines in the L1 Data Cache from Miss Status Holding Register data forwarding"
+  },
+  {
+    "EventName": "MSHR_UPGRADE_L1_TAG",
+    "EventCode": "0x10000d",
+    "BriefDescription": "Counts upgrades to L1 Data Cache tags from Miss Status Holding Registers"
+  },
+  {
+    "EventName": "MSHR_WRITE_BLOCKED_L1_WAY_PREDICTOR",
+    "EventCode": "0x20000d",
+    "BriefDescription": "Counts cycles in which a Miss Status Holding Register write is blocked due to the L1 Data Cache Way Predictor"
+  },
+  {
+    "EventName": "MSHR_READ_BLOCKED",
+    "EventCode": "0x80000d",
+    "BriefDescription": "Counts cycles in which a Miss Status Holding Register read is blocked"
+  },
+  {
+    "EventName": "MSHR_BLOCKED_STQ_WRITE_GATHER",
+    "EventCode": "0x100000d",
+    "BriefDescription": "Counts cycles in which a Store Queue Write Gather is blocked by Miss Status Holding Register arbitration"
+  },
+  {
+    "EventName": "MSHR_BLOCKED_L2_ARBITRATION",
+    "EventCode": "0x200000d",
+    "BriefDescription": "Counts cycles in which an L2 cache read from a Miss Status Holding Register is blocked by arbitration"
+  },
+  {
+    "EventName": "MSHR_BLOCKED_LDQ_READ",
+    "EventCode": "0x400000d",
+    "BriefDescription": "Counts cycles in which a Load Queue read is blocked by Miss Status Holding Register arbitration"
+  },
+  {
+    "EventName": "MSHR_BLOCKED_L1_ARBITRATION",
+    "EventCode": "0x800000d",
+    "BriefDescription": "Counts cycles in which an L1 cache read from a Miss Status Holding Register is blocked by arbitration"
+  },
+  {
+    "EventName": "MSHR_FENCE_WAITING_PREDECESSOR",
+    "EventCode": "0x1000000d",
+    "BriefDescription": "Counts cycles in which a Miss Status Holding Register FENCE is waiting for a predecessor"
+  },
+  {
+    "EventName": "MSHR_SUCCESSOR_WAITING_FENCE",
+    "EventCode": "0x2000000d",
+    "BriefDescription": "Counts cycles in which an Miss Status Holding Register entry is blocked by a preceding FENCE"
+  },
+  {
+    "EventName": "TSW_L1_TAG_WRITE_BLOCKED",
+    "EventCode": "0x4000000d",
+    "BriefDescription": "Counts cycles in which a Tag Search Write to an L1 Data Cache Tag is blocked"
+  }
+]
