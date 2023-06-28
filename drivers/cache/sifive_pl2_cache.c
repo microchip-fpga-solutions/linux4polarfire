@@ -44,7 +44,7 @@ struct sifive_pl2_pmu {
 struct sifive_pl2_state {
 	void __iomem *pl2_base;
 	u32 config1;
-	u32 config0;
+	u64 config0;
 	u64 pmclientfilter;
 };
 
@@ -569,7 +569,7 @@ static void sifive_pl2_state_save(struct sifive_pl2_state *pl2_state)
 		return;
 
 	pl2_state->config1 = readl(pl2_base + SIFIVE_PL2_CONFIG1_OFFSET);
-	pl2_state->config0 = readl(pl2_base + SIFIVE_PL2_CONFIG0_OFFSET);
+	pl2_state->config0 = readq(pl2_base + SIFIVE_PL2_CONFIG0_OFFSET);
 	pl2_state->pmclientfilter = readq(pl2_base + SIFIVE_PL2_PMCLIENT_OFFSET);
 }
 
@@ -581,7 +581,7 @@ static void sifive_pl2_state_restore(struct sifive_pl2_state *pl2_state)
 		return;
 
 	writel(pl2_state->config1, pl2_base + SIFIVE_PL2_CONFIG1_OFFSET);
-	writel(pl2_state->config0, pl2_base + SIFIVE_PL2_CONFIG0_OFFSET);
+	writeq(pl2_state->config0, pl2_base + SIFIVE_PL2_CONFIG0_OFFSET);
 	writeq(pl2_state->pmclientfilter, pl2_base + SIFIVE_PL2_PMCLIENT_OFFSET);
 }
 
