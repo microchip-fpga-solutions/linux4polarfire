@@ -38,7 +38,6 @@ struct sifive_pl2_pmu_event {
 struct sifive_pl2_pmu {
 	struct pmu *pmu;
 	struct hlist_node node;
-	cpumask_t cpumask;
 };
 
 struct sifive_pl2_state {
@@ -77,26 +76,7 @@ static inline void writeq(unsigned long long v, void __iomem *addr)
  *   symbolically, e.g.:
  *     perf stat -a -e sifive_pl2_pmu/inner_put_partial_data_hit/ ls
  *     perf stat -a -e sifive_pl2_pmu/event=0x101/ ls
- * - cpumask, used by perf user space and other tools to know on which CPUs
  */
-
-/* cpumask */
-static ssize_t cpumask_show(struct device *dev,
-			    struct device_attribute *attr, char *buf)
-{
-	return cpumap_print_to_pagebuf(true, buf, &sifive_pl2_pmu.cpumask);
-};
-
-static DEVICE_ATTR_RO(cpumask);
-
-static struct attribute *sifive_pl2_pmu_cpumask_attrs[] = {
-	&dev_attr_cpumask.attr,
-	NULL,
-};
-
-static const struct attribute_group sifive_pl2_pmu_cpumask_attr_group = {
-	.attrs = sifive_pl2_pmu_cpumask_attrs,
-};
 
 /* formats */
 
@@ -352,7 +332,6 @@ static struct attribute_group sifive_pl2_pmu_events_group = {
 static const struct attribute_group *sifive_pl2_pmu_attr_grps[] = {
 	&sifive_pl2_pmu_format_group,
 	&sifive_pl2_pmu_events_group,
-	&sifive_pl2_pmu_cpumask_attr_group,
 	NULL,
 };
 
@@ -546,7 +525,7 @@ static int sifive_pl2_pmu_event_init(struct perf_event *event)
 
 static struct pmu sifive_pl2_generic_pmu = {
 	.name		= "sifive_pl2_pmu",
-	.task_ctx_nr	= perf_invalid_context,
+	.task_ctx_nr	= perf_sw_context,
 	.event_init	= sifive_pl2_pmu_event_init,
 	.add		= sifive_pl2_pmu_add,
 	.del		= sifive_pl2_pmu_del,
@@ -590,25 +569,18 @@ static void sifive_pl2_state_restore(struct sifive_pl2_state *pl2_state)
  */
 static int sifive_pl2_pmu_online_cpu(unsigned int cpu, struct hlist_node *node)
 {
-	struct sifive_pl2_pmu *ptr = hlist_entry_safe(node, struct sifive_pl2_pmu, node);
 	struct sifive_pl2_state *pl2_state = this_cpu_ptr(&sifive_pl2_state);
 
 	sifive_pl2_state_restore(pl2_state);
-	if (!cpumask_test_cpu(cpu, &ptr->cpumask))
-		cpumask_set_cpu(cpu, &ptr->cpumask);
 
 	return 0;
 }
 
 static int sifive_pl2_pmu_offline_cpu(unsigned int cpu, struct hlist_node *node)
 {
-	struct sifive_pl2_pmu *ptr = hlist_entry_safe(node, struct sifive_pl2_pmu, node);
 	struct sifive_pl2_state *pl2_state = this_cpu_ptr(&sifive_pl2_state);
-
 	/* Save the pl2 state */
 	sifive_pl2_state_save(pl2_state);
-	/* Clear this cpu in cpumask */
-	cpumask_test_and_clear_cpu(cpu, &ptr->cpumask);
 
 	return 0;
 }
