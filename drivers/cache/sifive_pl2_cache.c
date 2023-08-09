@@ -5,7 +5,7 @@
  * Copyright (C) 2018-2022 SiFive, Inc.
  */
 
-#define pr_fmt(fmt) "pL2CACHE: " fmt
+#define pr_fmt(fmt) "pl2cache: " fmt
 
 #include <linux/kprobes.h>
 #include <linux/kernel.h>
@@ -670,8 +670,8 @@ static inline void sifive_pl2_pmu_pm_init(void) { }
 #endif /* CONFIG_CPU_PM */
 
 static const struct of_device_id sifive_pl2_pmu_of_ids[] = {
-	{ .compatible = "sifive,pL2Cache0" },
-	{ .compatible = "sifive,pL2Cache1" },
+	{ .compatible = "sifive,pl2cache0" },
+	{ .compatible = "sifive,pl2cache1" },
 	{ /* sentinel value */ }
 };
 
