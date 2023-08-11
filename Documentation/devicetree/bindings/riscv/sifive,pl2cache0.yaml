@@ -2,7 +2,7 @@
 # Copyright (C) 2023 SiFive, Inc.
 %YAML 1.2
 ---
-$id: http://devicetree.org/schemas/riscv/sifive,pL2Cache0.yaml#
+$id: http://devicetree.org/schemas/riscv/sifive,pl2cache0.yaml#
 $schema: http://devicetree.org/meta-schemas/core.yaml#
 
 title: SiFive Private L2 Cache Controller
@@ -24,8 +24,8 @@ select:
     compatible:
       contains:
         enum:
-          - sifive,pL2Cache0
-          - sifive,pL2Cache1
+          - sifive,pl2cache0
+          - sifive,pl2cache1
 
   required:
     - compatible
@@ -34,8 +34,8 @@ properties:
   compatible:
     items:
       - enum:
-          - sifive,pL2Cache0
-          - sifive,pL2Cache1
+          - sifive,pl2cache0
+          - sifive,pl2cache1
 
   cache-block-size:
     const: 64
@@ -70,7 +70,7 @@ required:
 examples:
   - |
     pl2@10104000 {
-        compatible = "sifive,pL2Cache0";
+        compatible = "sifive,pl2cache0";
         cache-block-size = <64>;
         cache-level = <2>;
         cache-sets = <512>;
