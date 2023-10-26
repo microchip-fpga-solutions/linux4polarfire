@@ -2,7 +2,7 @@
 /*
  *  at91-sama7d65.dts - Device Tree file for SAMA7D65 board
  *
- *  Copyright (c) 2020 Microchip Technology Inc. and its subsidiaries
+ *  Copyright (c) 2023 Microchip Technology Inc. and its subsidiaries
  *
  *
  */
@@ -468,6 +468,7 @@
 	bus-width = <4>;
 	vmmc-supply = <&vdd_3v3>;
 	vqmmc-supply = <&vdd_3v3>;
+	disable-wp;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_sdmmc1_default>;
 	status = "okay";
