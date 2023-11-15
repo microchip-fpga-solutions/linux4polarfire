@@ -400,7 +400,7 @@ static const struct {
 	  .ep = { "syspll_divpmcck", "ddrpll_divpmcck", },
 	  .ep_mux_table = { 5, 6, },
 	  .ep_count = 2,
-	  .ep_chg_id = 5, },
+	  .ep_chg_id = INT_MIN, },
 
 	{ .n = "mck4",
 	  .id = 4,
@@ -519,6 +519,7 @@ static const struct {
 	{ .n = "icm_clk",	.p = "mck5", .id = 53, },
 	{ .n = "i2smcc0_clk",	.p = "mck9", .id = 54, .r = { .max = 200000000, }, },
 	{ .n = "i2smcc1_clk",	.p = "mck9", .id = 55, .r = { .max = 200000000, }, },
+	{ .n = "lcd_clk",	.p = "mck3", .id = 56, },
 	{ .n = "matrix_clk",	.p = "mck5", .id = 57, },
 	{ .n = "mcan0_clk",	.p = "mck5", .id = 58, .r = { .max = 200000000, }, },
 	{ .n = "mcan1_clk",	.p = "mck5", .id = 59, .r = { .max = 200000000, }, },
@@ -557,6 +558,7 @@ static const struct {
 	{ .n = "udphsa_clk",	.p = "mck5", .id = 99, },
 	{ .n = "udphsb_clk",	.p = "mck5", .id = 100, },
 	{ .n = "uhphs_clk",	.p = "mck5", .id = 101, },
+	{ .n = "dsi_clk",	.p = "mck3", .id = 103, },
 };
 
 /*
@@ -688,7 +690,7 @@ static const struct {
 	  .pp = { "ethpll_divpmcck", },
 	  .pp_mux_table = { 10, },
 	  .pp_count = 1,
-	  .pp_chg_id = 3, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "gmac1_gclk",
 	  .id = 47,
@@ -696,7 +698,7 @@ static const struct {
 	  .pp = { "ethpll_divpmcck", },
 	  .pp_mux_table = { 10, },
 	  .pp_count = 1,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "gmac0_tsu_gclk",
 	  .id = 49,
@@ -729,6 +731,13 @@ static const struct {
 	  .pp_mux_table = { 9, },
 	  .pp_count = 1,
 	  .pp_chg_id = 4, },
+
+	{ .n = "lcdc_gclk",
+	  .id = 56,
+	  .r = { .max = 100000000 },
+	  .pp_count = 0,
+	  .pp_chg_id = INT_MIN,
+	},
 
 	{ .n  = "mcan0_gclk",
 	  .id = 58,
@@ -856,7 +865,7 @@ static const struct {
 	  .pp = {  "baudpll_divpmcck", "ethpll_divpmcck",},
 	  .pp_mux_table = { 8, 10, },
 	  .pp_count = 2,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "sdmmc1_gclk",
 	  .id = 76,
@@ -864,7 +873,7 @@ static const struct {
 	  .pp = { "baudpll_divpmcck", "ethpll_divpmcck",},
 	  .pp_mux_table = { 8, 10, },
 	  .pp_count = 2,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "sdmmc2_gclk",
 	  .id = 77,
@@ -872,7 +881,7 @@ static const struct {
 	  .pp = {  "baudpll_divpmcck", "ethpll_divpmcck",},
 	  .pp_mux_table = { 8, 10 },
 	  .pp_count = 2,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "spdifrx_gclk",
 	  .id = 79,
