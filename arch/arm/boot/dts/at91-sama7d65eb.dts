@@ -464,6 +464,11 @@
 	status = "okay";
 };
 
+&rtt {
+	atmel,rtt-rtc-time-reg = <&gpbr 0x0>;
+	status = "disabled";
+};
+
 &sdmmc1 {
 	bus-width = <4>;
 	vmmc-supply = <&vdd_3v3>;
