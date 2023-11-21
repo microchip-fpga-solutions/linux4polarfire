@@ -15,8 +15,8 @@
 #include <dt-bindings/sound/microchip,pdmc.h>
 
 / {
-	model = "Microchip SAMA7D65";
-	compatible = "microchip,sama7d65", "microchip,sama7d65", "microchip,sama7";
+	model = "Microchip SAMA7D65 DDR3 EB";
+	compatible = "microchip,sama7d65-ddr3-eb", "microchip,sama7d65", "microchip,sama7";
 
 	chosen {
 
