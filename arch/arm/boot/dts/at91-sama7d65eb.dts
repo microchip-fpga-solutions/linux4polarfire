@@ -15,8 +15,8 @@
 #include <dt-bindings/sound/microchip,pdmc.h>
 
 / {
-	model = "Microchip SAMA7D65";
-	compatible = "microchip,sama7d65", "microchip,sama7d65", "microchip,sama7";
+	model = "Microchip SAMA7D65 DDR3 EB";
+	compatible = "microchip,sama7d65-ddr3-eb", "microchip,sama7d65", "microchip,sama7";
 
 	chosen {
 
@@ -396,7 +396,7 @@
 				 <PIN_PB26__SDMMC1_DAT2>,
 				 <PIN_PB27__SDMMC1_DAT3>;
 			slew-rate = <0>;
-			bias-pull-up;
+			bias-disable;
 		};
 		ck_cd_rstn_vddsel {
 			pinmux = <PIN_PB23__SDMMC1_CK>,
@@ -404,7 +404,7 @@
 				 <PIN_PB30__SDMMC1_1V8SEL>,
 				 <PIN_PB29__SDMMC1_CD>;
 			slew-rate = <0>;
-			bias-pull-up;
+			bias-disable;
 		};
 	};
 	pinctrl_sdmmc2_default: sdmmc2_default {
@@ -415,7 +415,7 @@
 				 <PIN_PC31__SDMMC2_DAT2>,
 				 <PIN_PD0__SDMMC2_DAT3>;
 			slew-rate = <0>;
-			bias-pull-up;
+			bias-disable;
 		};
 		ck_cd_rstn_vddsel{
 			pinmux = <PIN_PC28__SDMMC2_CK>,
@@ -424,7 +424,7 @@
 				 <PIN_PD2__SDMMC2_CD>,
 				 <PIN_PD1__SDMMC2_WP>;
 			slew-rate = <0>;
-			bias-pull-up;
+			bias-disable;
 		};
 	};
 	pinctrl_usb_default: usb_default {
@@ -462,6 +462,11 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usb_default &pinctrl_usbb_vbus_en>;
 	status = "okay";
+};
+
+&rtt {
+	atmel,rtt-rtc-time-reg = <&gpbr 0x0>;
+	status = "disabled";
 };
 
 &sdmmc1 {
