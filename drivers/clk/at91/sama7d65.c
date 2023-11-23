@@ -559,6 +559,7 @@ static const struct {
 	{ .n = "udphsb_clk",	.p = "mck5", .id = 100, },
 	{ .n = "uhphs_clk",	.p = "mck5", .id = 101, },
 	{ .n = "dsi_clk",	.p = "mck3", .id = 103, },
+	{ .n = "lvdsc_clk",	.p = "mck3", .id = 104, },
 };
 
 /*
