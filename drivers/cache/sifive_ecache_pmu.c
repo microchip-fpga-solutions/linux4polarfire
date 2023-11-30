@@ -32,10 +32,10 @@ void __iomem *ec_base;
 
 /* ecache pmu counter */
 #define ECACHE_PMU_MAX_COUNTERS		32
-#define ECACHE_SELECT_BASE			0x2000
+#define ECACHE_SELECT_BASE		0x2000
 #define ECACHE_CLIENT_FILTER_BASE	0x2200
-#define ECACHE_COUNTER_INHIBIT_BASE 0x2800
-#define ECACHE_COUNTER_BASE			0x3000
+#define ECACHE_COUNTER_INHIBIT_BASE	0x2800
+#define ECACHE_COUNTER_BASE		0x3000
 
 #define ECACHE_COUNTER_MASK   GENMASK_ULL(63, 0)
 
@@ -53,6 +53,7 @@ struct sifive_ecache_pmu {
 	struct perf_event *events[ECACHE_PMU_MAX_COUNTERS];
 	DECLARE_BITMAP(used_mask, ECACHE_PMU_MAX_COUNTERS);
 	u32 counters;
+	struct notifier_block	ecache_pm_nb;
 };
 
 #define to_ecache_pmu(p) (container_of(p, struct sifive_ecache_pmu, pmu))
@@ -569,10 +570,63 @@ static int sifive_ec_pm_notify(struct notifier_block *b, unsigned long cmd,
 	return NOTIFY_OK;
 }
 
+static int sifive_ec_pm_pmu_notify(struct notifier_block *b, unsigned long cmd,
+				   void *v)
+{
+	struct sifive_ecache_pmu *ec_pmu = container_of(b, struct sifive_ecache_pmu, ecache_pm_nb);
+	struct perf_event *event;
+	int idx;
+	int enabled = bitmap_weight(ec_pmu->used_mask, ec_pmu->counters);
+
+	if (!enabled)
+		return NOTIFY_OK;
+
+	for (idx = 0; idx < ec_pmu->counters; idx++) {
+		event = ec_pmu->events[idx];
+		if (!event)
+			continue;
+
+		switch (cmd) {
+		case CPU_PM_ENTER:
+			/* Stop and update the counter */
+			sifive_ecache_pmu_stop(event, PERF_EF_UPDATE);
+			break;
+		case CPU_PM_ENTER_FAILED:
+		case CPU_PM_EXIT:
+			sifive_ecache_pmu_start(event, PERF_EF_RELOAD);
+			break;
+		default:
+			break;
+		}
+	}
+
+	return NOTIFY_OK;
+}
+
 static struct notifier_block sifive_ec_pm_notifier_block = {
 	.notifier_call = sifive_ec_pm_notify,
 };
+
+static int sifive_ec_pm_pmu_register(struct sifive_ecache_pmu *pmu)
+{
+	pmu->ecache_pm_nb.notifier_call = sifive_ec_pm_pmu_notify;
+	return cpu_pm_register_notifier(&pmu->ecache_pm_nb);
+}
+
+static void sifive_ec_pm_pmu_unregister(struct sifive_ecache_pmu *pmu)
+{
+	cpu_pm_unregister_notifier(&pmu->ecache_pm_nb);
+}
+#else
+static inline int sifive_ec_pm_pmu_register(struct sifive_ecache_pmu *pmu) { return 0; }
+static inline void sifive_ec_pm_pmu_unregister(struct sifive_ecache_pmu *pmu) { }
 #endif
+
+static void sifive_ecache_pmu_destroy(struct sifive_ecache_pmu *pmu)
+{
+	sifive_ec_pm_pmu_unregister(pmu);
+	cpuhp_state_remove_instance(CPUHP_AP_PERF_RISCV_SIFIVE_ECACHE_ONLINE, &pmu->node);
+}
 
 static void sifive_ec_pmu_init(struct sifive_ecache_pmu *ecache_pmu)
 {
@@ -666,6 +720,11 @@ static int sifive_ecache_pmu_dev_probe(struct platform_device *pdev)
 
 	ecache_pmu->slice_count = slice_count;
 	sifive_ec_pmu_init(ecache_pmu);
+
+	ret = sifive_ec_pm_pmu_register(ecache_pmu);
+	if (ret)
+		goto out_unregister;
+
 #ifdef CONFIG_CPU_PM
 	ec_base = ecache_pmu->slice[0].base;
 	cpu_pm_register_notifier(&sifive_ec_pm_notifier_block);
@@ -673,6 +732,8 @@ static int sifive_ecache_pmu_dev_probe(struct platform_device *pdev)
 
 	return 0;
 
+out_unregister:
+	sifive_ecache_pmu_destroy(ecache_pmu);
 err_unmap:
 	while (--i >= 0)
 		iounmap(ecache_pmu->slice[i].base);
