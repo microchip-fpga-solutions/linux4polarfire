@@ -159,7 +159,7 @@
 		};
 
 		pioA: pinctrl@e0014000 {
-			compatible = "microchip,sama7d65-pinctrl", "microchip,sama7g5-pinctrl";
+			compatible = "microchip,sama7d65-pinctrl";
 			reg = <0xe0014000 0x800>;
 			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>,
 				<GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>,
