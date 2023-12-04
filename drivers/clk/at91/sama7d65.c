@@ -900,7 +900,7 @@ static const struct {
 	  .pp_chg_id = 4, },
 
 	{ .n  = "tcb0_ch0_gclk",
-	  .id = 81,
+	  .id = 83,
 	  .r = { .max = 34000000 },
 	  .pp = { "baudpll_divpmcck",
 		  "audiopll_divpmcck", "ethpll_divpmcck", },
@@ -909,7 +909,7 @@ static const struct {
 	  .pp_chg_id = INT_MIN, },
 
 	{ .n  = "tcb1_ch0_gclk",
-	  .id = 82,
+	  .id = 86,
 	  .r = { .max = 67000000 },
 	  .pp = {"baudpll_divpmcck",
 		  "audiopll_divpmcck", "ethpll_divpmcck", },
