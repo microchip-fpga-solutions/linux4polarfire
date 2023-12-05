@@ -1080,7 +1080,7 @@ static const struct atmel_pioctrl_data microchip_sama7g5_pioctrl_data = {
 
 static const struct atmel_pioctrl_data microchip_sama7d65_pioctrl_data = {
 	.nbanks			= 5,
-	.last_bank_count	= ATMEL_PIO_NPINS_PER_BANK,
+	.last_bank_count	= 14, /* sama7d65 has only PE0 to PE13 */
 	.slew_rate_support	= 1,
 };
 
