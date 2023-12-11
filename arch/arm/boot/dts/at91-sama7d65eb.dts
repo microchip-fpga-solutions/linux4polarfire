@@ -69,6 +69,7 @@
 		reg = <0x60000000 0x10000000>;
 	};
 };
+
 &cpu0 {
 	cpu-supply = <&vddcpu>;
 };
@@ -242,7 +243,8 @@
 				};
 			};
 		};
-		eeprom0:eeprom@52 {
+
+		eeprom0: eeprom@52 {
 			compatible = "atmel,24c02"; /* EEPROM is 2Kbits microchip 24aa025e48, an at24c02 with page size of 16 */
 			reg = <0x52>;
 			pagesize = <16>;
@@ -250,11 +252,13 @@
 			#size-cells = <0>;
 			size = <256>;
 			status = "okay";
+
 			eeprom0_eui48: eui48@fa {
 				reg = <0xfa 0x6>;
 			};
 		};
-		eeprom1:eeprom@53 {
+
+		eeprom1: eeprom@53 {
 			compatible = "atmel,24c02"; /* EEPROM is 2Kbits microchip 24aa025e48, an at24c02 with page size of 16 */
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -307,6 +311,7 @@
 		status = "okay";
 	};
 };
+
 &pioA {
 	pinctrl_gmac0_default: gmac0_default {
 		pinmux = <PIN_PA26__G0_TX0>,
@@ -323,11 +328,13 @@
 		slew-rate = <0>;
 		bias-disable;
 	};
+
 	pinctrl_gmac0_mdio_default: gmac0_mdio_default {
 		pinmux = <PIN_PA31__G0_MDC>,
 			 <PIN_PB0__G0_MDIO>;
 		bias-disable;
 	};
+
 	pinctrl_gmac1_default: gmac1_default{
 		pinmux = <PIN_PD22__G1_TX0>,
 			 <PIN_PD23__G1_TX1>,
@@ -343,31 +350,37 @@
 		slew-rate = <0>;
 		bias-disable;
 	};
+
 	pinctrl_gmac1_mdio_default: gmac1_mdio_default {
 		pinmux = <PIN_PD25__G1_MDC>,
 			 <PIN_PD26__G1_MDIO>;
 		bias-disable;
 	};
+
 	pinctrl_led_gpio_default: led_gpio_default {
 		pinmux = <PIN_PA19__GPIO>,
 			 <PIN_PA20__GPIO>,
 			 <PIN_PA21__GPIO>;
 		bias-pull-up;
 	};
+
 	pinctrl_gmac0_txck_default: gmac0_txck_default {
 		pinmux = <PIN_PB1__G0_REFCK>;
 		slew-rate = <0>;
 		bias-pull-up;
 	};
+
 	pinctrl_gmac1_txck_default: gmac1_txck_default {
 		pinmux = <PIN_PD29__G1_REFCK>;
 		slew-rate = <0>;
 		bias-pull-up;
 	};
+
 	pinctrl_gmac1_phy_irq: gmac1_phy_irq {
 		pinmux = <PIN_PE3__GPIO>;
 		bias-pull-up;
 	};
+
 	pinctrl_i2c3_default: i2c3_default{
 		pinmux = <PIN_PA24__FLEXCOM3_IO0>,
 			 <PIN_PA23__FLEXCOM3_IO1>;
@@ -379,15 +392,18 @@
 			<PIN_PA18__FLEXCOM4_IO0>;
 		bias-disable;
 	};
+
 	pinctrl_i2c5_default: i2c5_default{
 		pinmux = <PIN_PD16__FLEXCOM5_IO0>,
 			 <PIN_PD17__FLEXCOM5_IO1>;
 		bias-disable;
 	};
+
 	pinctrl_gmac0_phy_irq: gmac0_phy_irq {
 		pinmux = <PIN_PB7__GPIO>;
 		bias-pull-up;
 	};
+
 	pinctrl_sdmmc1_default: sdmmc1_default {
 		cmd_data {
 			pinmux = <PIN_PB22__SDMMC1_CMD>,
@@ -398,6 +414,7 @@
 			slew-rate = <0>;
 			bias-disable;
 		};
+
 		ck_cd_rstn_vddsel {
 			pinmux = <PIN_PB23__SDMMC1_CK>,
 				 <PIN_PB21__SDMMC1_RSTN>,
@@ -407,6 +424,7 @@
 			bias-disable;
 		};
 	};
+
 	pinctrl_sdmmc2_default: sdmmc2_default {
 		cmd_data {
 			pinmux = <PIN_PC27__SDMMC2_CMD>,
@@ -417,7 +435,8 @@
 			slew-rate = <0>;
 			bias-disable;
 		};
-		ck_cd_rstn_vddsel{
+
+		ck_cd_rstn_vddsel {
 			pinmux = <PIN_PC28__SDMMC2_CK>,
 				 <PIN_PD3__SDMMC2_1V8SEL>,
 				 <PIN_PC10__GPIO>,
@@ -427,10 +446,12 @@
 			bias-disable;
 		};
 	};
+
 	pinctrl_usb_default: usb_default {
 		pinmux = <PIN_PC11__GPIO>;
 		bias-disable;
 	};
+
 	pinctrl_usbb_vbus_det: usbb_vbus_det {
 		pinmux = <PIN_PC0__GPIO>;
 		bias-disable;
@@ -440,7 +461,6 @@
 		pinmux = <PIN_PB31__GPIO>;
 		bias-disable;
 	};
-
 };
 
 &usb1 {
@@ -479,7 +499,7 @@
 	status = "okay";
 };
 
-&sdmmc2{
+&sdmmc2 {
 	bus-width = <4>;
 	vmmc-supply = <&vdd_3v3>;
 	vqmmc-supply = <&vdd_3v3>;
