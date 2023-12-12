@@ -26,8 +26,9 @@
 
 	aliases {
 		serial0 = &uart4;
-		i2c0 = &i2c5;
-		i2c1 = &i2c3;
+		i2c0 = &i2c0;
+		i2c1 = &i2c5;
+		i2c2 = &i2c3;
 	};
 
 	clocks {
@@ -63,6 +64,16 @@
 		};
 	};
 
+	mic23150_reg: mic23150_regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "panel-power-supply";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&pioA PIN_PD5 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		status = "okay";
+	};
+
 	/* 512 M */
 	memory@60000000 {
 		device_type = "memory";
@@ -84,6 +95,32 @@
 
 &dma2 {
 	status = "okay";
+};
+
+&flx0 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+	status = "okay";
+
+	i2c0: i2c@600 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_i2c0_default>;
+		i2c-analog-filter;
+		i2c-digital-filter;
+		i2c-digital-filter-width-ns = <35>;
+		status = "okay";
+
+		mxt: atmel_mxt_ts@4a {
+			compatible = "atmel,maxtouch";
+			reg = <0x4a>;
+			interrupt-parent = <&pioA>;
+			interrupts = <PIN_PD4 0x0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_mxt_irq>;
+			vdda-supply = <&mic23150_reg>;
+			vdd-supply = <&vdd_3v3>;
+			status = "okay";
+		};
+	};
 };
 
 &flx3 {
@@ -381,6 +418,12 @@
 		bias-pull-up;
 	};
 
+	pinctrl_i2c0_default: i2c0_default {
+		pinmux = <PIN_PC7__FLEXCOM0_IO0>,
+			<PIN_PC6__FLEXCOM0_IO1>;
+		bias-pull-up;
+	};
+
 	pinctrl_i2c3_default: i2c3_default{
 		pinmux = <PIN_PA24__FLEXCOM3_IO0>,
 			 <PIN_PA23__FLEXCOM3_IO1>;
@@ -402,6 +445,12 @@
 	pinctrl_gmac0_phy_irq: gmac0_phy_irq {
 		pinmux = <PIN_PB7__GPIO>;
 		bias-pull-up;
+	};
+
+	pinctrl_mxt_irq: pinctrl_mxt_irq {
+		pinmux = <PIN_PD4__GPIO>;
+		bias-pull-up;
+		input-debounce = <1>;
 	};
 
 	pinctrl_sdmmc1_default: sdmmc1_default {
