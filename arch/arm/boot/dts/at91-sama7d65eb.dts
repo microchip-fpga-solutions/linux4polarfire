@@ -74,7 +74,6 @@
 		status = "okay";
 	};
 
-	/* 512 M */
 	memory@60000000 {
 		device_type = "memory";
 		reg = <0x60000000 0x10000000>;
