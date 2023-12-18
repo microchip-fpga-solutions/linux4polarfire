@@ -107,12 +107,24 @@ static const struct clk_range pll_outputs[] = {
 	{ .min = 2343750, .max = 1200000000 },
 };
 
+/*
+ * Min: fCOREPLLCK = 600 MHz, PMC_PLL_CTRL0.DIVPMC = 255
+ * Max: fCOREPLLCK = 800 MHz, PMC_PLL_CTRL0.DIVPMC = 0
+ */
+static const struct clk_range lvdspll_outputs[] = {
+	{ .min = 16406250, .max = 800000000 },
+};
+
 static const struct clk_range upll_outputs[] = {
 	{ .min = 300000000, .max = 600000000 },
 };
 
 /* Fractional PLL core output range. */
 static const struct clk_range core_outputs[] = {
+	{ .min = 600000000, .max = 1200000000 },
+};
+
+static const struct clk_range lvdspll_core_outputs[] = {
 	{ .min = 600000000, .max = 1200000000 },
 };
 
@@ -134,6 +146,13 @@ static const struct clk_pll_characteristics pll_characteristics = {
 	.num_output = ARRAY_SIZE(pll_outputs),
 	.output = pll_outputs,
 	.core_output = core_outputs,
+};
+
+static const struct clk_pll_characteristics lvdspll_characteristics = {
+	.input = { .min = 12000000, .max = 50000000 },
+	.num_output = ARRAY_SIZE(lvdspll_outputs),
+	.output = lvdspll_outputs,
+	.core_output = lvdspll_core_outputs,
 };
 
 static const struct clk_pll_characteristics upll_characteristics = {
@@ -324,17 +343,18 @@ static const struct {
 		{ .n = "lvdspll_fracck",
 		  .p = "main_xtal",
 		  .l = &pll_layout_frac,
-		  .c = &pll_characteristics,
+		  .c = &lvdspll_characteristics,
 		  .t = PLL_TYPE_FRAC,
 		  .f = CLK_SET_RATE_GATE, },
 
 		{ .n = "lvdspll_divpmcck",
 		  .p = "lvdspll_fracck",
 		  .l = &pll_layout_divpmc,
-		  .c = &pll_characteristics,
+		  .c = &lvdspll_characteristics,
 		  .t = PLL_TYPE_DIV,
 		  .f = CLK_SET_RATE_GATE | CLK_SET_PARENT_GATE |
-		       CLK_SET_RATE_PARENT, },
+		       CLK_SET_RATE_PARENT,
+		  .eid = PMC_LVDSPLL, },
 	},
 
 	[PLL_ID_USB] = {
@@ -559,6 +579,7 @@ static const struct {
 	{ .n = "udphsb_clk",	.p = "mck5", .id = 100, },
 	{ .n = "uhphs_clk",	.p = "mck5", .id = 101, },
 	{ .n = "dsi_clk",	.p = "mck3", .id = 103, },
+	{ .n = "lvdsc_clk",	.p = "mck3", .id = 104, },
 };
 
 /*
@@ -999,7 +1020,7 @@ static void __init sama7d65_pmc_setup(struct device_node *np)
 	if (IS_ERR(regmap))
 		return;
 
-	sama7d65_pmc = pmc_data_allocate(PMC_MCK1 + 1,
+	sama7d65_pmc = pmc_data_allocate(PMC_LVDSPLL + 1,
 					nck(sama7d65_systemck),
 					nck(sama7d65_periphck),
 					nck(sama7d65_gck), 8);
