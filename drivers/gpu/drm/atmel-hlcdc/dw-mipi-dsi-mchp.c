@@ -86,6 +86,7 @@ struct dw_mipi_dsi_mchp {
 
 	struct clk *pclk;
 	struct clk *pllref_clk;
+	const struct mipi_dsi_config *config;
 };
 
 struct dphy_pll_parameter_map {
@@ -421,12 +422,14 @@ static int dw_mipi_dsi_mchp_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-	sfr = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "microchip,sfr");
-	if (IS_ERR_OR_NULL(sfr))
-		return PTR_ERR(sfr);
-	ret = regmap_write(sfr, SFR_ISS_CFG, 1);
-	if (ret)
-		return ret;
+	if (dsi->config->has_sfr) {
+		sfr = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "microchip,sfr");
+		if (IS_ERR_OR_NULL(sfr))
+			return PTR_ERR(sfr);
+		ret = regmap_write(sfr, SFR_ISS_CFG, 1);
+		if (ret)
+			return ret;
+	}
 
 	/*debug*/
 	syscon_node_to_regmap(pdev->dev.of_node);
@@ -442,9 +445,22 @@ static int dw_mipi_dsi_mchp_probe(struct platform_device *pdev)
 	return ret;
 }
 
+const struct mipi_dsi_config sam9x7_config = {
+	.has_sfr = true;
+};
+
+const struct mipi_dsi_config sama7d65_config = {
+	.has_sfr = false;
+};
+
 static const struct of_device_id dw_mipi_dsi_mchp_dt_ids[] = {
 	{
-	 .compatible = "microchip,sam9x7-mipi-dsi",
+		.compatible = "microchip,sam9x7-mipi-dsi",
+		.data = &sam9x7_config,
+	},
+	{
+		.compatible = "microchip,sama7d65-mipi-dsi",
+		.data = &sama7d65_config,
 	},
 	{ /* sentinel */ }
 };
