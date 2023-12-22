@@ -376,7 +376,7 @@ static inline bool m_can_tx_fifo_full(struct m_can_classdev *cdev)
 static void m_can_config_endisable(struct m_can_classdev *cdev, bool enable)
 {
 	u32 cccr = m_can_read(cdev, M_CAN_CCCR);
-	u32 timeout = 10;
+	u32 timeout = 1000;
 	u32 val = 0;
 
 	/* Clear the Clock stop request if it was set */
