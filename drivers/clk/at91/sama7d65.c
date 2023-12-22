@@ -116,7 +116,7 @@ static const struct clk_range lvdspll_outputs[] = {
 };
 
 static const struct clk_range upll_outputs[] = {
-	{ .min = 300000000, .max = 600000000 },
+	{ .min = 480000000, .max = 480000000 },
 };
 
 /* Fractional PLL core output range. */
@@ -766,7 +766,7 @@ static const struct {
 	  .pp = { "usbpll_divpmcck",},
 	  .pp_mux_table = { 12 },
 	  .pp_count = 1,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "mcan1_gclk",
 	  .id = 59,
@@ -774,7 +774,7 @@ static const struct {
 	  .pp = { "usbpll_divpmcck",},
 	  .pp_mux_table = { 12 },
 	  .pp_count = 1,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "mcan2_gclk",
 	  .id = 60,
@@ -782,7 +782,7 @@ static const struct {
 	  .pp = { "usbpll_divpmcck", },
 	  .pp_mux_table = { 12 },
 	  .pp_count = 1,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "mcan3_gclk",
 	  .id = 61,
@@ -790,7 +790,7 @@ static const struct {
 	  .pp = { "usbpll_divpmcck",},
 	  .pp_mux_table = { 12 },
 	  .pp_count = 1,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "mcan4_gclk",
 	  .id = 62,
@@ -798,7 +798,7 @@ static const struct {
 	  .pp = { "usbpll_divpmcck",},
 	  .pp_mux_table = { 12 },
 	  .pp_count = 1,
-	  .pp_chg_id = INT_MIN, },
+	  .pp_chg_id = 4, },
 
 	{ .n  = "pdmc0_gclk",
 	  .id = 64,
