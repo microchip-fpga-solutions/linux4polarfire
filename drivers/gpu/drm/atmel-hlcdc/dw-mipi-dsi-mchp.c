@@ -13,6 +13,7 @@
 #include <linux/io.h>
 #include <linux/mfd/syscon.h>
 #include <linux/mod_devicetable.h>
+#include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
 
@@ -72,6 +73,14 @@
 #define PLL_INPUT_AND_LOOP_DIVIDER_RATIOS_CONTROL	0x19
 
 #define SFR_ISS_CFG	0x240
+
+/**
+ * struct mipi_dsi_config - SoC data for a MIPI/DSI Block
+ * @has_sfr: boolean indicating if SFR registers have a mode DSI/CSI Selection
+ */
+struct mipi_dsi_config {
+	bool has_sfr;
+};
 
 struct dw_mipi_dsi_mchp {
 	struct device *dev;
@@ -403,6 +412,8 @@ static int dw_mipi_dsi_mchp_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, dsi);
 	dsi->dev = &pdev->dev;
 
+	dsi->config = of_device_get_match_data(&pdev->dev);
+
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	dsi->base = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(dsi->base))
@@ -446,11 +457,11 @@ static int dw_mipi_dsi_mchp_probe(struct platform_device *pdev)
 }
 
 const struct mipi_dsi_config sam9x7_config = {
-	.has_sfr = true;
+	.has_sfr = true,
 };
 
 const struct mipi_dsi_config sama7d65_config = {
-	.has_sfr = false;
+	.has_sfr = false,
 };
 
 static const struct of_device_id dw_mipi_dsi_mchp_dt_ids[] = {
