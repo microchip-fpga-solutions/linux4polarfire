@@ -410,6 +410,56 @@
 			status = "disabled";
 		};
 
+		xlcdc: lcd-controller@e1400000{
+			compatible = "microchip,sama7d65-xlcdc";
+			reg = <0xe1400000 0x2000>;
+			interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pmc PMC_TYPE_PERIPHERAL 56>, <&pmc PMC_TYPE_GCK 56>, <&clk32k 1>;
+			clock-names = "periph_clk", "sys_clk", "slow_clk";
+			assigned-clocks = <&pmc PMC_TYPE_GCK 56>;
+			assigned-clock-rates = <66000000>;
+			assigned-clock-parents = <&pmc PMC_TYPE_CORE PMC_MCK1>;
+			status = "disabled";
+
+			hlcdc-display-controller {
+				compatible = "atmel,hlcdc-display-controller";
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <0>;
+				};
+			};
+
+			xlcdc_pwm: hlcdc-pwm {
+				compatible = "atmel,hlcdc-pwm";
+				#pwm-cells = <3>;
+			};
+		};
+
+		dsi: dsi@e1404000{
+			compatible = "microchip,sama7d65-mipi-dsi";
+			reg = <0xe1404000 0x200>;
+			clocks = <&pmc PMC_TYPE_PERIPHERAL 103>, <&pmc PMC_TYPE_GCK 103>;
+			clock-names = "pclk", "refclk";
+			assigned-clocks = <&pmc PMC_TYPE_GCK 103>;
+			assigned-clock-rates = <24000000>;
+			status = "disabled";
+		};
+
+		lvdsc: lvds-controller@e1408000 {
+			compatible = "microchip,sama7d65-lvds";
+			reg = <0xe1408000 0x100>;
+			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pmc PMC_TYPE_PERIPHERAL 104>;
+			clock-names = "pclk";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		aes: crypto@e1600000 {
 			compatible = "microchip,sama7d65-aes", "atmel,at91sam9g46-aes";
 			reg = <0xe1600000 0x100>;
@@ -447,45 +497,6 @@
 			reg = <0xe160C000 0x100>;
 			interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 92>;
-			status = "disabled";
-		};
-
-		xlcdc: lcd-controller@e1400000{
-			compatible = "microchip,sama7d65-xlcdc";
-			reg = <0xe1400000 0x2000>;
-			interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
-			clocks = <&pmc PMC_TYPE_PERIPHERAL 56>, <&pmc PMC_TYPE_GCK 56>, <&clk32k 1>;
-			clock-names = "periph_clk", "sys_clk", "slow_clk";
-			assigned-clocks = <&pmc PMC_TYPE_GCK 56>;
-			assigned-clock-rates = <66000000>;
-			assigned-clock-parents = <&pmc PMC_TYPE_CORE PMC_MCK1>;
-			status = "disabled";
-
-			hlcdc-display-controller {
-				compatible = "atmel,hlcdc-display-controller";
-				#address-cells = <1>;
-				#size-cells = <0>;
-
-				port@0 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <0>;
-				};
-			};
-
-			xlcdc_pwm: hlcdc-pwm {
-				compatible = "atmel,hlcdc-pwm";
-				#pwm-cells = <3>;
-			};
-		};
-
-		dsi: dsi@e1404000{
-			compatible = "microchip,sama7d65-mipi-dsi";
-			reg = <0xe1404000 0x200>;
-			clocks = <&pmc PMC_TYPE_PERIPHERAL 103>, <&pmc PMC_TYPE_GCK 103>;
-			clock-names = "pclk", "refclk";
-			assigned-clocks = <&pmc PMC_TYPE_GCK 103>;
-			assigned-clock-rates = <24000000>;
 			status = "disabled";
 		};
 

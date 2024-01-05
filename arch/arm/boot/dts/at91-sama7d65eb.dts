@@ -74,6 +74,15 @@
 		status = "okay";
 	};
 
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&xlcdc_pwm 0 1000000 0>;
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <7>;
+		power-supply = <&mic23150_reg>;
+		status = "okay";
+	};
+
 	memory@60000000 {
 		device_type = "memory";
 		reg = <0x60000000 0x10000000>;
@@ -106,6 +115,49 @@
 
 &dma2 {
 	status = "okay";
+};
+
+&dsi {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			reg = <0>;
+			dsi_in: endpoint {
+				remote-endpoint = <&hlcdc_panel_output>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dsi_out: endpoint {
+				remote-endpoint = <&mipi_in_panel>;
+			};
+		};
+	};
+
+	panel@0 {
+		reg = <0>;
+		compatible = "hannstar,hsd060bhw4";
+		backlight = <&backlight>;
+		power-supply = <&mic23150_reg>;
+		iovcc-supply = <&vldo1>;
+		reset-gpio =  <&pioA PIN_PD7 GPIO_ACTIVE_LOW>;
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			mipi_in_panel: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
+	};
 };
 
 &flx0 {
@@ -470,6 +522,11 @@
 		bias-pull-up;
 	};
 
+	pinctrl_lcd_pwm: lcd-pwm {
+		pinmux = <PIN_PD6__LCDC_PWM>;
+		bias-disable;
+	};
+
 	pinctrl_mxt_irq: pinctrl_mxt_irq {
 		pinmux = <PIN_PD4__GPIO>;
 		bias-pull-up;
@@ -609,4 +666,22 @@
 &vddout25 {
 	vin-supply = <&vdd_3v3>;
 	status = "okay";
+};
+
+&xlcdc {
+	status = "okay";
+	hlcdc-display-controller {
+		port@0 {
+			hlcdc_panel_output: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&dsi_in>;
+			};
+		};
+	};
+
+	xlcdc_pwm: hlcdc-pwm {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_lcd_pwm>;
+		status = "okay";
+	};
 };
