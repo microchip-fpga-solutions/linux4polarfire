@@ -79,13 +79,22 @@
 		pwms = <&xlcdc_pwm 0 1000000 0>;
 		brightness-levels = <0 4 8 16 32 64 128 255>;
 		default-brightness-level = <7>;
-		power-supply = <&mic23150_reg>;
+		power-supply = <&vdd_5v>;
 		status = "okay";
 	};
 
 	memory@60000000 {
 		device_type = "memory";
 		reg = <0x60000000 0x10000000>;
+	};
+
+	vdd_5v: fixed-regulator-vdd-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "VDD_5V";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		status = "okay";
 	};
 };
 
