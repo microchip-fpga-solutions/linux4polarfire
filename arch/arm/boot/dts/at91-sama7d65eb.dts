@@ -44,6 +44,30 @@
 		};
 	};
 
+	display {
+		/* LVDS WVGA Display panel Microchip AC69T88A */
+		compatible = "sitronix,st7262", "simple-panel";
+		power-supply = <&mic23150_reg>;
+		backlight = <&backlight>;
+		/* Warning: depending on board setup I3C or mikroBUS may own PC5 */
+		reset-gpios = <&pioA PIN_PC5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_lcd_reset>;
+		width-mm = <108>;
+		height-mm = <65>;
+#ifdef LCD_DSI_NOT_LVDS
+		status="disabled";
+#else
+		status="okay";
+#endif
+
+		port {
+			lcd_lvds_in: endpoint {
+				remote-endpoint = <&lvdsc_out>;
+			};
+		};
+	};
+
 	leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
@@ -431,6 +455,28 @@
 	};
 };
 
+&lvdsc {
+#ifndef LCD_DSI_NOT_LVDS
+	status = "okay";
+
+	port@0 {
+		reg = <0>;
+
+		lvdsc_in: endpoint {
+			remote-endpoint = <&xlcdc_out>;
+		};
+	};
+#endif
+
+	port@1 {
+		reg = <1>;
+
+		lvdsc_out: endpoint {
+			remote-endpoint = <&lcd_lvds_in>;
+		};
+	};
+};
+
 &pioA {
 	pinctrl_can1_default: can1_default {
 		pinmux = <PIN_PD10__CANTX1>,
@@ -541,9 +587,19 @@
 		bias-pull-up;
 	};
 
+	pinctrl_lcd_disp_en: lcd-disp {
+		pinmux = <PIN_PD7__LCDC_DISP>;
+		bias-disable;
+	};
+
 	pinctrl_lcd_pwm: lcd-pwm {
 		pinmux = <PIN_PD6__LCDC_PWM>;
 		bias-disable;
+	};
+
+	pinctrl_lcd_reset: lcd-rst {
+		pinmux = <PIN_PC5__GPIO>;
+		bias-pull-up;
 	};
 
 	pinctrl_mxt_irq: pinctrl_mxt_irq {
@@ -678,18 +734,28 @@
 	assigned-clocks = <&pmc PMC_TYPE_GCK 56>;
 	assigned-clock-rates = <66000000>;
 	assigned-clock-parents = <&pmc PMC_TYPE_CORE PMC_MCK1>;
+#else
+	clocks = <&pmc PMC_TYPE_PERIPHERAL 56>, <&pmc PMC_TYPE_CORE PMC_LVDSPLL>, <&clk32k 1>;
+	clock-names = "periph_clk", "lvds_pll_clk", "slow_clk";
 #endif
 	status = "okay";
 
 	hlcdc-display-controller {
-#ifdef LCD_DSI_NOT_LVDS
+#ifndef LCD_DSI_NOT_LVDS
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_lcd_disp_en>;
+#endif
+
 		port@0 {
 			xlcdc_out: endpoint@0 {
 				reg = <0>;
+#ifdef LCD_DSI_NOT_LVDS
 				remote-endpoint = <&dsi_in>;
+#else
+				remote-endpoint = <&lvdsc_in>;
+#endif
 			};
 		};
-#endif
 	};
 
 	xlcdc_pwm: hlcdc-pwm {
