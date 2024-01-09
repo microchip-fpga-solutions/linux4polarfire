@@ -91,6 +91,9 @@ static int hsd060bhw4_init_sequence(struct hx8394 *ctx)
 {
 	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
 
+	/* DCS commands do not seem to be sent correclty with out this delay */
+	msleep(10);
+
 	/* 5.19.8 SETEXTC: Set extension command (B9h) */
 	mipi_dsi_dcs_write_seq(dsi, HX8394_CMD_SETEXTC,
 			       0xff, 0x83, 0x94);
