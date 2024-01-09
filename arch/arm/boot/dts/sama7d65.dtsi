@@ -246,6 +246,7 @@
 			interrupts = <GIC_SPI 86 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 87 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 86>, <&pmc PMC_TYPE_PERIPHERAL 87>, <&pmc PMC_TYPE_PERIPHERAL 88>, <&clk32k 1>;
 			clock-names = "t0_clk", "t1_clk", "t2_clk", "slow_clk";
+			status = "disabled";
 		};
 
 		hsmc: hsmc@e0808000 {
@@ -716,6 +717,7 @@
 			interrupts = <GIC_SPI 83 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 83>, <&pmc PMC_TYPE_PERIPHERAL 84>, <&pmc PMC_TYPE_PERIPHERAL 85>, <&clk32k 1>;
 			clock-names = "t0_clk", "t1_clk", "t2_clk", "slow_clk";
+			status = "disabled";
 		};
 
 		flx4: flexcom@e2018000 {
