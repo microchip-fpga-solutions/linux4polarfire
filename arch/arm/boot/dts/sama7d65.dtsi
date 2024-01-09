@@ -173,7 +173,7 @@
 			#gpio-cells = <2>;
 		};
 
-		pmc: pmc@e0018000 {
+		pmc: clock-controller@e0018000 {
 			compatible = "microchip,sama7d65-pmc", "syscon";
 			reg = <0xe0018000 0x200>;
 			interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
@@ -182,7 +182,7 @@
 			clock-names = "td_slck", "md_slck", "main_xtal";
 		};
 
-		reset_controller: rstc@e001d100 {
+		reset_controller: reset-controller@e001d100 {
 			compatible = "microchip,sama7d65-rstc", "microchip,sama7g5-rstc", "microchip,sam9x60-rstc";
 			reg = <0xe001d100 0xc>, <0xe001d1e4 0x4>;
 			#reset-cells = <1>;
@@ -876,7 +876,7 @@
 			ranges = <0x0 0xe2824000 0x800>;
 			status = "disabled";
 
-			spi11: spi@400 {
+			spi10: spi@400 {
 				compatible = "microchip,sama7d65-spi", "atmel,at91rm9200-spi";
 				reg = <0x400 0x200>;
 				interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
@@ -887,7 +887,7 @@
 				atmel,fifo-size = <32>;
 				dmas = <&dma0 AT91_XDMAC_DT_PERID(25)>,
 					    <&dma0 AT91_XDMAC_DT_PERID(26)>;
-				dma-names = "rx", "tx";
+				dma-names = "tx", "rx";
 				status = "disabled";
 			};
 
