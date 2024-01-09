@@ -137,7 +137,7 @@
 		port@0 {
 			reg = <0>;
 			dsi_in: endpoint {
-				remote-endpoint = <&hlcdc_panel_output>;
+				remote-endpoint = <&xlcdc_out>;
 			};
 		};
 
@@ -665,7 +665,7 @@
 	status = "okay";
 	hlcdc-display-controller {
 		port@0 {
-			hlcdc_panel_output: endpoint@0 {
+			xlcdc_out: endpoint@0 {
 				reg = <0>;
 				remote-endpoint = <&dsi_in>;
 			};
