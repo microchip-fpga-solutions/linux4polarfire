@@ -86,6 +86,7 @@ dtb-$(CONFIG_SOC_SAM_V7) += \
 dtb-$(CONFIG_SOC_SAMA7G5) += \
 	at91-sama7g5ek.dtb
 dtb-$(CONFIG_SOC_SAMA7D65) += \
+	at91-sama7d65_curiosity.dtb \
 	at91-sama7d65eb.dtb
 dtb-$(CONFIG_SOC_SP7021) += \
 	sunplus-sp7021-demo-v3.dtb
