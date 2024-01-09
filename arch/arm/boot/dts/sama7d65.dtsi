@@ -411,15 +411,14 @@
 			status = "disabled";
 		};
 
+		/*
+		 * LCDC clock related properties will be defined in board-specific DT since
+		 * a clock source differs between the LVDS and MIPI DSI interfaces.
+		 */
 		xlcdc: lcd-controller@e1400000{
 			compatible = "microchip,sama7d65-xlcdc";
 			reg = <0xe1400000 0x2000>;
 			interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
-			clocks = <&pmc PMC_TYPE_PERIPHERAL 56>, <&pmc PMC_TYPE_GCK 56>, <&clk32k 1>;
-			clock-names = "periph_clk", "sys_clk", "slow_clk";
-			assigned-clocks = <&pmc PMC_TYPE_GCK 56>;
-			assigned-clock-rates = <66000000>;
-			assigned-clock-parents = <&pmc PMC_TYPE_CORE PMC_MCK1>;
 			status = "disabled";
 
 			hlcdc-display-controller {
