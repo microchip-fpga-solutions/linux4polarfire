@@ -656,22 +656,6 @@
 	};
 };
 
-&tcb0 {
-	status = "okay";
-	timer0: timer@0 {
-		compatible = "atmel,tcb-timer";
-		status = "okay";
-		reg = <0>;
-	};
-
-	timer1: timer@1 {
-		compatible = "atmel,tcb-timer";
-		reg = <1>;
-		status = "okay";
-	};
-};
-
-
 &vddout25 {
 	vin-supply = <&vdd_3v3>;
 	status = "okay";
