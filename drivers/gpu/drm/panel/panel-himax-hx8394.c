@@ -213,8 +213,8 @@ static const struct drm_display_mode hsd060bhw4_mode = {
 	.vtotal	     = 1280 + 14 + 13,
 	.clock	     = 60226,
 	.flags	     = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
-	.width_mm    = 68,
-	.height_mm   = 136,
+	.width_mm    = 76,
+	.height_mm   = 132,
 };
 
 static const struct hx8394_panel_desc hsd060bhw4_desc = {
