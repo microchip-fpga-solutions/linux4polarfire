@@ -91,6 +91,9 @@ static int hsd060bhw4_init_sequence(struct hx8394 *ctx)
 {
 	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
 
+	/* DCS commands do not seem to be sent correclty with out this delay */
+	msleep(10);
+
 	/* 5.19.8 SETEXTC: Set extension command (B9h) */
 	mipi_dsi_dcs_write_seq(dsi, HX8394_CMD_SETEXTC,
 			       0xff, 0x83, 0x94);
@@ -210,8 +213,8 @@ static const struct drm_display_mode hsd060bhw4_mode = {
 	.vtotal	     = 1280 + 14 + 13,
 	.clock	     = 60226,
 	.flags	     = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
-	.width_mm    = 68,
-	.height_mm   = 136,
+	.width_mm    = 76,
+	.height_mm   = 132,
 };
 
 static const struct hx8394_panel_desc hsd060bhw4_desc = {
