@@ -68,6 +68,20 @@
 		};
 	};
 
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_key_gpio_default>;
+
+		button {
+				label = "PB_USER";
+				gpios = <&pioA PIN_PA16 GPIO_ACTIVE_LOW>;
+				linux,code = <KEY_PROG1>;
+				wakeup-source;
+		};
+	};
+
 	leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
@@ -585,6 +599,11 @@
 	pinctrl_gmac0_phy_irq: gmac0_phy_irq {
 		pinmux = <PIN_PB7__GPIO>;
 		bias-pull-up;
+	};
+
+	pinctrl_key_gpio_default: key-gpio-default {
+		pinmux = <PIN_PA16__GPIO>;
+		bias-disable;
 	};
 
 	pinctrl_lcd_disp_en: lcd-disp {
