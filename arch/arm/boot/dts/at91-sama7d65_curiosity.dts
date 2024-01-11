@@ -68,8 +68,26 @@
 
 	memory@60000000 {
 		device_type = "memory";
-		reg = <0x60000000 0x10000000>;
+		reg = <0x60000000 0x40000000>;
 	};
+};
+
+&can1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_can1_default>;
+	status = "okay";
+};
+
+&can2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_can2_default>;
+	status = "okay";
+};
+
+&can3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_can3_default>;
+	status = "okay";
 };
 
 &cpu0 {
@@ -252,7 +270,44 @@
 	};
 };
 
+&gmac1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_gmac1_default
+			 &pinctrl_gmac1_mdc_default
+		     &pinctrl_gmac1_mdio_default
+		     &pinctrl_gmac1_txck_default
+		     &pinctrl_gmac1_phy_irq>;
+	phy-mode = "rgmii-id";
+	status = "okay";
+
+	ethernet-phy@1 {
+		reg = <0x1>;
+		interrupt-parent = <&pioA>;
+		interrupts = <PIN_PE3 IRQ_TYPE_LEVEL_LOW>;
+		status = "okay";
+	};
+};
+
 &pioA {
+	pinctrl_can1_default: can1-default {
+		pinmux = <PIN_PD10__CANTX1>,
+			<PIN_PD11__CANRX1>;
+		bias-disable;
+	};
+
+	pinctrl_can2_default: can2-default {
+		pinmux = <PIN_PD12__CANTX2>,
+			<PIN_PD13__CANRX2>;
+		bias-disable;
+	};
+
+	pinctrl_can3_default: can3-default {
+		pinmux = <PIN_PD14__CANTX3>,
+			<PIN_PD15__CANRX3>;
+		bias-disable;
+	};
 
 	pinctrl_gmac0_default: gmac0-default {
 		pinmux = <PIN_PA26__G0_TX0>,
@@ -283,6 +338,43 @@
 
 	pinctrl_gmac0_txck_default: gmac0-txck-default {
 		pinmux = <PIN_PB1__G0_REFCK>;
+		slew-rate = <0>;
+		bias-pull-up;
+	};
+
+	pinctrl_gmac1_default: gmac1-default{
+		pinmux = <PIN_PD22__G1_TX0>,
+			 <PIN_PD23__G1_TX1>,
+			 <PIN_PE0__G1_TX2>,
+			 <PIN_PE1__G1_TX3>,
+			 <PIN_PD27__G1_RX0>,
+			 <PIN_PD28__G1_RX1>,
+			 <PIN_PD30__G1_RX2>,
+			 <PIN_PD31__G1_RX3>,
+			 <PIN_PD21__G1_TXCTL>,
+			 <PIN_PE2__G1_RXCK>,
+			 <PIN_PD24__G1_RXCTL>;
+		slew-rate = <0>;
+		bias-disable;
+	};
+
+	pinctrl_gmac1_mdc_default: gmac1-mdc-default {
+		pinmux = <PIN_PD25__G1_MDC>;
+		bias-disable;
+	};
+
+	pinctrl_gmac1_mdio_default: gmac1-mdio-default {
+		pinmux = <PIN_PD26__G1_MDIO>;
+		bias-pull-up; /* if R30 is not mounted on LAN8840 EDS2 Daughter Card */
+	};
+
+	pinctrl_gmac1_phy_irq: gmac1-phy-irq {
+		pinmux = <PIN_PE3__GPIO>;
+		bias-disable;
+	};
+
+	pinctrl_gmac1_txck_default: gmac1-txck-default {
+		pinmux = <PIN_PD29__G1_REFCK>;
 		slew-rate = <0>;
 		bias-pull-up;
 	};
