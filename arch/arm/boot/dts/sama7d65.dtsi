@@ -220,14 +220,14 @@
 		};
 
 		rtc: rtc@e001d800 {
-			compatible = "microchip,sama7d65-rtc","microchip,sama7g5-rtc", "microchip,sam9x60-rtc";
+			compatible = "microchip,sama7d65-rtc", "microchip,sama7g5-rtc", "microchip,sam9x60-rtc";
 			reg = <0xe001d800 0x30>;
 			interrupts = <GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clk32k 1>;
 		};
 
 		ps_wdt: watchdog@e001d180 {
-			compatible = "microchip,sama7d65-wdt","microchip,sama7g5-wdt";
+			compatible = "microchip,sama7d65-wdt", "microchip,sama7g5-wdt";
 			reg = <0xe001d180 0x24>;
 			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clk32k 0>;
