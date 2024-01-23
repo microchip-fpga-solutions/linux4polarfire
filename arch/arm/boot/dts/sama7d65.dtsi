@@ -374,7 +374,7 @@
 
 		sdmmc0: mmc@e1204000 {
 			compatible = "microchip,sama7d65-sdhci", "microchip,sama7g5-sdhci", "microchip,sam9x60-sdhci";
-			reg = <0xe1204000 0x4000>;
+			reg = <0xe1204000 0x400>;
 			interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 75>, <&pmc PMC_TYPE_GCK 75>;
 			clock-names = "hclock", "multclk";
@@ -387,7 +387,7 @@
 
 		sdmmc1: mmc@e1208000 {
 			compatible = "microchip,sama7d65-sdhci", "microchip,sama7g5-sdhci", "microchip,sam9x60-sdhci";
-			reg = <0xe1208000 0x4000>;
+			reg = <0xe1208000 0x400>;
 			interrupts = <GIC_SPI 76 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 76>, <&pmc PMC_TYPE_GCK 76>;
 			clock-names = "hclock", "multclk";
@@ -400,7 +400,7 @@
 
 		sdmmc2: mmc@e120c000 {
 			compatible = "microchip,sama7d65-sdhci", "microchip,sama7g5-sdhci", "microchip,sam9x60-sdhci";
-			reg = <0xe120c000 0x4000>;
+			reg = <0xe120c000 0x400>;
 			interrupts = <GIC_SPI 77 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 77>, <&pmc PMC_TYPE_GCK 77>;
 			clock-names = "hclock", "multclk";
@@ -554,7 +554,7 @@
 
 		pit64b0: timer@e1800000 {
 			compatible = "microchip,sama7d65-pit64b", "microchip,sam9x60-pit64b";
-			reg = <0xe1800000 0x4000>;
+			reg = <0xe1800000 0x100>;
 			interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 66>, <&pmc PMC_TYPE_GCK 66>;
 			clock-names = "pclk", "gclk";
@@ -562,7 +562,7 @@
 
 		pit64b1: timer@e1804000 {
 			compatible = "microchip,sama7d65-pit65b", "microchip,sam9x60-pit64b";
-			reg = <0xe1804000 0x4000>;
+			reg = <0xe1804000 0x100>;
 			interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 67>, <&pmc PMC_TYPE_GCK 67>;
 			clock-names = "pclk", "gclk";
@@ -583,7 +583,7 @@
 
 		pwm: pwm@e1818000 {
 			compatible = "microchip,sama7d65-pwm", "atmel,sama5d2-pwm";
-			reg = <0xe1818000 0x4000>;
+			reg = <0xe1818000 0x500>;
 			interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
 			#pwm-cells = <3>;
 			clocks = <&pmc PMC_TYPE_PERIPHERAL 72>;
