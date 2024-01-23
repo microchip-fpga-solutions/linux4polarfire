@@ -15,8 +15,18 @@
 #include <dt-bindings/pinctrl/at91.h>
 #include <dt-bindings/sound/microchip,pdmc.h>
 
+/*
+ *  This variable define in which display mode you want to be : MIPI or LVDS.
+ *  Please comment the define value to use LVDS mode.
+ */
+#define LCD_DSI_NOT_LVDS
+
 / {
-	model = "Microchip SAMA7D65 CURIOSITY";
+#ifdef LCD_DSI_NOT_LVDS
+	model = "Microchip SAMA7D65 Curiosity MIPI";
+#else
+	model = "Microchip SAMA7D65 Curiosity LVDS";
+#endif
 	compatible = "microchip,sama7d65-curiosity", "microchip,sama7d65", "microchip,sama7d6", "microchip,sama7";
 
 	chosen {
@@ -28,6 +38,34 @@
 	aliases {
 		serial0 = &uart6;
 		i2c1 = &i2c10;
+	};
+
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 3 1000000 0>;
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <7>;
+		power-supply = <&vdd_5v>;
+	};
+
+	display {
+		/* LVDS WVGA Display panel Microchip AC69T88A */
+		compatible = "sitronix,st7262", "simple-panel";
+		power-supply = <&mic23150_reg>;
+		backlight = <&backlight>;
+		width-mm = <108>;
+		height-mm = <65>;
+#ifdef LCD_DSI_NOT_LVDS
+		status="disabled";
+#else
+		status="okay";
+#endif
+
+		port {
+			lcd_lvds_in: endpoint {
+				remote-endpoint = <&lvdsc_out>;
+			};
+		};
 	};
 
 	gpio-keys {
@@ -70,6 +108,23 @@
 		device_type = "memory";
 		reg = <0x60000000 0x40000000>;
 	};
+
+	mic23150_reg: mic23150-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "panel-power-supply";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&pioA PIN_PB18 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+	vdd_5v: fixed-regulator-vdd-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "VDD_5V";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+	};
 };
 
 &can1 {
@@ -100,6 +155,79 @@
 
 &dma1 {
 	status = "okay";
+};
+
+&dsi {
+#ifdef LCD_DSI_NOT_LVDS
+	status = "okay";
+#endif
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+#ifdef LCD_DSI_NOT_LVDS
+		port@0 {
+			reg = <0>;
+			dsi_in: endpoint {
+				remote-endpoint = <&xlcdc_out>;
+			};
+		};
+#endif
+
+		port@1 {
+			reg = <1>;
+			dsi_out: endpoint {
+				remote-endpoint = <&mipi_in_panel>;
+			};
+		};
+	};
+
+	panel@0 {
+		reg = <0>;
+		compatible = "hannstar,hsd060bhw4";
+		backlight = <&backlight>;
+		vcc-supply = <&mic23150_reg>;
+		iovcc-supply = <&vldo1>;
+		/* Provide the panel-himax-hx8394 driver with a fake GPIO. */
+		reset-gpio =  <&pioA PIN_PC3 GPIO_ACTIVE_LOW>; /* Conflict with RPi 40Pin GPIO17 */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			mipi_in_panel: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
+	};
+};
+
+&flx0 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_TWI>;
+	status = "okay";
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c0_default>;
+	i2c-analog-filter;
+	i2c-digital-filter;
+	i2c-digital-filter-width-ns = <35>;
+	status = "okay";
+
+	mxt: atmel-mxt-ts@4a {
+		compatible = "atmel,maxtouch";
+		reg = <0x4a>;
+		interrupt-parent = <&pioA>;
+		interrupts = <PIN_PB16 0x0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_mxt_irq>;
+		vdda-supply = <&mic23150_reg>;
+		vdd-supply = <&vdd_3v3>;
+	};
 };
 
 &flx6 {
@@ -290,6 +418,28 @@
 	};
 };
 
+&lvdsc {
+#ifndef LCD_DSI_NOT_LVDS
+	status = "okay";
+
+	port@0 {
+		reg = <0>;
+
+		lvdsc_in: endpoint {
+			remote-endpoint = <&xlcdc_out>;
+		};
+	};
+#endif
+
+	port@1 {
+		reg = <1>;
+
+		lvdsc_out: endpoint {
+			remote-endpoint = <&lcd_lvds_in>;
+		};
+	};
+};
+
 &pioA {
 	pinctrl_can1_default: can1-default {
 		pinmux = <PIN_PD10__CANTX1>,
@@ -379,10 +529,21 @@
 		bias-pull-up;
 	};
 
+	pinctrl_lcd_pwm: lcd-pwm {
+		pinmux = <PIN_PB14__PWMH3>;
+		bias-disable;
+	};
+
 	pinctrl_led_gpio_default: led-gpio-default {
 		pinmux = <PIN_PB15__GPIO>,
 			 <PIN_PB17__GPIO>,
 			 <PIN_PA21__GPIO>;
+		bias-pull-up;
+	};
+
+	pinctrl_i2c0_default: i2c0-default {
+		pinmux = <PIN_PC7__FLEXCOM0_IO0>,
+			<PIN_PC6__FLEXCOM0_IO1>;
 		bias-pull-up;
 	};
 
@@ -395,6 +556,12 @@
 	pinctrl_key_gpio_default: key-gpio-default {
 		pinmux = <PIN_PC10__GPIO>;
 		bias-pull-up;
+	};
+
+	pinctrl_mxt_irq: pinctrl-mxt-irq {
+		pinmux = <PIN_PB16__GPIO>;
+		bias-pull-up;
+		input-debounce = <1>;
 	};
 
 	pinctrl_sdmmc1_default: sdmmc1-default {
@@ -426,6 +593,12 @@
 	};
 };
 
+&pwm {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_lcd_pwm>;
+	status = "okay";
+};
+
 &rtt {
 	atmel,rtt-rtc-time-reg = <&gpbr 0x0>;
 	status = "disabled";
@@ -447,4 +620,31 @@
 &vddout25 {
 	vin-supply = <&vdd_3v3>;
 	status = "okay";
+};
+
+&xlcdc {
+#ifdef LCD_DSI_NOT_LVDS
+	clocks = <&pmc PMC_TYPE_PERIPHERAL 56>, <&pmc PMC_TYPE_GCK 56>, <&clk32k 1>;
+	clock-names = "periph_clk", "sys_clk", "slow_clk";
+	assigned-clocks = <&pmc PMC_TYPE_GCK 56>;
+	assigned-clock-rates = <66000000>;
+	assigned-clock-parents = <&pmc PMC_TYPE_CORE PMC_MCK1>;
+#else
+	clocks = <&pmc PMC_TYPE_PERIPHERAL 56>, <&pmc PMC_TYPE_CORE PMC_LVDSPLL>, <&clk32k 1>;
+	clock-names = "periph_clk", "lvds_pll_clk", "slow_clk";
+#endif
+	status = "okay";
+
+	hlcdc-display-controller {
+		port@0 {
+			xlcdc_out: endpoint@0 {
+				reg = <0>;
+#ifdef LCD_DSI_NOT_LVDS
+				remote-endpoint = <&dsi_in>;
+#else
+				remote-endpoint = <&lvdsc_in>;
+#endif
+			};
+		};
+	};
 };
