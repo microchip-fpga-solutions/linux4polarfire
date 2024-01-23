@@ -127,6 +127,14 @@
 	};
 };
 
+&adc {
+	vddana-supply = <&vddout25>;
+	vref-supply = <&vddout25>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_adc_default>;
+	status = "okay";
+};
+
 &can1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_can1_default>;
@@ -228,6 +236,17 @@
 		vdda-supply = <&mic23150_reg>;
 		vdd-supply = <&vdd_3v3>;
 	};
+};
+
+&flx4 {
+	atmel,flexcom-mode = <ATMEL_FLEXCOM_MODE_SPI>;
+	status = "okay";
+};
+
+&spi4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi4_default &pinctrl_spi4_cs>;
+	status = "okay";
 };
 
 &flx6 {
@@ -441,6 +460,11 @@
 };
 
 &pioA {
+	pinctrl_adc_default: adc-default {
+		pinmux = <PIN_PC13__GPIO>;
+		bias-disable;
+	};
+
 	pinctrl_can1_default: can1-default {
 		pinmux = <PIN_PD10__CANTX1>,
 			<PIN_PD11__CANRX1>;
@@ -584,6 +608,18 @@
 			slew-rate = <0>;
 			bias-disable;
 		};
+	};
+
+	pinctrl_spi4_cs: spi4-cs {
+		pinmux = <PIN_PA15__FLEXCOM4_IO3>;
+		bias-disable;
+	};
+
+	pinctrl_spi4_default: spi4-default {
+		pinmux = <PIN_PA18__FLEXCOM4_IO0>,
+			 <PIN_PA17__FLEXCOM4_IO1>,
+			 <PIN_PA16__FLEXCOM4_IO2>;
+		bias-disable;
 	};
 
 	pinctrl_uart6_default: uart6-default {
