@@ -436,8 +436,6 @@ struct atmel_hlcdc_dc {
 		wait_queue_head_t wait;
 		bool pending;
 	} commit;
-	struct gfx2d_gpu *gpu;
-	struct platform_device *gpu_pdev;
 };
 
 extern const struct atmel_lcdc_dc_ops atmel_hlcdc_ops;

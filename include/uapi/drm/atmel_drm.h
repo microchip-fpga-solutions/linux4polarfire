@@ -37,13 +37,10 @@ struct drm_gfx2d_gem_addr {
 	__u32 size;
 };
 
-#define DRM_ATMEL_GEM_GET		0x00
 #define DRM_GFX2D_SUBMIT		0x01
 #define DRM_GFX2D_FLUSH			0x02
 #define DRM_GFX2D_GEM_ADDR		0x03
 
-#define DRM_IOCTL_ATMEL_GEM_GET		DRM_IOWR(DRM_COMMAND_BASE +	\
-						 DRM_ATMEL_GEM_GET, struct drm_mode_map_dumb)
 #define DRM_IOCTL_GFX2D_SUBMIT		DRM_IOWR(DRM_COMMAND_BASE +	\
 						 DRM_GFX2D_SUBMIT, struct drm_gfx2d_submit)
 #define DRM_IOCTL_GFX2D_FLUSH		DRM_IO(DRM_COMMAND_BASE + DRM_GFX2D_FLUSH)

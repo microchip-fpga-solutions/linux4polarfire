@@ -18,7 +18,6 @@
 
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_helper.h>
-#include <drm/drm_debugfs.h>
 #include <drm/drm_drv.h>
 #include <drm/drm_fb_helper.h>
 #include <drm/drm_gem_dma_helper.h>
@@ -28,14 +27,8 @@
 #include <drm/drm_vblank.h>
 
 #include "atmel_hlcdc_dc.h"
-#include "gfx2d/gfx2d_gpu.h"
-#include <drm/atmel_drm.h>
 #include <drm/drm_of.h>
 #include <linux/component.h>
-
-struct gfx2d_gpu *gfx2d_load_gpu(struct drm_device *dev);
-void __init gfx2d_register(void);
-void __exit gfx2d_unregister(void);
 
 #define ATMEL_HLCDC_LAYER_IRQS_OFFSET		8
 
@@ -1030,153 +1023,9 @@ static void atmel_hlcdc_dc_unload(struct drm_device *dev)
 
 DEFINE_DRM_GEM_DMA_FOPS(fops);
 
-/*
-ioctl to export the physical address of GEM to user space for
-video decoder
-*/
-int atmel_drm_gem_get_ioctl(struct drm_device *drm, void *data,
-				      struct drm_file *file_priv)
-{
-	struct drm_gem_object *gem_obj;
-	struct drm_gem_dma_object *dma_obj;
-	struct drm_mode_map_dumb *args = data;
-
-	mutex_lock(&drm->struct_mutex);
-
-	gem_obj = drm_gem_object_lookup(file_priv, args->handle);
-	if (!gem_obj) {
-		dev_err(drm->dev, "failed to lookup gem object\n");
-		mutex_unlock(&drm->struct_mutex);
-		return -EINVAL;
-	}
-
-	dma_obj = to_drm_gem_dma_obj(gem_obj);
-	args->offset = (__u64)dma_obj->dma_addr;
-
-	drm_gem_object_put(gem_obj);
-
-	mutex_unlock(&drm->struct_mutex);
-
-	return 0;
-}
-
-static int gfx2d_ioctl_submit(struct drm_device *dev, void *data,
-			      struct drm_file *file)
-{
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-	struct gfx2d_gpu *gpu = priv->gpu;
-	struct drm_gfx2d_submit *args = data;
-
-	if (!gpu)
-		return -ENXIO;
-
-	return gfx2d_submit(gpu, (uint32_t *)args->buf, args->size);
-}
-
-static int gfx2d_ioctl_flush(struct drm_device *dev, void *data,
-			     struct drm_file *file)
-{
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-	struct gfx2d_gpu *gpu = priv->gpu;
-	return gfx2d_flush(gpu);
-}
-
-static int gfx2d_ioctl_gem_addr(struct drm_device *dev, void *data,
-				struct drm_file *file_priv)
-{
-	struct drm_gfx2d_gem_addr *args = data;
-	struct drm_gem_object *obj;
-
-	if (!drm_core_check_feature(dev, DRIVER_GEM))
-		return -ENODEV;
-
-	mutex_lock(&dev->object_name_lock);
-	obj = idr_find(&dev->object_name_idr, (int) args->name);
-	if (!obj) {
-		mutex_unlock(&dev->object_name_lock);
-		return -ENOENT;
-	}
-
-	args->paddr = to_drm_gem_dma_obj(obj)->dma_addr;
-	args->size = obj->size;
-
-	mutex_unlock(&dev->object_name_lock);
-
-	return 0;
-}
-
-static const struct drm_ioctl_desc atmel_ioctls[] = {
-	DRM_IOCTL_DEF_DRV(ATMEL_GEM_GET, atmel_drm_gem_get_ioctl, DRM_UNLOCKED),
-	DRM_IOCTL_DEF_DRV(GFX2D_SUBMIT, gfx2d_ioctl_submit, DRM_AUTH|DRM_RENDER_ALLOW),
-	DRM_IOCTL_DEF_DRV(GFX2D_FLUSH, gfx2d_ioctl_flush, DRM_AUTH|DRM_RENDER_ALLOW),
-	DRM_IOCTL_DEF_DRV(GFX2D_GEM_ADDR, gfx2d_ioctl_gem_addr, DRM_AUTH|DRM_RENDER_ALLOW),
-};
-
-#ifdef CONFIG_DEBUG_FS
-static int atmel_hlcdc_dc_gpu_show(struct drm_device *dev, struct seq_file *m)
-{
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-	struct gfx2d_gpu *gpu = priv->gpu;
-
-	if (gpu) {
-		gfx2d_show(gpu, m);
-	}
-
-	return 0;
-}
-
-static int show_locked(struct seq_file *m, void *arg)
-{
-	struct drm_info_node *node = (struct drm_info_node *) m->private;
-	struct drm_device *dev = node->minor->dev;
-	int (*show)(struct drm_device *dev, struct seq_file *m) =
-		node->info_ent->data;
-	int ret;
-
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
-	if (ret)
-		return ret;
-
-	ret = show(dev, m);
-
-	mutex_unlock(&dev->struct_mutex);
-
-	return ret;
-}
-
-static struct drm_info_list atmel_hlcdc_dc_debugfs_list[] = {
-	{"gpu", show_locked, 0, atmel_hlcdc_dc_gpu_show},
-};
-
-void atmel_hlcdc_dc_debugfs_init(struct drm_minor *minor)
-{
-	drm_debugfs_create_files(atmel_hlcdc_dc_debugfs_list,
-				       ARRAY_SIZE(atmel_hlcdc_dc_debugfs_list),
-				       minor->debugfs_root, minor);
-}
-#endif
-
-static void load_gpu(struct drm_device *dev)
-{
-	static DEFINE_MUTEX(init_lock);
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-
-	mutex_lock(&init_lock);
-
-	if (!priv->gpu)
-		priv->gpu = gfx2d_load_gpu(dev);
-
-	mutex_unlock(&init_lock);
-}
-
-static struct drm_driver atmel_hlcdc_dc_driver = {
+static const struct drm_driver atmel_hlcdc_dc_driver = {
 	.driver_features = DRIVER_GEM | DRIVER_MODESET | DRIVER_ATOMIC,
 	DRM_GEM_DMA_DRIVER_OPS,
-#ifdef CONFIG_DEBUG_FS
-	.debugfs_init       = atmel_hlcdc_dc_debugfs_init,
-#endif
-	.ioctls	= atmel_ioctls,
-	.num_ioctls= ARRAY_SIZE(atmel_ioctls),
 	.fops = &fops,
 	.name = "atmel-hlcdc",
 	.desc = "Atmel HLCD Controller DRM",
@@ -1208,8 +1057,6 @@ static int atmel_hlcdc_dc_bind(struct device *dev)
 	ret = component_bind_all(dev, ddev);
 	if (ret < 0)
 		goto out_bind;
-
-	load_gpu(ddev);
 
 	ret = drm_dev_register(ddev, 0);
 	if (ret)
@@ -1353,14 +1200,12 @@ static struct platform_driver atmel_hlcdc_dc_platform_driver = {
 
 static int __init atmel_hlcdc_dc_drm_init(void)
 {
-	gfx2d_register();
 	return platform_driver_register(&atmel_hlcdc_dc_platform_driver);
 }
 module_init(atmel_hlcdc_dc_drm_init);
 
 static void __exit atmel_hlcdc_dc_drm_exit(void)
 {
-	gfx2d_unregister();
 	platform_driver_unregister(&atmel_hlcdc_dc_platform_driver);
 }
 module_exit(atmel_hlcdc_dc_drm_exit);
