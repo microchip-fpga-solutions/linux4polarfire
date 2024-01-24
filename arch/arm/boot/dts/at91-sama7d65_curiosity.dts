@@ -627,6 +627,21 @@
 			<PIN_PD19__FLEXCOM6_IO1>;
 		bias-disable;
 	};
+
+	pinctrl_usba_vbus_det: usba-vbus-det {
+		pinmux = <PIN_PC8__GPIO>;
+		bias-disable;
+	};
+
+	pinctrl_usbb_vbus_en: usbb-vbus-en {
+		pinmux = <PIN_PC20__GPIO>;
+		bias-disable;
+	};
+
+	pinctrl_usbc_vbus_en: usbc-vbus-en {
+		pinmux = <PIN_PC21__GPIO>;
+		bias-disable;
+	};
 };
 
 &pwm {
@@ -651,6 +666,27 @@
 
 &slow_xtal {
 	clock-frequency = <32768>;
+};
+
+&usb1 {
+	atmel,vbus-gpio = <&pioA PIN_PC8 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usba_vbus_det>;
+	status = "okay";
+};
+
+&ehci0 {
+	status = "okay";
+};
+
+&ohci0 {
+	num-ports = <3>;
+	atmel,vbus-gpio = <0
+			   &pioA PIN_PC20 GPIO_ACTIVE_HIGH
+			   &pioA PIN_PC21 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usbb_vbus_en &pinctrl_usbc_vbus_en>;
+	status = "okay";
 };
 
 &vddout25 {
