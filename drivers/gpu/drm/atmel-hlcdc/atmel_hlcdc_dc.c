@@ -18,7 +18,6 @@
 
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_helper.h>
-#include <drm/drm_debugfs.h>
 #include <drm/drm_drv.h>
 #include <drm/drm_fb_helper.h>
 #include <drm/drm_gem_dma_helper.h>
@@ -28,14 +27,8 @@
 #include <drm/drm_vblank.h>
 
 #include "atmel_hlcdc_dc.h"
-#include "gfx2d/gfx2d_gpu.h"
-#include <drm/atmel_drm.h>
 #include <drm/drm_of.h>
 #include <linux/component.h>
-
-struct gfx2d_gpu *gfx2d_load_gpu(struct drm_device *dev);
-void __init gfx2d_register(void);
-void __exit gfx2d_unregister(void);
 
 #define ATMEL_HLCDC_LAYER_IRQS_OFFSET		8
 
@@ -797,10 +790,103 @@ static void atmel_hlcdc_dc_irq_uninstall(struct drm_device *dev)
 	atmel_hlcdc_dc_irq_disable(dev);
 }
 
+struct atmel_hlcdc_dc_commit {
+	struct work_struct work;
+	struct drm_device *dev;
+	struct drm_atomic_state *state;
+};
+
+static void
+atmel_hlcdc_dc_atomic_complete(struct atmel_hlcdc_dc_commit *commit)
+{
+	struct drm_device *dev = commit->dev;
+	struct atmel_hlcdc_dc *dc = dev->dev_private;
+	struct drm_atomic_state *old_state = commit->state;
+
+	/* Apply the atomic update. */
+	drm_atomic_helper_commit_modeset_disables(dev, old_state);
+	drm_atomic_helper_commit_planes(dev, old_state, 0);
+	drm_atomic_helper_commit_modeset_enables(dev, old_state);
+
+	drm_atomic_helper_wait_for_vblanks(dev, old_state);
+
+	drm_atomic_helper_cleanup_planes(dev, old_state);
+
+	drm_atomic_state_put(old_state);
+
+	/* Complete the commit, wake up any waiter. */
+	spin_lock(&dc->commit.wait.lock);
+	dc->commit.pending = false;
+	wake_up_all_locked(&dc->commit.wait);
+	spin_unlock(&dc->commit.wait.lock);
+
+	kfree(commit);
+}
+
+static void atmel_hlcdc_dc_atomic_work(struct work_struct *work)
+{
+	struct atmel_hlcdc_dc_commit *commit =
+		container_of(work, struct atmel_hlcdc_dc_commit, work);
+
+	atmel_hlcdc_dc_atomic_complete(commit);
+}
+
+static int atmel_hlcdc_dc_atomic_commit(struct drm_device *dev,
+					struct drm_atomic_state *state,
+					bool async)
+{
+	struct atmel_hlcdc_dc *dc = dev->dev_private;
+	struct atmel_hlcdc_dc_commit *commit;
+	int ret;
+
+	ret = drm_atomic_helper_prepare_planes(dev, state);
+	if (ret)
+		return ret;
+
+	/* Allocate the commit object. */
+	commit = kzalloc(sizeof(*commit), GFP_KERNEL);
+	if (!commit) {
+		ret = -ENOMEM;
+		goto error;
+	}
+
+	INIT_WORK(&commit->work, atmel_hlcdc_dc_atomic_work);
+	commit->dev = dev;
+	commit->state = state;
+
+	spin_lock(&dc->commit.wait.lock);
+	ret = wait_event_interruptible_locked(dc->commit.wait,
+					      !dc->commit.pending);
+	if (ret == 0)
+		dc->commit.pending = true;
+	spin_unlock(&dc->commit.wait.lock);
+
+	if (ret)
+		goto err_free;
+
+	/* We have our own synchronization through the commit lock. */
+	BUG_ON(drm_atomic_helper_swap_state(state, false) < 0);
+
+	/* Swap state succeeded, this is the point of no return. */
+	drm_atomic_state_get(state);
+	if (async)
+		queue_work(dc->wq, &commit->work);
+	else
+		atmel_hlcdc_dc_atomic_complete(commit);
+
+	return 0;
+
+err_free:
+	kfree(commit);
+error:
+	drm_atomic_helper_cleanup_planes(dev, state);
+	return ret;
+}
+
 static const struct drm_mode_config_funcs mode_config_funcs = {
 	.fb_create = drm_gem_fb_create,
 	.atomic_check = drm_atomic_helper_check,
-	.atomic_commit = drm_atomic_helper_commit,
+	.atomic_commit = atmel_hlcdc_dc_atomic_commit,
 };
 
 static int atmel_hlcdc_dc_modeset_init(struct drm_device *dev)
@@ -860,6 +946,11 @@ static int atmel_hlcdc_dc_load(struct drm_device *dev)
 	if (!dc)
 		return -ENOMEM;
 
+	dc->wq = alloc_ordered_workqueue("atmel-hlcdc-dc", 0);
+	if (!dc->wq)
+		return -ENOMEM;
+
+	init_waitqueue_head(&dc->commit.wait);
 	dc->desc = match->data;
 	dc->hlcdc = dev_get_drvdata(dev->dev->parent);
 	dev->dev_private = dc;
@@ -867,7 +958,7 @@ static int atmel_hlcdc_dc_load(struct drm_device *dev)
 	ret = clk_prepare_enable(dc->hlcdc->periph_clk);
 	if (ret) {
 		dev_err(dev->dev, "failed to enable periph_clk\n");
-		return ret;
+		goto err_destroy_wq;
 	}
 
 	pm_runtime_enable(dev->dev);
@@ -904,6 +995,9 @@ err_periph_clk_disable:
 	pm_runtime_disable(dev->dev);
 	clk_disable_unprepare(dc->hlcdc->periph_clk);
 
+err_destroy_wq:
+	destroy_workqueue(dc->wq);
+
 	return ret;
 }
 
@@ -911,6 +1005,7 @@ static void atmel_hlcdc_dc_unload(struct drm_device *dev)
 {
 	struct atmel_hlcdc_dc *dc = dev->dev_private;
 
+	flush_workqueue(dc->wq);
 	drm_kms_helper_poll_fini(dev);
 	drm_atomic_helper_shutdown(dev);
 	drm_mode_config_cleanup(dev);
@@ -923,157 +1018,14 @@ static void atmel_hlcdc_dc_unload(struct drm_device *dev)
 
 	pm_runtime_disable(dev->dev);
 	clk_disable_unprepare(dc->hlcdc->periph_clk);
+	destroy_workqueue(dc->wq);
 }
 
 DEFINE_DRM_GEM_DMA_FOPS(fops);
 
-/*
-ioctl to export the physical address of GEM to user space for
-video decoder
-*/
-int atmel_drm_gem_get_ioctl(struct drm_device *drm, void *data,
-				      struct drm_file *file_priv)
-{
-	struct drm_gem_object *gem_obj;
-	struct drm_gem_dma_object *dma_obj;
-	struct drm_mode_map_dumb *args = data;
-
-	mutex_lock(&drm->struct_mutex);
-
-	gem_obj = drm_gem_object_lookup(file_priv, args->handle);
-	if (!gem_obj) {
-		dev_err(drm->dev, "failed to lookup gem object\n");
-		mutex_unlock(&drm->struct_mutex);
-		return -EINVAL;
-	}
-
-	dma_obj = to_drm_gem_dma_obj(gem_obj);
-	args->offset = (__u64)dma_obj->dma_addr;
-
-	drm_gem_object_put(gem_obj);
-
-	mutex_unlock(&drm->struct_mutex);
-
-	return 0;
-}
-
-static int gfx2d_ioctl_submit(struct drm_device *dev, void *data,
-			      struct drm_file *file)
-{
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-	struct gfx2d_gpu *gpu = priv->gpu;
-	struct drm_gfx2d_submit *args = data;
-
-	if (!gpu)
-		return -ENXIO;
-
-	return gfx2d_submit(gpu, (uint32_t *)args->buf, args->size);
-}
-
-static int gfx2d_ioctl_flush(struct drm_device *dev, void *data,
-			     struct drm_file *file)
-{
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-	struct gfx2d_gpu *gpu = priv->gpu;
-	return gfx2d_flush(gpu);
-}
-
-static int gfx2d_ioctl_gem_addr(struct drm_device *dev, void *data,
-				struct drm_file *file_priv)
-{
-	struct drm_gfx2d_gem_addr *args = data;
-	struct drm_gem_object *obj;
-
-	if (!drm_core_check_feature(dev, DRIVER_GEM))
-		return -ENODEV;
-
-	mutex_lock(&dev->object_name_lock);
-	obj = idr_find(&dev->object_name_idr, (int) args->name);
-	if (!obj) {
-		mutex_unlock(&dev->object_name_lock);
-		return -ENOENT;
-	}
-
-	args->paddr = to_drm_gem_dma_obj(obj)->dma_addr;
-	args->size = obj->size;
-
-	mutex_unlock(&dev->object_name_lock);
-
-	return 0;
-}
-
-static const struct drm_ioctl_desc atmel_ioctls[] = {
-	DRM_IOCTL_DEF_DRV(ATMEL_GEM_GET, atmel_drm_gem_get_ioctl, DRM_UNLOCKED),
-	DRM_IOCTL_DEF_DRV(GFX2D_SUBMIT, gfx2d_ioctl_submit, DRM_AUTH|DRM_RENDER_ALLOW),
-	DRM_IOCTL_DEF_DRV(GFX2D_FLUSH, gfx2d_ioctl_flush, DRM_AUTH|DRM_RENDER_ALLOW),
-	DRM_IOCTL_DEF_DRV(GFX2D_GEM_ADDR, gfx2d_ioctl_gem_addr, DRM_AUTH|DRM_RENDER_ALLOW),
-};
-
-#ifdef CONFIG_DEBUG_FS
-static int atmel_hlcdc_dc_gpu_show(struct drm_device *dev, struct seq_file *m)
-{
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-	struct gfx2d_gpu *gpu = priv->gpu;
-
-	if (gpu) {
-		gfx2d_show(gpu, m);
-	}
-
-	return 0;
-}
-
-static int show_locked(struct seq_file *m, void *arg)
-{
-	struct drm_info_node *node = (struct drm_info_node *) m->private;
-	struct drm_device *dev = node->minor->dev;
-	int (*show)(struct drm_device *dev, struct seq_file *m) =
-		node->info_ent->data;
-	int ret;
-
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
-	if (ret)
-		return ret;
-
-	ret = show(dev, m);
-
-	mutex_unlock(&dev->struct_mutex);
-
-	return ret;
-}
-
-static struct drm_info_list atmel_hlcdc_dc_debugfs_list[] = {
-	{"gpu", show_locked, 0, atmel_hlcdc_dc_gpu_show},
-};
-
-void atmel_hlcdc_dc_debugfs_init(struct drm_minor *minor)
-{
-	drm_debugfs_create_files(atmel_hlcdc_dc_debugfs_list,
-				       ARRAY_SIZE(atmel_hlcdc_dc_debugfs_list),
-				       minor->debugfs_root, minor);
-}
-#endif
-
-static void load_gpu(struct drm_device *dev)
-{
-	static DEFINE_MUTEX(init_lock);
-	struct atmel_hlcdc_dc *priv = dev->dev_private;
-
-	mutex_lock(&init_lock);
-
-	if (!priv->gpu)
-		priv->gpu = gfx2d_load_gpu(dev);
-
-	mutex_unlock(&init_lock);
-}
-
-static struct drm_driver atmel_hlcdc_dc_driver = {
+static const struct drm_driver atmel_hlcdc_dc_driver = {
 	.driver_features = DRIVER_GEM | DRIVER_MODESET | DRIVER_ATOMIC,
 	DRM_GEM_DMA_DRIVER_OPS,
-#ifdef CONFIG_DEBUG_FS
-	.debugfs_init       = atmel_hlcdc_dc_debugfs_init,
-#endif
-	.ioctls	= atmel_ioctls,
-	.num_ioctls= ARRAY_SIZE(atmel_ioctls),
 	.fops = &fops,
 	.name = "atmel-hlcdc",
 	.desc = "Atmel HLCD Controller DRM",
@@ -1105,8 +1057,6 @@ static int atmel_hlcdc_dc_bind(struct device *dev)
 	ret = component_bind_all(dev, ddev);
 	if (ret < 0)
 		goto out_bind;
-
-	load_gpu(ddev);
 
 	ret = drm_dev_register(ddev, 0);
 	if (ret)
@@ -1250,14 +1200,12 @@ static struct platform_driver atmel_hlcdc_dc_platform_driver = {
 
 static int __init atmel_hlcdc_dc_drm_init(void)
 {
-	gfx2d_register();
 	return platform_driver_register(&atmel_hlcdc_dc_platform_driver);
 }
 module_init(atmel_hlcdc_dc_drm_init);
 
 static void __exit atmel_hlcdc_dc_drm_exit(void)
 {
-	gfx2d_unregister();
 	platform_driver_unregister(&atmel_hlcdc_dc_platform_driver);
 }
 module_exit(atmel_hlcdc_dc_drm_exit);
