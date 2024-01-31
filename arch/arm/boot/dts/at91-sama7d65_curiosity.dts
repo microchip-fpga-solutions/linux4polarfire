@@ -165,6 +165,10 @@
 	status = "okay";
 };
 
+&dma2 {
+	status = "okay";
+};
+
 &dsi {
 #ifdef LCD_DSI_NOT_LVDS
 	status = "okay";
