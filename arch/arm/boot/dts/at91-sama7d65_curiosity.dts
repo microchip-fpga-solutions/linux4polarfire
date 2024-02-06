@@ -17,9 +17,9 @@
 
 /*
  *  This variable define in which display mode you want to be : MIPI or LVDS.
- *  Please comment the define value to use LVDS mode.
+ *  Please remove comment on the define value to use MIPI mode.
  */
-#define LCD_DSI_NOT_LVDS
+/*#define LCD_DSI_NOT_LVDS*/
 
 / {
 #ifdef LCD_DSI_NOT_LVDS

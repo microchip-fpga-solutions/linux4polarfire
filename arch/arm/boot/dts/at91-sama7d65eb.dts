@@ -14,11 +14,18 @@
 #include <dt-bindings/pinctrl/at91.h>
 #include <dt-bindings/sound/microchip,pdmc.h>
 
-/* Select LCD interface: have this macro defined for MIPI DSI or undefined for LVDS */
-#define LCD_DSI_NOT_LVDS
+/*
+ *  This variable define in which display mode you want to be : MIPI or LVDS.
+ *  Please remove comment on the define value to use MIPI mode.
+ */
+/*#define LCD_DSI_NOT_LVDS*/
 
 / {
-	model = "Microchip SAMA7D65 DDR3 EB";
+#ifdef LCD_DSI_NOT_LVDS
+	model = "Microchip SAMA7D65 DDR3 EB MIPI";
+#else
+	model = "Microchip SAMA7D65 DDR3 EB LVDS";
+#endif
 	compatible = "microchip,sama7d65-ddr3-eb", "microchip,sama7d65", "microchip,sama7";
 
 	chosen {
