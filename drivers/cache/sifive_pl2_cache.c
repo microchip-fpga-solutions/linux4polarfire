@@ -621,7 +621,7 @@ static int sifive_pl2_pmu_pm_notify(struct notifier_block *b, unsigned long cmd,
 			  * an RCU perspective for the sifive_pl2_pmu_start() call
 			  * duration.
 			  */
-			RCU_NONIDLE(sifive_pl2_pmu_start(event, PERF_EF_RELOAD));
+			sifive_pl2_pmu_start(event, PERF_EF_RELOAD);
 			break;
 		default:
 			break;

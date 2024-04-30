@@ -635,7 +635,7 @@ static int sifive_ccache_resume(void)
 		if (!event)
 			continue;
 
-		RCU_NONIDLE(sifive_ccache_pmu_start(event, PERF_EF_RELOAD));
+		sifive_ccache_pmu_start(event, PERF_EF_RELOAD);
 	}
 	writeq(state->pmclientfilter, ccache_base +
 		SIFIVE_CCACHE_CLIENT_FILTER_BASE_OFFSET);
