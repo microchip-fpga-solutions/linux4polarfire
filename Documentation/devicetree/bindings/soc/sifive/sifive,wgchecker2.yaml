@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/sifive/sifive,wgchecker2.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFive WorldGuard Checker
+
+maintainers:
+  - Andy Chiu <andy.chiu@sifive.com>
+
+description: |
+  The driver for SiFive WorldGuard Checker only reports the first violation
+  interrupt when it happens. It do not try to set or read wg checker themselves
+  because Linux should not runs in a secure wid and accessing any wg MMIO region
+  from a non-secure wid is prohibited by the spec.
+
+properties:
+  compatible:
+    items:
+      - const: sifive,wgchecker2
+
+  reg:
+    maxItems: 1
+    description: |
+      The MMIO base address of the wg checker. Since we are not programming wg
+      checkers in Linux, we do not really need this information.
+
+  interrupts:
+    maxItems: 1
+    description: |
+      The interrupt number which the wg checker generates. Must be edge trigger.
+
+required:
+  - compatible
+  - interrupts
+
+additionalProperties: false
+...
