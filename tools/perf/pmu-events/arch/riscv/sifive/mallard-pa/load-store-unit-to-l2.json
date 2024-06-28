@@ -1,0 +1,97 @@
+[
+  {
+    "EventName": "L2_REQUEST_BLOCKED",
+    "EventCode": "0x10e",
+    "BriefDescription": "Counts cycles in which a valid request to L2 is blocked waiting for a response"
+  },
+  {
+    "EventName": "L2_REQUEST_ACQUIRE_FROM_N",
+    "EventCode": "0x20e",
+    "BriefDescription": "Counts AcquireBlock requests to L2 that grow permission from Invalid to Shared or Exclusive"
+  },
+  {
+    "EventName": "L2_REQUEST_ACQUIRE_FROM_B",
+    "EventCode": "0x40e",
+    "BriefDescription": "Counts AcquireBlock requests to L2 that grow permission from Shared to Exclusive"
+  },
+  {
+    "EventName": "L2_REQUEST_ACQUIREPERM",
+    "EventCode": "0x80e",
+    "BriefDescription": "Counts AcquirePerm requests to L2 that grow permission"
+  },
+  {
+    "EventName": "L2_REQUEST_GET",
+    "EventCode": "0x100e",
+    "BriefDescription": "Counts Get requests to L2 for reading data"
+  },
+  {
+    "EventName": "L2_REQUEST_PUTFULL",
+    "EventCode": "0x200e",
+    "BriefDescription": "Counts PutFullData requests to L2 for writing data"
+  },
+  {
+    "EventName": "L2_REQUEST_PUTPARTIALDATA",
+    "EventCode": "0x400e",
+    "BriefDescription": "Counts PutPartialData requests to L2 for writing data"
+  },
+  {
+    "EventName": "L2_REQUEST_ATOMIC",
+    "EventCode": "0x800e",
+    "BriefDescription": "Counts ArithmeticData and LogicalData requests to L2 for atomic read-modify-write"
+  },
+  {
+    "EventName": "L2_REQUEST_HINT",
+    "EventCode": "0x1000e",
+    "BriefDescription": "Counts Intent (Hint) requests to L2 to signal future intention to access data"
+  },
+  {
+    "EventName": "L2_PROBE_REQUEST_BLOCKED",
+    "EventCode": "0x2000e",
+    "BriefDescription": "Counts cycles in which a Probe request from L2 is blocked"
+  },
+  {
+    "EventName": "L2_EVICT_OR_PROBE_RESPONSE_BLOCKED",
+    "EventCode": "0x4000e",
+    "BriefDescription": "Counts cycles in which a Release request or a response to L2 is blocked"
+  },
+  {
+    "EventName": "L2_EVICT_RELEASE_DIRTY",
+    "EventCode": "0x8000e",
+    "BriefDescription": "Counts ReleaseData requests to L2 to writeback dirty data"
+  },
+  {
+    "EventName": "L2_EVICT_RELEASE_CLEAN",
+    "EventCode": "0x10000e",
+    "BriefDescription": "Counts Release requests to L2 to relinquish permissions of a block"
+  },
+  {
+    "EventName": "L2_PROBEACK_RESPONSE_DIRTY",
+    "EventCode": "0x20000e",
+    "BriefDescription": "Counts ProbeAckData responses to L2 which include dirty data"
+  },
+  {
+    "EventName": "L2_PROBEACK_RESPONSE_CLEAN",
+    "EventCode": "0x40000e",
+    "BriefDescription": "Counts ProbeAck responses to L2 which do not writeback dirty data"
+  },
+  {
+    "EventName": "L2_PROBEACK_RESPONSE_MISS",
+    "EventCode": "0x80000e",
+    "BriefDescription": "Counts ProbeAck responses to L2 indicating a miss in the L1 Data Cache"
+  },
+  {
+    "EventName": "PROBE_MATCH_RELEASE_QUEUE",
+    "EventCode": "0x100000e",
+    "BriefDescription": "Counts cycles in which there is at least one entry in the Probe Release Queue"
+  },
+  {
+    "EventName": "L2_RESPONSE_CORRUPT",
+    "EventCode": "0x200000e",
+    "BriefDescription": "Counts Corrupt responses from L2 indicating corrupted data"
+  },
+  {
+    "EventName": "L2_RESPONSE_DENIED",
+    "EventCode": "0x400000e",
+    "BriefDescription": "Counts Denied responses from L2 indicating an inability to service a request"
+  }
+]

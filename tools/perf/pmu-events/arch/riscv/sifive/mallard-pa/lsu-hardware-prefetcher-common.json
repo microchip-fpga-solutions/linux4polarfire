@@ -1,0 +1,52 @@
+[
+  {
+    "EventName": "HWPF_DEMAND_MATCHED_MSHR_FROM_L1HWPF",
+    "EventCode": "0x110",
+    "BriefDescription": "Counts matches of a demand to an MSHR allocated by an L1 Hardware Prefetch"
+  },
+  {
+    "EventName": "HWPF_L1HWPF_MATCHED_MSHR_FROM_DEMAND",
+    "EventCode": "0x210",
+    "BriefDescription": "Counts matches of an L1 Hardware Prefetch to an MSHR allocated by a demand"
+  },
+  {
+    "EventName": "HWPF_ISSUE_BLOCKED",
+    "EventCode": "0x410",
+    "BriefDescription": "Counts cycles in which the Hardware Prefetcher issue queue is blocked"
+  },
+  {
+    "EventName": "HWPF_ISSUE_BLOCKED_DTLB",
+    "EventCode": "0x810",
+    "BriefDescription": "Counts cycles in which the Hardware Prefetcher issue queue is blocked waiting for the Data TLB"
+  },
+  {
+    "EventName": "HWPF_ISSUE_BLOCKED_MSHR",
+    "EventCode": "0x1010",
+    "BriefDescription": "Counts cycles in which the Hardware Prefetcher issue queue is blocked waiting for a Miss Status Holding Register"
+  },
+  {
+    "EventName": "HWPF_ISSUE_BLOCKED_L2Q",
+    "EventCode": "0x2010",
+    "BriefDescription": "Counts cycles in which the Hardware Prefetcher issue queue is blocked waiting for the L2 queue"
+  },
+  {
+    "EventName": "HWPF_L1_HIT_L2_CACHE",
+    "EventCode": "0x4010",
+    "BriefDescription": "Counts hits of an L2 cache tag from an L1 Hardware Prefetch"
+  },
+  {
+    "EventName": "HWPF_L2_HIT_L2_CACHE",
+    "EventCode": "0x8010",
+    "BriefDescription": "Counts hits of an L2 cache tag from an L2 Hardware Prefetch"
+  },
+  {
+    "EventName": "HWPF_L1_MATCH_L2_MSHR",
+    "EventCode": "0x10010",
+    "BriefDescription": "Counts matches of an L2 Miss Status Holding Register from an L1 Hardware Prefetch"
+  },
+  {
+    "EventName": "HWPF_L2_MATCH_L2_MSHR",
+    "EventCode": "0x20010",
+    "BriefDescription": "Counts matches of an L2 Miss Status Holding Register from an L2 Hardware Prefetch"
+  }
+]

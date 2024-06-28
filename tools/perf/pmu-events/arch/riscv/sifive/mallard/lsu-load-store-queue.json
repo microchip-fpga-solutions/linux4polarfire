@@ -1,0 +1,142 @@
+[
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_DATA_TLB",
+    "EventCode": "0x10c",
+    "BriefDescription": "LSU issue queue waiting for data TLB"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUEWAITING_FOR_STORE_QUEUE",
+    "EventCode": "0x20c",
+    "BriefDescription": "LSU issue queuewaiting for store queue"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUEWAITING_FOR_LOAD_QUEUE",
+    "EventCode": "0x40c",
+    "BriefDescription": "LSU issue queuewaiting for load queue"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_MSHR",
+    "EventCode": "0x80c",
+    "BriefDescription": "LSU issue queue waiting for MSHR"
+  },
+  {
+    "EventName": "LOAD_QUEUE_RETURN_HOLD_FOR_L1_DATA_CACHE_TAG",
+    "EventCode": "0x100c",
+    "BriefDescription": "Load queue return hold for L1 data cache tag"
+  },
+  {
+    "EventName": "LOAD_QUEUE_RETURN_RETRY_FOR_NO_DATA",
+    "EventCode": "0x200c",
+    "BriefDescription": "Load queue return retry for no data"
+  },
+  {
+    "EventName": "LOAD_QUEUE_RETURN_FROM_MSHR_DATA",
+    "EventCode": "0x400c",
+    "BriefDescription": "Load queue return from MSHR data"
+  },
+  {
+    "EventName": "LOAD_QUEUE_RETURN_FROM_L2_DATA_FAST",
+    "EventCode": "0x800c",
+    "BriefDescription": "Load queue return from L2 data fast"
+  },
+  {
+    "EventName": "LOAD_QUEUE_ROB_RESOLVE",
+    "EventCode": "0x1000c",
+    "BriefDescription": "Load queue ROB resolve"
+  },
+  {
+    "EventName": "LOAD_QUEUE_ROB_FLUSH_BEFORE",
+    "EventCode": "0x2000c",
+    "BriefDescription": "Load queue ROB flush before"
+  },
+  {
+    "EventName": "LOAD_QUEUE_WAITING_FOR_CACHEABLE",
+    "EventCode": "0x4000c",
+    "BriefDescription": "Load queue waiting for cacheable"
+  },
+  {
+    "EventName": "LOAD_QUEUE_WAITING_FOR_NON_CACHEABLE",
+    "EventCode": "0x8000c",
+    "BriefDescription": "Load queue waiting for non_cacheable"
+  },
+  {
+    "EventName": "LOAD_QUEUE_WAITING_FOR_MSHR_DEPENDENCY",
+    "EventCode": "0x10000c",
+    "BriefDescription": "Load queue waiting for MSHR dependency"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_ENTRY",
+    "EventCode": "0x20000c",
+    "BriefDescription": "Store queue retire entry"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_WRITE_L1_DATACACHE_DATA",
+    "EventCode": "0x40000c",
+    "BriefDescription": "Store queue retire write L1 datacache data"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_WRITE_MSHR_DATA",
+    "EventCode": "0x80000c",
+    "BriefDescription": "Store queue retire write MSHR data"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_WRITE_L1_DATA_CACHE_DATA_L1HITCOHCLEAN",
+    "EventCode": "0x100000c",
+    "BriefDescription": "Store queue retire write L1 data cache data L1HitCohClean"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_WRITE_MSHR_DATA_L1HITCOHCLEAN",
+    "EventCode": "0x200000c",
+    "BriefDescription": "Store queue retire write MSHR data L1HitCohClean"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_HOLD_FOR_L1_DATA_CACHE_TAG",
+    "EventCode": "0x400000c",
+    "BriefDescription": "Store queue retire hold for L1 data cache tag"
+  },
+  {
+    "EventName": "STORE_QUEUE_RETIRE_HOLD_FOR_MSHR_DEPENDENCY",
+    "EventCode": "0x800000c",
+    "BriefDescription": "Store queue retire hold for MSHR Dependency"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_ADDRESS_SOURCE",
+    "EventCode": "0x1000000c",
+    "BriefDescription": "LSU issue queue waiting for address source"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_STORE_DATA_SOURCE",
+    "EventCode": "0x2000000c",
+    "BriefDescription": "LSU issue queue waiting for store data source"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_OLDER_IN_ORDER_OP",
+    "EventCode": "0x4000000c",
+    "BriefDescription": "LSU issue queue waiting for older in_order op"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_IN_ORDER_OP_WAITING_FOR_OLDER_OPS",
+    "EventCode": "0x8000000c",
+    "BriefDescription": "LSU issue queue in_order op waiting for older ops"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_OLDER_NON_SPECULATIVE_OP",
+    "EventCode": "0x10000000c",
+    "BriefDescription": "LSU issue queue waiting for older non_speculative op"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_OLDER_STORES_TO_STACK",
+    "EventCode": "0x20000000c",
+    "BriefDescription": "LSU issue queue waiting for older stores to stack"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_ONE_OLDER_PREDICTED_MDP_HAZARD_STORE",
+    "EventCode": "0x40000000c",
+    "BriefDescription": "LSU issue queue waiting for one older predicted MDP hazard store"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_MULTIPLE_OLDER_PREDICTED_MDP_HAZARD_STORES",
+    "EventCode": "0x80000000c",
+    "BriefDescription": "LSU issue queue waiting for multiple older predicted MDP hazard stores"
+  }
+]

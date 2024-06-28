@@ -1,0 +1,137 @@
+[
+  {
+    "EventName": "HWPF_SENT_L1",
+    "EventCode": "0x10f",
+    "BriefDescription": "TWJ: Counts L1 Hardware Prefetch requests"
+  },
+  {
+    "EventName": "HWPF_SENT_L2",
+    "EventCode": "0x20f",
+    "BriefDescription": "TWJ: Counts L2 Hardware Prefetch requests"
+  },
+  {
+    "EventName": "HWPF_DEMAND_MATCHED",
+    "EventCode": "0x80f",
+    "BriefDescription": "TWJ: Counts demands that cause one or more Hardware Prefetch requests"
+  },
+  {
+    "EventName": "HWPF_STREAM_STARTED",
+    "EventCode": "0x100f",
+    "BriefDescription": "TWJ: Counts new streams started in the Hardware Prefetcher"
+  },
+  {
+    "EventName": "HWPF_INCREASE_AGGRESSIVENESS",
+    "EventCode": "0x200f",
+    "BriefDescription": "TWJ: Counts increases in distance aggressiveness in a Hardware Prefetcher stream"
+  },
+  {
+    "EventName": "HWPF_STREAM_REPLACED",
+    "EventCode": "0x400f",
+    "BriefDescription": "TWJ: Counts streams in the Hardware Prefetcher replaced by a new allocation"
+  },
+  {
+    "EventName": "HWPF_STREAM_UNTRAINED",
+    "EventCode": "0x800f",
+    "BriefDescription": "TWJ: Counts streams in the Hardware Prefetcher deallocated due to stride mismatch"
+  },
+  {
+    "EventName": "HWPF_L1_BLOCKED_L1MSHR",
+    "EventCode": "0x1000f",
+    "BriefDescription": "TWJ: Counts cycles in which an L1 Hardware Prefetch request is blocked due to MSHR threshold"
+  },
+  {
+    "EventName": "HWPF_L2_BLOCKED_L2MSHR",
+    "EventCode": "0x2000f",
+    "BriefDescription": "TWJ: Counts cycles in which an L2 Hardware Prefetch request is blocked due to MSHR threshold"
+  },
+  {
+    "EventName": "HWPF_STREAM_STOPPED_L1_THRESHOLD",
+    "EventCode": "0x8000f",
+    "BriefDescription": "TWJ: Counts deallocations of Hardware Prefetcher streams due to hitting the L1 cache threshold"
+  },
+  {
+    "EventName": "HWPF_STREAM_STOPPED_L2_THRESHOLD",
+    "EventCode": "0x10000f",
+    "BriefDescription": "TWJ: Counts deallocations of Hardware Prefetcher streams due to hitting the L2 cache threshold"
+  },
+  {
+    "EventName": "HWPF_L1_BLOCKED_ISSUE_QUEUE",
+    "EventCode": "0x40000f",
+    "BriefDescription": "TWJ: Counts cycles in which an L1 Hardware Prefetch is blocked by the Issue Queue threshold"
+  },
+  {
+    "EventName": "HWPF_L2_BLOCKED_ISSUE_QUEUE",
+    "EventCode": "0x80000f",
+    "BriefDescription": "TWJ: Counts cycles in which an L2 Hardware Prefetch is blocked by the Issue Queue threshold"
+  },
+  {
+    "EventName": "HWPF_SENT_L1",
+    "EventCode": "0x200000f",
+    "BriefDescription": "BPM: Counts L1 Hardware Prefetch requests"
+  },
+  {
+    "EventName": "HWPF_SENT_L2",
+    "EventCode": "0x400000f",
+    "BriefDescription": "BPM: Counts L2 Hardware Prefetch requests"
+  },
+  {
+    "EventName": "HWPF_DEMAND_MATCHED",
+    "EventCode": "0x1000000f",
+    "BriefDescription": "BPM: Counts demands that cause one or more Hardware Prefetch requests"
+  },
+  {
+    "EventName": "HWPF_STREAM_STARTED",
+    "EventCode": "0x2000000f",
+    "BriefDescription": "BPM: Counts new streams started in the Hardware Prefetcher"
+  },
+  {
+    "EventName": "HWPF_INCREASE_AGGRESSIVENESS",
+    "EventCode": "0x4000000f",
+    "BriefDescription": "BPM: Counts increases in distance aggressiveness in a Hardware Prefetcher stream"
+  },
+  {
+    "EventName": "HWPF_STREAM_REPLACED",
+    "EventCode": "0x8000000f",
+    "BriefDescription": "BPM: Counts streams in the Hardware Prefetcher replaced by a new allocation"
+  },
+  {
+    "EventName": "HWPF_STREAM_UNTRAINED",
+    "EventCode": "0x10000000f",
+    "BriefDescription": "BPM: Counts streams in the Hardware Prefetcher deallocated due to stride mismatch"
+  },
+  {
+    "EventName": "HWPF_L1_BLOCKED_L1MSHR",
+    "EventCode": "0x20000000f",
+    "BriefDescription": "BPM: Counts cycles in which an L1 Hardware Prefetch request is blocked due to MSHR threshold"
+  },
+  {
+    "EventName": "HWPF_L2_BLOCKED_L2MSHR",
+    "EventCode": "0x40000000f",
+    "BriefDescription": "BPM: Counts cycles in which an L2 Hardware Prefetch request is blocked due to MSHR threshold"
+  },
+  {
+    "EventName": "HWPF_STREAM_STOPPED_L1_THRESHOLD",
+    "EventCode": "0x100000000f",
+    "BriefDescription": "BPM: Counts deallocations of Hardware Prefetcher streams due to hitting the L1 cache threshold"
+  },
+  {
+    "EventName": "HWPF_STREAM_STOPPED_L2_THRESHOLD",
+    "EventCode": "0x200000000f",
+    "BriefDescription": "BPM: Counts deallocations of Hardware Prefetcher streams due to hitting the L2 cache threshold"
+  },
+  {
+    "EventName": "HWPF_L1_BLOCKED_ISSUE_QUEUE",
+    "EventCode": "0x800000000f",
+    "BriefDescription": "BPM: Counts cycles in which an L1 Hardware Prefetch is blocked by the Issue Queue threshold"
+  },
+  {
+    "EventName": "HWPF_L2_BLOCKED_ISSUE_QUEUE",
+    "EventCode": "0x1000000000f",
+    "BriefDescription": "BPM: Counts cycles in which an L2 Hardware Prefetch is blocked by the Issue Queue threshold"
+  },
+  {
+    "EventName": "HWPF_TRAINING_QUEUE_OVERFLOW",
+    "EventCode": "0x4000000000f",
+    "BriefDescription": "Counts occurrences of a new entry in the Hardware Prefetcher training queue overwriting an existing entry"
+  }
+]

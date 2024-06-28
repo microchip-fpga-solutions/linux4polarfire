@@ -1,0 +1,132 @@
+[
+  {
+    "EventName": "BRANCH_DIRECTION_PREDICTOR_MISPREDICTION",
+    "EventCode": "0x103",
+    "BriefDescription": "Branch direction predictor misprediction"
+  },
+  {
+    "EventName": "IJTP_MISPREDICTION",
+    "EventCode": "0x203",
+    "BriefDescription": "IJTP misprediction"
+  },
+  {
+    "EventName": "IJTP_HINT_WRONG",
+    "EventCode": "0x403",
+    "BriefDescription": "IJTP hint wrong"
+  },
+  {
+    "EventName": "INSTRUCTION_CACHE_WAY_PREDICTOR_MISPREDICTION",
+    "EventCode": "0x803",
+    "BriefDescription": "Instruction cache way predictor misprediction"
+  },
+  {
+    "EventName": "INSTRUCTION_CACHE_PREFETCH_REQUEST",
+    "EventCode": "0x1003",
+    "BriefDescription": "Instruction cache prefetch request"
+  },
+  {
+    "EventName": "INSTRUCTION_CACHE_FETCH_REQUEST",
+    "EventCode": "0x2003",
+    "BriefDescription": "Instruction cache fetch request"
+  },
+  {
+    "EventName": "INSTRUCTION_FETCH_UNIT_STALLED_DUE_TO_INSTRUCTION_CACHE_MISS",
+    "EventCode": "0x4003",
+    "BriefDescription": "Instruction fetch unit stalled due to instruction cache miss"
+  },
+  {
+    "EventName": "INSTRUCTION_FETCH_UNIT_STALLED",
+    "EventCode": "0x8003",
+    "BriefDescription": "Instruction fetch unit stalled"
+  },
+  {
+    "EventName": "INSTRUCTION_CACHE_FILL",
+    "EventCode": "0x10003",
+    "BriefDescription": "Instruction cache fill"
+  },
+  {
+    "EventName": "INSTRUCTION_TLB_MISS",
+    "EventCode": "0x20003",
+    "BriefDescription": "Instruction TLB miss"
+  },
+  {
+    "EventName": "BRANCH_DIRECTION_PREDICTOR_TRAINED",
+    "EventCode": "0x40003",
+    "BriefDescription": "Branch direction predictor trained"
+  },
+  {
+    "EventName": "BRANCH_DIRECTION_PREDICTOR_TRAINING_STALLED",
+    "EventCode": "0x80003",
+    "BriefDescription": "Branch direction predictor training stalled"
+  },
+  {
+    "EventName": "STALLED_DUE_TO_INSTRUCTION_TLB_MISS",
+    "EventCode": "0x100003",
+    "BriefDescription": "Stalled due to instruction TLB miss"
+  },
+  {
+    "EventName": "STALLED_DUE_TO_FULL_FETCH_QUEUE",
+    "EventCode": "0x200003",
+    "BriefDescription": "Stalled due to full fetch queue"
+  },
+  {
+    "EventName": "DECODED_LESS_THAN_MAXIMUM_OPERATIONS",
+    "EventCode": "0x400003",
+    "BriefDescription": "Decoded less than maximum operations"
+  },
+  {
+    "EventName": "NEXT_LINE_PREDICTOR_HIGH_TARGET_REDIRECTION",
+    "EventCode": "0x800003",
+    "BriefDescription": "Next-line predictor high target redirection"
+  },
+  {
+    "EventName": "NEXT_LINE_PREDICTOR_LOW_TARGET_REDIRECTION",
+    "EventCode": "0x1000003",
+    "BriefDescription": "Next-line predictor low target redirection"
+  },
+  {
+    "EventName": "NEXT_LINE_PREDICTOR_NOT_TAKEN_BUT_REDIRECTED",
+    "EventCode": "0x2000003",
+    "BriefDescription": "Next-line predictor not taken but redirected"
+  },
+  {
+    "EventName": "NEXT_LINE_PREDICTOR_TAKEN_BUT_REDIRECTED",
+    "EventCode": "0x4000003",
+    "BriefDescription": "Next-line predictor taken but redirected"
+  },
+  {
+    "EventName": "RAS_PREDICTED_A_RETURN",
+    "EventCode": "0x8000003",
+    "BriefDescription": "RAS predicted a return"
+  },
+  {
+    "EventName": "RAS_FORWARDED_A_RETURN_PREDICTION",
+    "EventCode": "0x10000003",
+    "BriefDescription": "RAS forwarded a return prediction"
+  },
+  {
+    "EventName": "RAS_EMPTY_FOR_RETURN",
+    "EventCode": "0x20000003",
+    "BriefDescription": "RAS empty for return"
+  },
+  {
+    "EventName": "RAS_MISPREDICTED_TARGET",
+    "EventCode": "0x40000003",
+    "BriefDescription": "RAS mispredicted target"
+  },
+  {
+    "EventName": "RAS_OVERFLOW",
+    "EventCode": "0x80000003",
+    "BriefDescription": "RAS overflow"
+  },
+  {
+    "EventName": "IJTP_PREDICTED_A_JALR",
+    "EventCode": "0x100000003",
+    "BriefDescription": "IJTP predicted a JALR"
+  },
+  {
+    "EventName": "BRANCH_DIRECTION_PREDICTOR_PREDICTED_TAKEN_ON_A_BRANCH",
+    "EventCode": "0x200000003",
+    "BriefDescription": "Branch direction predictor predicted taken on a branch"
+  }
+]
