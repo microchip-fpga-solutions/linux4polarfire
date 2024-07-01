@@ -1,0 +1,32 @@
+[
+  {
+    "EventName": "L1_DATA_CACHE_DATA_TAG_SEARCH_WRITE_READ_BLOCKED",
+    "EventCode": "0x109",
+    "BriefDescription": "L1 data cache data tag search write read blocked"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_DATA_STORE_QUEUE_WRITE_BLOCKED",
+    "EventCode": "0x209",
+    "BriefDescription": "L1 data cache data store queue write blocked"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_DATA_LOAD_QUEUE_READ_BLOCKED",
+    "EventCode": "0x409",
+    "BriefDescription": "L1 data cache data load queue read blocked"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_DATA_MSHR_DATA_FORWARD_WRITE_BLOCKED",
+    "EventCode": "0x809",
+    "BriefDescription": "L1 data cache data MSHR data forward write blocked"
+  },
+  {
+    "EventName": "LR_SC_RESERVATION_SET",
+    "EventCode": "0x1009",
+    "BriefDescription": "LR_SC reservation set"
+  },
+  {
+    "EventName": "LR_SC_RESERVATION_CLEARED",
+    "EventCode": "0x2009",
+    "BriefDescription": "LR_SC reservation cleared"
+  }
+]

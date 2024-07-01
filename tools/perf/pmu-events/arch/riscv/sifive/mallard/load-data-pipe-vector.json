@@ -1,0 +1,102 @@
+[
+  {
+    "EventName": "L1_DATA_FORWARD_REPLAY_DEPENDENCIES",
+    "EventCode": "0x10a",
+    "BriefDescription": "L1 data forward replay dependencies"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_REPLAY_DEPENDENCIES",
+    "EventCode": "0x20a",
+    "BriefDescription": "L1 data write_back replay dependencies"
+  },
+  {
+    "EventName": "L1_DATAWRITE_BACK_SEARCH_HIT_L1_DATACACHE_DATA",
+    "EventCode": "0x40a",
+    "BriefDescription": "L1 datawrite_back search hit L1 datacache data"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_SEARCH_FORWARD_FROM_LS_TAG_MATCH",
+    "EventCode": "0x80a",
+    "BriefDescription": "L1 data write_back search forward from LS tag match"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_SEARCH_FORWARD_FROM_LS_TAG_ORDER",
+    "EventCode": "0x100a",
+    "BriefDescription": "L1 data write_back search forward from LS tag order"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_SEARCH_FORWARD_FROM_STORE_QUEUE_ENTRY",
+    "EventCode": "0x200a",
+    "BriefDescription": "L1 data write_back search forward from store queue entry"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_SEARCH_FORWARD_FROM_STORE_QUEUE_WRITE_GATHER",
+    "EventCode": "0x400a",
+    "BriefDescription": "L1 data write_back search forward from store queue write gather"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_LOAD_READ_FROM_L1_DATA_CACHE_DATA_HIT",
+    "EventCode": "0x800a",
+    "BriefDescription": "L1 data write_back load read from L1 data cache data hit"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_LOAD_FORWARD_FROM_STORE_QUEUE_ENTRY",
+    "EventCode": "0x1000a",
+    "BriefDescription": "L1 data write_back load forward from store queue entry"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_LOAD_FORWARD_FROM_STORE_QUEUE_WRITE_GATHER",
+    "EventCode": "0x2000a",
+    "BriefDescription": "L1 data write_back load forward from store queue write gather"
+  },
+  {
+    "EventName": "L1_DATAWRITE_BACK_LOAD_READ_FROM_MSHR_DATA",
+    "EventCode": "0x4000a",
+    "BriefDescription": "L1 datawrite_back load read from MSHR data"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_SC_PASS",
+    "EventCode": "0x8000a",
+    "BriefDescription": "L1 data write_back SC pass"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_SC_FAIL",
+    "EventCode": "0x10000a",
+    "BriefDescription": "L1 data write_back SC fail"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_ATOMIC",
+    "EventCode": "0x20000a",
+    "BriefDescription": "L1 data write_back atomic"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_L1_DATA_CACHE_DATA_PARTIAL_GRANULE_WRITE",
+    "EventCode": "0x40000a",
+    "BriefDescription": "L1 data write_back L1 data cache data partial granule write"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_ROB_RESOLVE",
+    "EventCode": "0x80000a",
+    "BriefDescription": "L1 data write_back ROB resolve"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_ROB_FLUSH_BEFORE",
+    "EventCode": "0x100000a",
+    "BriefDescription": "L1 data write_back ROB flush before"
+  },
+  {
+    "EventName": "L1_DATA_WRITE_BACK_FS_DIRTY",
+    "EventCode": "0x200000a",
+    "BriefDescription": "L1 data write_back FS dirty"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_DATA_CORRECTABLE_ERROR",
+    "EventCode": "0x400000a",
+    "BriefDescription": "L1 data cache data correctable error"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_DATA_UNCORRECTABLE_ERROR",
+    "EventCode": "0x800000a",
+    "BriefDescription": "L1 data cache data uncorrectable error"
+  }
+]

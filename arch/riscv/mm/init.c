@@ -76,6 +76,9 @@ static void __init zone_sizes_init(void)
 #endif
 	max_zone_pfns[ZONE_NORMAL] = max_low_pfn;
 
+#ifdef CONFIG_SPARSEMEM_VMEMMAP
+	local_flush_tlb_kernel_range(VMEMMAP_START, VMEMMAP_END);
+#endif
 	free_area_init(max_zone_pfns);
 }
 

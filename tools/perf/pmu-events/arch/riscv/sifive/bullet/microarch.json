@@ -1,0 +1,57 @@
+[
+  {
+    "EventName": "ADDRESSGEN_INTERLOCK",
+    "EventCode": "0x0000101",
+    "BriefDescription": "Counts cycles in which an address-generation interlock occurs"
+  },
+  {
+    "EventName": "LONGLATENCY_INTERLOCK",
+    "EventCode": "0x0000201",
+    "BriefDescription": "Counts cycles in which a long-latency interlock occurs"
+  },
+  {
+    "EventName": "CSR_INTERLOCK",
+    "EventCode": "0x0000401",
+    "BriefDescription": "Counts cyles in which a CSR interlock"
+  },
+  {
+    "EventName": "ICACHE_BLOCKED",
+    "EventCode": "0x0000801",
+    "BriefDescription": "Counts cycles in which the instruction cache is not able to provide instructions"
+  },
+  {
+    "EventName": "DCACHE_BLOCKED",
+    "EventCode": "0x0001001",
+    "BriefDescription": "Counts cycles in which the data cache is not able to provide data to a waiting instruction"
+  },
+  {
+    "EventName": "BRANCH_DIRECTION_MISPREDICTION",
+    "EventCode": "0x0002001",
+    "BriefDescription": "Counts number of times the direction prediction (taken/not-taken) for a branch is wrong"
+  },
+  {
+    "EventName": "BRANCH_TARGET_MISPREDICTION",
+    "EventCode": "0x0004001",
+    "BriefDescription": "Counts number of times a branch’s direction was correct, but the target is mispredicted"
+  },
+  {
+    "EventName": "PIPELINE_FLUSH",
+    "EventCode": "0x0008001",
+    "BriefDescription": "Counts the number of times the core pipeline was flushed. Common causes include fence.i and certain CSR accesses"
+  },
+  {
+    "EventName": "REPLAY",
+    "EventCode": "0x0010001",
+    "BriefDescription": "Counts the number of times a replay was performed for memory accesses"
+  },
+  {
+    "EventName": "INTEGER_MUL_DIV_INTERLOCK",
+    "EventCode": "0x0020001",
+    "BriefDescription": "Counts the number of times an interlock occurred with the multiply or divide block"
+  },
+  {
+    "EventName": "FP_INTERLOCK",
+    "EventCode": "0x0040001",
+    "BriefDescription": "Counts the number of times an interlock with the floating-point unit occurred"
+  }
+]

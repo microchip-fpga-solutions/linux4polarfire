@@ -161,7 +161,7 @@ static enum hrtimer_restart sched_clock_poll(struct hrtimer *hrt)
 }
 
 void __init
-sched_clock_register(u64 (*read)(void), int bits, unsigned long rate)
+sched_clock_register_scale(u64 (*read)(void), int bits, u32 scale, unsigned long rate)
 {
 	u64 res, wrap, new_mask, new_epoch, cyc, ns;
 	u32 new_mult, new_shift;
@@ -176,7 +176,7 @@ sched_clock_register(u64 (*read)(void), int bits, unsigned long rate)
 	local_irq_save(flags);
 
 	/* Calculate the mult/shift to convert counter ticks to ns. */
-	clocks_calc_mult_shift(&new_mult, &new_shift, rate, NSEC_PER_SEC, 3600);
+	clocks_calc_mult_shift(&new_mult, &new_shift, rate, NSEC_PER_SEC / scale, 3600 * scale);
 
 	new_mask = CLOCKSOURCE_MASK(bits);
 	cd.rate = rate;

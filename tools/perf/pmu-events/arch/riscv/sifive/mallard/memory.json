@@ -1,0 +1,47 @@
+[
+  {
+    "EventName": "ICACHE_MISS",
+    "EventCode": "0x0000102",
+    "BriefDescription": "Counts the number of times the core refilled instructions from memory"
+  },
+  {
+    "EventName": "DCACHE_MISS",
+    "EventCode": "0x0000202",
+    "BriefDescription": "Counts the number of times the core refilled data from memory"
+  },
+  {
+    "EventName": "DCACHE_RELEASE",
+    "EventCode": "0x0000402",
+    "BriefDescription": "Counts the number of times the core sent a writeback request from the data cache to memory"
+  },
+  {
+    "EventName": "ITLB_MISS",
+    "EventCode": "0x0000802",
+    "BriefDescription": "Counts the number of times that an instruction translation request missed in the instruction TLB"
+  },
+  {
+    "EventName": "DTLB_MISS",
+    "EventCode": "0x0001002",
+    "BriefDescription": "Counts the number of times that a data translation request missed in the data TLB"
+  },
+  {
+    "EventName": "UTLB_MISS",
+    "EventCode": "0x0002002",
+    "BriefDescription": "UTLB miss"
+  },
+  {
+    "EventName": "UTLB_HIT",
+    "EventCode": "0x0004002",
+    "BriefDescription": "UTLB hit"
+  },
+  {
+    "EventName": "PTE_CACHE_MISS",
+    "EventCode": "0x0008002",
+    "BriefDescription": "UTLB hit"
+  },
+  {
+    "EventName": "PTE_CACHE_HIT",
+    "EventCode": "0x10002",
+    "BriefDescription": "PTE cache hit"
+  }
+]

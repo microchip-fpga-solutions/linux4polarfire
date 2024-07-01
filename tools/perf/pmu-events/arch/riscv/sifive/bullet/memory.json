@@ -1,0 +1,32 @@
+[
+  {
+    "EventName": "ICACHE_MISS",
+    "EventCode": "0x0000102",
+    "BriefDescription": "Counts the number of times the core refilled instructions from memory"
+  },
+  {
+    "EventName": "DCACHE_MISS",
+    "EventCode": "0x0000202",
+    "BriefDescription": "Counts the number of times the core refilled data from memory"
+  },
+  {
+    "EventName": "DCACHE_RELEASE",
+    "EventCode": "0x0000402",
+    "BriefDescription": "Counts the number of times the core sent a writeback request from the data cache to memory"
+  },
+  {
+    "EventName": "ITLB_MISS",
+    "EventCode": "0x0000802",
+    "BriefDescription": "Counts the number of times that an instruction translation request missed in the instruction TLB"
+  },
+  {
+    "EventName": "DTLB_MISS",
+    "EventCode": "0x0001002",
+    "BriefDescription": "Counts the number of times that a data translation request missed in the data TLB"
+  },
+  {
+    "EventName": "L2_TLB_MISS",
+    "EventCode": "0x0002002",
+    "BriefDescription": "Counts the number of times that a translation request missed in the level-2 TLB and a tablewalk was initiated"
+  }
+]
