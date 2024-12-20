@@ -1,0 +1,32 @@
+[
+  {
+    "EventName": "L1_DCACHE_DATA_TSW_READ_BLOCKED",
+    "EventCode": "0x109",
+    "BriefDescription": "Counts cycles in which an L1 Data Cache data array read is blocked in the Tag Search Write (TSW) stage"
+  },
+  {
+    "EventName": "L1_DCACHE_DATA_STQ_WRITE_BLOCKED",
+    "EventCode": "0x209",
+    "BriefDescription": "Counts cycles in which an L1 Data Cache data array write is blocked by the Store Queue"
+  },
+  {
+    "EventName": "L1_DCACHE_DATA_LDQ_READ_BLOCKED",
+    "EventCode": "0x409",
+    "BriefDescription": "Counts cycles in which an L1 Data Cache data array read is blocked by the Load Queue"
+  },
+  {
+    "EventName": "L1_DCACHE_DATA_MSHR_DATA_FORWARD_WRITE_BLOCKED",
+    "EventCode": "0x809",
+    "BriefDescription": "Counts cycles in which an L1 Data Cache data array write is blocked due to MSHR data forwarding"
+  },
+  {
+    "EventName": "LR_SC_RESERVATION_SET",
+    "EventCode": "0x1009",
+    "BriefDescription": "Counts LR/SC reservations set"
+  },
+  {
+    "EventName": "LR_SC_RESERVATION_CLEARED",
+    "EventCode": "0x2009",
+    "BriefDescription": "Counts LR/SC reservations cleared"
+  }
+]

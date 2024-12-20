@@ -207,12 +207,10 @@ static int aia_imsic_addr(struct kvm *kvm, u64 *addr,
 			return -EINVAL;
 	}
 
-	mutex_lock(&vcpu->mutex);
 	if (write)
 		vcpu_aia->imsic_addr = *addr;
 	else
 		*addr = vcpu_aia->imsic_addr;
-	mutex_unlock(&vcpu->mutex);
 
 	return 0;
 }

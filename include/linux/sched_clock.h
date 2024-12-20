@@ -38,8 +38,18 @@ extern int sched_clock_read_retry(unsigned int seq);
 
 extern void generic_sched_clock_init(void);
 
-extern void sched_clock_register(u64 (*read)(void), int bits,
-				 unsigned long rate);
+extern void
+sched_clock_register_scale(u64 (*read)(void), int bits, u32 scale, unsigned long rate);
+
+static inline void sched_clock_register(u64 (*read)(void), int bits, unsigned long rate)
+{
+	sched_clock_register_scale(read, bits, 1, rate);
+}
+
+static inline void sched_clock_register_khz(u64 (*read)(void), int bits, unsigned long rate)
+{
+	sched_clock_register_scale(read, bits, 1000, rate);
+}
 #else
 static inline void generic_sched_clock_init(void) { }
 

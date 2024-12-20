@@ -1653,6 +1653,8 @@ static int get_event_modifier(struct event_modifier *mod, char *str,
 		} else if (*str == 'k') {
 			if (!exclude)
 				exclude = eu = ek = eh = 1;
+			if (!exclude_GH && !perf_guest)
+				eG = 1;
 			ek = 0;
 		} else if (*str == 'h') {
 			if (!exclude)

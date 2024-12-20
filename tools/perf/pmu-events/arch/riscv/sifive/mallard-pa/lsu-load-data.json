@@ -1,0 +1,82 @@
+[
+  {
+    "EventName": "LDF_REPLAY_DEPENDENCIES",
+    "EventCode": "0x10a",
+    "BriefDescription": "Counts replay dependencies from the Load Data Forward (LDF) stage"
+  },
+  {
+    "EventName": "LDWB_REPLAY_DEPENDENCIES",
+    "EventCode": "0x20a",
+    "BriefDescription": "Counts replay dependencies from the Load Data Writeback (LDWB) stage"
+  },
+  {
+    "EventName": "LDWB_SEARCH_HIT_L1_DCACHE_DATA",
+    "EventCode": "0x40a",
+    "BriefDescription": "Counts L1 data cache hits from searches in the Load Data Writeback (LDWB) stage"
+  },
+  {
+    "EventName": "LDWB_SEARCH_STLDF",
+    "EventCode": "0x80a",
+    "BriefDescription": "Counts number of store-to-load-forwarded searches in the Load Data Writeback (LDWB) stage"
+  },
+  {
+    "EventName": "LDWB_LOAD_READ_FROM_L1_DCACHE_DATA_HIT",
+    "EventCode": "0x800a",
+    "BriefDescription": "Counts loads in the Load Data Writeback (LDWB) stage whose data is sourced from the L1 Data Cache"
+  },
+  {
+    "EventName": "LDWB_LOAD_STLDF",
+    "EventCode": "0x1000a",
+    "BriefDescription": "Counts loads in the Load Data Writeback (LDWB) stage whose data is source from Store-to-Load-Forwarding"
+  },
+  {
+    "EventName": "LDWB_LOAD_READ_FROM_MSHR_DATA",
+    "EventCode": "0x4000a",
+    "BriefDescription": "Counts loads in the Load Data Writeback (LDWB) stage whose data is sourced from a Miss Status Handling Register"
+  },
+  {
+    "EventName": "LDWB_SC_PASS",
+    "EventCode": "0x8000a",
+    "BriefDescription": "Counts successful Store Conditionals"
+  },
+  {
+    "EventName": "LDWB_SC_FAIL",
+    "EventCode": "0x10000a",
+    "BriefDescription": "Counts failed Store Conditionals"
+  },
+  {
+    "EventName": "LDWB_ATOMIC",
+    "EventCode": "0x20000a",
+    "BriefDescription": "Counts atomic instructions in the Load Data Writeback (LDWB) stage"
+  },
+  {
+    "EventName": "LDWB_PARTIAL_GRANULE_WRITE",
+    "EventCode": "0x40000a",
+    "BriefDescription": "Counts partial-granule writes to the L1 Data Cache"
+  },
+  {
+    "EventName": "LDWB_ROB_RESOLVE",
+    "EventCode": "0x80000a",
+    "BriefDescription": "Counts Resolve notifications sent from the Load Data Writeback (LDWB) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "LDWB_ROB_FLUSH_BEFORE",
+    "EventCode": "0x100000a",
+    "BriefDescription": "Counts Flush-before notifications sent from the Load Data Writeback (LDWB) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "LDWB_FSDIRTY",
+    "EventCode": "0x200000a",
+    "BriefDescription": "Counts dirty FPU state notifications sent from the Load Data Writeback (LDWB) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "L1_DCACHE_DATA_ERROR_CORRECTABLE",
+    "EventCode": "0x400000a",
+    "BriefDescription": "Counts correctable errors detected in the L1 Data Cache data array"
+  },
+  {
+    "EventName": "L1_DCACHE_DATA_ERROR_UNCORRECTABLE",
+    "EventCode": "0x800000a",
+    "BriefDescription": "Counts uncorrectable errors detected in the L1 Data Cache data array"
+  }
+]

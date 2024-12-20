@@ -22,12 +22,12 @@
   {
     "EventName": "SYSTEM_INSTRUCTION_RETIRED",
     "EventCode": "0x0001000",
-    "BriefDescription": "System instruction retired"
+    "BriefDescription": "System instruction retired, such as ecall, csr*, et al"
   },
   {
     "EventName": "INTEGER_ARITHMETIC_RETIRED",
     "EventCode": "0x0002000",
-    "BriefDescription": "Integer arithmetic instruction retired"
+    "BriefDescription": "Integer arithmetic instruction retired, like Zba, Zbb,et al"
   },
   {
     "EventName": "CONDITIONAL_BRANCH_RETIRED",
@@ -65,17 +65,17 @@
     "BriefDescription": "Floating-point store instruction retired"
   },
   {
-    "EventName": "FP_ADDITION_RETIRED",
+    "EventName": "FP_ADD_RETIRED",
     "EventCode": "0x0200000",
     "BriefDescription": "Floating-point addition retired"
   },
   {
-    "EventName": "FP_MULTIPLICATION_RETIRED",
+    "EventName": "FP_MUL_RETIRED",
     "EventCode": "0x0400000",
     "BriefDescription": "Floating-point multiplication retired"
   },
   {
-    "EventName": "FP_FUSEDMADD_RETIRED",
+    "EventName": "FP_MULADD_RETIRED",
     "EventCode": "0x0800000",
     "BriefDescription": "Floating-point fused multiply-add retired"
   },

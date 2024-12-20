@@ -1,0 +1,7 @@
+[
+  {
+    "EventName": "BRANCH_TARGET_MISPREDICTION",
+    "EventCode": "0x205",
+    "BriefDescription": "Counts mispredictions of the target PC of control-flow instructions"
+  }
+]

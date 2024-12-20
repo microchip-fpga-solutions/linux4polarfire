@@ -4,9 +4,16 @@
  * Copyright (c) 2022 Ventana Micro Systems Inc.
  */
 
+#define pr_fmt(fmt) "suspend: " fmt
+
+#include <linux/cpu_pm.h>
 #include <linux/ftrace.h>
+#include <linux/thread_info.h>
+#include <linux/suspend.h>
 #include <asm/csr.h>
+#include <asm/sbi.h>
 #include <asm/suspend.h>
+#include <asm/switch_to.h>
 
 void suspend_save_csrs(struct suspend_context *context)
 {
@@ -85,3 +92,93 @@ int cpu_suspend(unsigned long arg,
 
 	return rc;
 }
+
+#ifdef CONFIG_CPU_PM
+static int cpu_ext_suspend(struct notifier_block *self, unsigned long cmd,
+			   void *v)
+{
+	struct task_struct *cur_task = get_current();
+	struct pt_regs *regs = task_pt_regs(cur_task);
+
+	switch (cmd) {
+	case CPU_PM_ENTER:
+#ifdef CONFIG_FPU
+		if (has_fpu()) {
+			if (unlikely(regs->status & SR_SD))
+				fstate_save(cur_task, regs);
+		}
+#endif
+#ifdef CONFIG_VECTOR
+		if (has_vector()) {
+			if (unlikely(regs->status & SR_SD))
+				vstate_save(cur_task, regs);
+		}
+#endif
+
+		break;
+	case CPU_PM_ENTER_FAILED:
+	case CPU_PM_EXIT:
+#ifdef CONFIG_FPU
+		if (has_fpu())
+			fstate_restore(cur_task, regs);
+#endif
+#ifdef CONFIG_VECTOR
+		if (has_vector())
+			vstate_restore(cur_task, regs);
+#endif
+		break;
+	}
+	return NOTIFY_OK;
+}
+
+static struct notifier_block cpu_pm_notifier_block = {
+	.notifier_call = cpu_ext_suspend,
+};
+
+void cpu_pm_suspend_init(void)
+{
+	cpu_pm_register_notifier(&cpu_pm_notifier_block);
+}
+
+#else
+static inline void cpu_pm_suspend_init(void) { }
+#endif /* CONFIG_CPU_PM */
+#ifdef CONFIG_RISCV_SBI
+static int sbi_system_suspend(unsigned long sleep_type,
+			      unsigned long resume_addr,
+			      unsigned long opaque)
+{
+	struct sbiret ret;
+
+	ret = sbi_ecall(SBI_EXT_SUSP, SBI_EXT_SUSP_SYSTEM_SUSPEND,
+			sleep_type, resume_addr, opaque, 0, 0, 0);
+	if (ret.error)
+		return sbi_err_map_linux_errno(ret.error);
+
+	return ret.value;
+}
+
+static int sbi_system_suspend_enter(suspend_state_t state)
+{
+	return cpu_suspend(SBI_SUSP_SLEEP_TYPE_SUSPEND_TO_RAM, sbi_system_suspend);
+}
+
+static const struct platform_suspend_ops sbi_system_suspend_ops = {
+	.valid = suspend_valid_only_mem,
+	.enter = sbi_system_suspend_enter,
+};
+
+static int __init sbi_system_suspend_init(void)
+{
+	if (sbi_spec_version >= sbi_mk_version(2, 0) &&
+	    sbi_probe_extension(SBI_EXT_SUSP) > 0) {
+		pr_info("SBI SUSP extension detected\n");
+		if (IS_ENABLED(CONFIG_SUSPEND))
+			suspend_set_ops(&sbi_system_suspend_ops);
+	}
+
+	return 0;
+}
+
+arch_initcall(sbi_system_suspend_init);
+#endif /* CONFIG_RISCV_SBI */

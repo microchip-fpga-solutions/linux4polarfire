@@ -1,0 +1,152 @@
+[
+  {
+    "EventName": "LSU_DISPATCH_BUSY",
+    "EventCode": "0x104",
+    "BriefDescription": "Counts cycles in which load/store unit dispatch is blocked waiting for a free Issue Queue entry"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_CSR_WRITE",
+    "EventCode": "0x204",
+    "BriefDescription": "Counts occurrences of CSR writes that cause a flush of the Reorder Buffer"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_REPLAY",
+    "EventCode": "0x404",
+    "BriefDescription": "Counts occurrences of instruction replays that cause a flush of the Reorder Buffer"
+  },
+  {
+    "EventName": "MOVE_ELIMINATED",
+    "EventCode": "0x804",
+    "BriefDescription": "Counts elimination optimizations of register-to-register move instructions"
+  },
+  {
+    "EventName": "CMOV_CONVERTED",
+    "EventCode": "0x1004",
+    "BriefDescription": "Counts conditional move conversions of conditional branches with register-to-register move instructions"
+  },
+  {
+    "EventName": "LUI_FUSED",
+    "EventCode": "0x2004",
+    "BriefDescription": "Counts instruction fusion optimizations of LUI with ADDI or ADDIW"
+  },
+  {
+    "EventName": "AUIPC_FUSED",
+    "EventCode": "0x4004",
+    "BriefDescription": "Counts instruction fusion optimizations of AUIPC with ADDI, ADDIW or JALR"
+  },
+  {
+    "EventName": "INTEGER_DISPATCH_BUFFER_STALL",
+    "EventCode": "0x8004",
+    "BriefDescription": "Counts cycles in which instruction dispatch is stalled waiting for a free Integer Dispatch Buffer entry"
+  },
+  {
+    "EventName": "LSU_DISPATCH_BUFFER_STALL",
+    "EventCode": "0x10004",
+    "BriefDescription": "Counts cycles in which instruction dispatch is stalled waiting for a free Load/store Dispatch Buffer entry"
+  },
+  {
+    "EventName": "FPU_DISPATCH_BUFFER_STALL",
+    "EventCode": "0x20004",
+    "BriefDescription": "Counts cycles in which instruction dispatch is stalled waiting for a free Floating-point Dispatch Buffer entry"
+  },
+  {
+    "EventName": "RHF_STALL",
+    "EventCode": "0x40004",
+    "BriefDescription": "Counts cycles in which instruction dispatch is stalled waiting for a free Rename History File entry"
+  },
+  {
+    "EventName": "ROB_STALL",
+    "EventCode": "0x80004",
+    "BriefDescription": "Counts cycles in which instruction dispatch is stalled waiting for a free Reorder Buffer entry"
+  },
+  {
+    "EventName": "PCMT_STALL",
+    "EventCode": "0x100004",
+    "BriefDescription": "Counts cycles in which instruction renaming is stalled waiting for a free PC Map Table entry"
+  },
+  {
+    "EventName": "INTEGER_FREE_LIST_STALL",
+    "EventCode": "0x200004",
+    "BriefDescription": "Counts cycles in which instruction renaming is stalled waiting for a free physical integer register"
+  },
+  {
+    "EventName": "FPU_FREE_LIST_STALL",
+    "EventCode": "0x400004",
+    "BriefDescription": "Counts cycles in which instruction renaming is stalled waiting for a free physical floating-point register"
+  },
+  {
+    "EventName": "BRQ_STALL",
+    "EventCode": "0x800004",
+    "BriefDescription": "Counts cycles in which instruction renaming is stalled waiting for a free Branch Resolution Queue entry"
+  },
+  {
+    "EventName": "MDP_ALLOCATE",
+    "EventCode": "0x1000004",
+    "BriefDescription": "Counts allocations of Memory Dependence Predictor entries"
+  },
+  {
+    "EventName": "MDP_OVER_ALLOCATE_WHEN_FULL",
+    "EventCode": "0x2000004",
+    "BriefDescription": "Counts replacements of Memory Dependence Predictor entries when all entries are allocated"
+  },
+  {
+    "EventName": "MDP_UPDATE_USEFUL_INCREMENT",
+    "EventCode": "0x4000004",
+    "BriefDescription": "Counts increment requests to existing Memory Dependence Predictor entries"
+  },
+  {
+    "EventName": "MDP_UPDATE_USEFUL_INCREMENT_MAXED",
+    "EventCode": "0x8000004",
+    "BriefDescription": "Counts increment requests to existing Memory Dependence Predictor entries that are already at maximum"
+  },
+  {
+    "EventName": "MDP_UPDATE_NOT_USEFUL_DECREMENT",
+    "EventCode": "0x10000004",
+    "BriefDescription": "Counts decrement requests to existing Memory Dependence Predictor entries"
+  },
+  {
+    "EventName": "MDP_UPDATE_NOT_USEFUL_DECREMENT_ZEROED",
+    "EventCode": "0x20000004",
+    "BriefDescription": "Counts decrement requests to existing Memory Dependence Predictor entries that are already at minimum"
+  },
+  {
+    "EventName": "MDP_UPDATE_MULTI_SET_SET",
+    "EventCode": "0x40000004",
+    "BriefDescription": "Counts conversions of Memory Dependence Predictor entries from single set to multi-set"
+  },
+  {
+    "EventName": "MDP_UPDATE_MULTI_SET_CLEAR",
+    "EventCode": "0x80000004",
+    "BriefDescription": "Counts conversions of Memory Dependence Predictor entries from multi-set to single set"
+  },
+  {
+    "EventName": "MDP_AGE_DECAYED",
+    "EventCode": "0x100000004",
+    "BriefDescription": "Counts age-related decrement requests to Memory Dependence Predictor entries"
+  },
+  {
+    "EventName": "INSTRUCTION_DECODE_STALL_FROM_RHF_REWIND",
+    "EventCode": "0x200000004",
+    "BriefDescription": "Counts cycles in which instruction decode is stalled due to rewinding the Rename History File"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_ECALL_EBREAK",
+    "EventCode": "0x400000004",
+    "BriefDescription": "Counts flushes of the Reorder Buffer due to ECALL or EBREAK"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_FENCEI",
+    "EventCode": "0x800000004",
+    "BriefDescription": "Counts flushes of the Reorder Buffer due to FENCE_I"
+  },
+  {
+    "EventName": "ROB_FLUSH_BEFORE_FROM_LSU",
+    "EventCode": "0x1000000004",
+    "BriefDescription": "Counts flushes of the Reorder Buffer due to Flush-before notifications from the load/store unit"
+  },
+  {
+    "EventName": "ROB_FLUSH_AFTER_FROM_LSU",
+    "EventCode": "0x2000000004",
+    "BriefDescription": "Counts flushes of the Reorder Buffer due to Flush-after notifications from the load/store unit"
+  }
+]

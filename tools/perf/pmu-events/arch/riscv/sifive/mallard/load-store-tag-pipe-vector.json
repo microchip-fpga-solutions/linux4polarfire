@@ -1,0 +1,102 @@
+[
+  {
+    "EventName": "L1_DATA_CACHE_WRITE_BLOCK_ISSUE_STAGE",
+    "EventCode": "0x107",
+    "BriefDescription": "L1 data cache write block issue stage"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_LS_TAG_READ_BLOCKED",
+    "EventCode": "0x207",
+    "BriefDescription": "L1 data cache LS tag read blocked"
+  },
+  {
+    "EventName": "PTW_BLOCK_ISSUE_STAGE",
+    "EventCode": "0x407",
+    "BriefDescription": "PTW block issue stage"
+  },
+  {
+    "EventName": "DATA_TLB_MISS",
+    "EventCode": "0x807",
+    "BriefDescription": "Data TLB miss"
+  },
+  {
+    "EventName": "DATA_TLB_HIT",
+    "EventCode": "0x1007",
+    "BriefDescription": "Data TLB hit"
+  },
+  {
+    "EventName": "DATA_TLB_LOAD_MISS",
+    "EventCode": "0x2007",
+    "BriefDescription": "Data TLB load miss"
+  },
+  {
+    "EventName": "DATA_TLB_LOAD_HIT",
+    "EventCode": "0x4007",
+    "BriefDescription": "Data TLB load hit"
+  },
+  {
+    "EventName": "DATA_TLB_STORE_MISS",
+    "EventCode": "0x8007",
+    "BriefDescription": "Data TLB store miss"
+  },
+  {
+    "EventName": "DATA_TLB_STORE_HIT",
+    "EventCode": "0x10007",
+    "BriefDescription": "Data TLB store hit"
+  },
+  {
+    "EventName": "DATA_TLB_AMO_LR_SC_MISS",
+    "EventCode": "0x20007",
+    "BriefDescription": "Data TLB AMO_LR_SC miss"
+  },
+  {
+    "EventName": "DATA_TLB_AMO_LR_SC_HIT",
+    "EventCode": "0x40007",
+    "BriefDescription": "Data TLB AMO_LR_SC hit"
+  },
+  {
+    "EventName": "DATA_TLB_HWPF_MISS",
+    "EventCode": "0x80007",
+    "BriefDescription": "Data TLB HWPF miss"
+  },
+  {
+    "EventName": "DATA_TLB_HWPF_HIT",
+    "EventCode": "0x100007",
+    "BriefDescription": "Data TLB HWPF hit"
+  },
+  {
+    "EventName": "LS_TAG_REPLAY_ADDRESS_OPERAND",
+    "EventCode": "0x200007",
+    "BriefDescription": "LS tag replay address operand"
+  },
+  {
+    "EventName": "LS_TAG_REPLAY_IN_ORDER_OPERATION",
+    "EventCode": "0x400007",
+    "BriefDescription": "LS tag replay in-order operation"
+  },
+  {
+    "EventName": "LS_TAG_CONFIRM_ROB_RESOLVE",
+    "EventCode": "0x800007",
+    "BriefDescription": "LS tag confirm ROB resolve"
+  },
+  {
+    "EventName": "LS_TAG_CONFIRM_ROB_EXCEPTION",
+    "EventCode": "0x1000007",
+    "BriefDescription": "LS tag confirm ROB exception"
+  },
+  {
+    "EventName": "SFENCE.VMA_TLB_INVALIDATE",
+    "EventCode": "0x2000007",
+    "BriefDescription": "SFENCE.VMA TLB invalidate"
+  },
+  {
+    "EventName": "LS_TAG_CONFIRM_ROB_FLUSH_NEWER",
+    "EventCode": "0x4000007",
+    "BriefDescription": "LS tag confirm ROB flush newer"
+  },
+  {
+    "EventName": "LS_TAG_CONFIRM_ROB_FLUSH_BEFORE",
+    "EventCode": "0x8000007",
+    "BriefDescription": "LS tag confirm ROB flush before"
+  }
+]

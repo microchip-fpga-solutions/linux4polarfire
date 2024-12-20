@@ -1,0 +1,132 @@
+[
+  {
+    "EventName": "L1_DCACHE_WRITE_BLOCK_ISS",
+    "EventCode": "0x107",
+    "BriefDescription": "Counts L1 data cache tag writes that were blocked at the issue stage"
+  },
+  {
+    "EventName": "L1_DCACHE_LSTR_BLOCKED",
+    "EventCode": "0x207",
+    "BriefDescription": "Counts L1 data cache tag reads that were blocked at the Load/Store Tag Read (LSTR) stage"
+  },
+  {
+    "EventName": "PTW_BLOCK_ISS",
+    "EventCode": "0x407",
+    "BriefDescription": "Counts Page Table Walker accesses that were blocked at the issue stage"
+  },
+  {
+    "EventName": "DTLB_MISS",
+    "EventCode": "0x807",
+    "BriefDescription": "Counts Data TLB misses from all memory accesses"
+  },
+  {
+    "EventName": "DTLB_HIT",
+    "EventCode": "0x1007",
+    "BriefDescription": "Counts Data TLB hits from all memory accesses"
+  },
+  {
+    "EventName": "DTLB_LOAD_MISS",
+    "EventCode": "0x2007",
+    "BriefDescription": "Counts Data TLB misses from loads"
+  },
+  {
+    "EventName": "DTLB_LOAD_HIT",
+    "EventCode": "0x4007",
+    "BriefDescription": "Counts Data TLB hits from loads"
+  },
+  {
+    "EventName": "DTLB_STORE_MISS",
+    "EventCode": "0x8007",
+    "BriefDescription": "Counts Data TLB misses from stores"
+  },
+  {
+    "EventName": "DTLB_STORE_HIT",
+    "EventCode": "0x10007",
+    "BriefDescription": "Counts Data TLB hits from stores"
+  },
+  {
+    "EventName": "DTLB_AMO_MISS",
+    "EventCode": "0x20007",
+    "BriefDescription": "Counts Data TLB misses from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "DTLB_AMO_HIT",
+    "EventCode": "0x40007",
+    "BriefDescription": "Counts Data TLB hits from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "DTLB_HWPF_MISS",
+    "EventCode": "0x80007",
+    "BriefDescription": "Counts Data TLB misses from the Hardware Prefetcher"
+  },
+  {
+    "EventName": "DTLB_HWPF_HIT",
+    "EventCode": "0x100007",
+    "BriefDescription": "Counts Data TLB hits from the Hardware Prefetcher"
+  },
+  {
+    "EventName": "LS_TAG_REPLAY_ADDRESS_OPERAND",
+    "EventCode": "0x200007",
+    "BriefDescription": "Counts replays caused by a load/store address operand"
+  },
+  {
+    "EventName": "LS_TAG_REPLAY_IN_ORDER_OPERATION",
+    "EventCode": "0x400007",
+    "BriefDescription": "Counts replays caused by a load/store in-order operation"
+  },
+  {
+    "EventName": "LSTC_ROB_RESOLVE",
+    "EventCode": "0x800007",
+    "BriefDescription": "Counts Resolve notifications sent from the Load/Store Tag Confirm (LSTC) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "LSTC_ROB_EXCEPTION",
+    "EventCode": "0x1000007",
+    "BriefDescription": "Counts Exception notifications sent from the Load/Store Tag Confirm (LSTC) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "SFENCE.VMA_TLB_INVALIDATE",
+    "EventCode": "0x2000007",
+    "BriefDescription": "Counts invalidations of the Data TLB due to SFENCE.VMA"
+  },
+  {
+    "EventName": "LSTC_ROB_FLUSH_NEWER",
+    "EventCode": "0x4000007",
+    "BriefDescription": "Counts Flush-after notifications from the Load/Store Tag Confirm (LSTC) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "LSTC_ROB_FLUSH_BEFORE",
+    "EventCode": "0x8000007",
+    "BriefDescription": "Counts Flush-before notifications from the Load/Store Tag Confirm (LSTC) stage to the Reorder Buffer"
+  },
+  {
+    "EventName": "L1_DCACHE_TAG_READ_BLOCK_ISS",
+    "EventCode": "0x10000007",
+    "BriefDescription": "Counts L1 Data Cache Tag reads that were blocked at the issue stage"
+  },
+  {
+    "EventName": "HWPF_BLOCK_ISS",
+    "EventCode": "0x20000007",
+    "BriefDescription": "Counts Hardware Prefetcher accesses that were blocked at the issue stage"
+  },
+  {
+    "EventName": "LSTR_LOAD_MISALIGN_UNROLL",
+    "EventCode": "0x40000007",
+    "BriefDescription": "Counts misaligned load accesses that are unrolled at the LSTR stage"
+  },
+  {
+    "EventName": "LSTR_STORE_MISALIGN_UNROLL",
+    "EventCode": "0x80000007",
+    "BriefDescription": "Counts misaligned store accesses that are unrolled at the LSTR stage"
+  },
+  {
+    "EventName": "DTLB_PF_MISS",
+    "EventCode": "0x100000007",
+    "BriefDescription": "Counts Data TLB misses from the Sofware Prefetcher"
+  },
+  {
+    "EventName": "DTLB_PF_HIT",
+    "EventCode": "0x200000007",
+    "BriefDescription": "Counts Data TLB hits from the Software Prefetcher"
+  }
+]

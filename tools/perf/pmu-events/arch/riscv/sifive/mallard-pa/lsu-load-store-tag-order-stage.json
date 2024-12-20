@@ -1,0 +1,182 @@
+[
+  {
+    "EventName": "MSHR_ESTABLISH",
+    "EventCode": "0x108",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from all memory accesses"
+  },
+  {
+    "EventName": "MSHR_REUSE",
+    "EventCode": "0x208",
+    "BriefDescription": "Counts reuses of Miss Status Handling Registers from all memory accesses"
+  },
+  {
+    "EventName": "MSHR_LOAD_ESTABLISH",
+    "EventCode": "0x408",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from loads"
+  },
+  {
+    "EventName": "MSHR_LOAD_REUSE",
+    "EventCode": "0x808",
+    "BriefDescription": "Counts reuses of Miss Status Handling Registers from loads"
+  },
+  {
+    "EventName": "MSHR_STORE_ESTABLISH",
+    "EventCode": "0x1008",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from stores"
+  },
+  {
+    "EventName": "MSHR_STORE_REUSE",
+    "EventCode": "0x2008",
+    "BriefDescription": "Counts reuses of Miss Status Handling Registers from stores"
+  },
+  {
+    "EventName": "MSHR_AMO_ESTABLISH",
+    "EventCode": "0x4008",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "MSHR_PTW_ESTABLISH",
+    "EventCode": "0x8008",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from the Page Table Walker"
+  },
+  {
+    "EventName": "MSHR_HWPF_ESTABLISH",
+    "EventCode": "0x10008",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from the Hardware Prefetcher"
+  },
+  {
+    "EventName": "MSHR_HWPF_REUSE",
+    "EventCode": "0x20008",
+    "BriefDescription": "Counts reuses of Miss Status Handling Registers from the Hardware Prefetcher"
+  },
+  {
+    "EventName": "MSHR_FENCE_HAS_DEPENDENCY",
+    "EventCode": "0x40008",
+    "BriefDescription": "Counts occurrences of FENCE instructions that set Miss Status Handling Register dependencies"
+  },
+  {
+    "EventName": "MSHR_NON_FENCE_HAS_DEPENDENCY",
+    "EventCode": "0x80008",
+    "BriefDescription": "Counts occurrences of other events that set Miss Status Handling Register dependencies"
+  },
+  {
+    "EventName": "LDQ_ESTABLISH",
+    "EventCode": "0x100008",
+    "BriefDescription": "Counts establishments of Load Queue entries"
+  },
+  {
+    "EventName": "LDQ_NEEDS_DATA_RETURN",
+    "EventCode": "0x200008",
+    "BriefDescription": "Counts establishments of Load Queue entries that need a data return"
+  },
+  {
+    "EventName": "LDQ_REQUEST_DATA_RETURN",
+    "EventCode": "0x400008",
+    "BriefDescription": "Counts establishments of Load Queue entries that request a data return"
+  },
+  {
+    "EventName": "LDQ_REQUEST_DATA_RETURN_FROM_L1_DCACHE",
+    "EventCode": "0x800008",
+    "BriefDescription": "Counts establishments of Load Queue entries that request a data return satisfied by the L1 data cache"
+  },
+  {
+    "EventName": "LDQ_REQUEST_DATA_RETURN_FROM_MSHR",
+    "EventCode": "0x1000008",
+    "BriefDescription": "Counts establishments of Load Queue entries that request a data return satisfied by a Miss Status Handling Register"
+  },
+  {
+    "EventName": "LDQ_REQUEST_DATA_RETURN_FROM_STORE_TO_LOAD_FORWARDING",
+    "EventCode": "0x2000008",
+    "BriefDescription": "Counts establishments of Load Queue entries that request a data return satisfied by store-to-load forwarding"
+  },
+  {
+    "EventName": "LDQ_KNOWN_READ_AFTER_READ_HAZARD",
+    "EventCode": "0x4000008",
+    "BriefDescription": "Counts known read-after-read hazards in the Load Queue"
+  },
+  {
+    "EventName": "LDQ_KNOWN_READ_AFTER_WRITE_HAZARD",
+    "EventCode": "0x8000008",
+    "BriefDescription": "Counts known read-after-write hazards in the Load Queue"
+  },
+  {
+    "EventName": "LDQ_POTENTIAL_READ_AFTER_READ_HAZARD",
+    "EventCode": "0x10000008",
+    "BriefDescription": "Counts potential read-after-read hazards in the Load Queue"
+  },
+  {
+    "EventName": "LDQ_POTENTIAL_READ_AFTER_WRITE_HAZARD",
+    "EventCode": "0x20000008",
+    "BriefDescription": "Counts potential read-after-write hazards in the Load Queue"
+  },
+  {
+    "EventName": "STQ_ESTABLISH",
+    "EventCode": "0x40000008",
+    "BriefDescription": "Counts establishments of Store Queue entries"
+  },
+  {
+    "EventName": "LSTO_OP_WANTS_BUT_CANNOT_ESTABLISH_LDQ",
+    "EventCode": "0x80000008",
+    "BriefDescription": "Counts occurrences of operations at the LSTO stage that request but cannot establish a Load Queue entry"
+  },
+  {
+    "EventName": "LSTO_OP_WANTS_BUT_CANNOT_ESTABLISH_STQ",
+    "EventCode": "0x100000008",
+    "BriefDescription": "Counts occurrences of operations at the LSTO stage that request but cannot establish a Store Queue entry"
+  },
+  {
+    "EventName": "LSTO_OP_WANTS_BUT_CANNOT_ESTABLISH_MSHR",
+    "EventCode": "0x200000008",
+    "BriefDescription": "Counts occurrences of operations at the LSTO stage that request but cannot establish a Miss Status Handling Register"
+  },
+  {
+    "EventName": "LSTO_FLUSH_NEWER_STQ_ENTRY",
+    "EventCode": "0x400000008",
+    "BriefDescription": "Counts flushes of newer out-of-order instructions to free a Store Queue entry"
+  },
+  {
+    "EventName": "LSTO_FLUSH_NEWEST_LDQ_ENTRY",
+    "EventCode": "0x800000008",
+    "BriefDescription": "Counts flushes of newest Load Queue entry"
+  },
+  {
+    "EventName": "LSTO_FLUSH_NEWER_FOR_MSHR_CAPACITY",
+    "EventCode": "0x1000000008",
+    "BriefDescription": "Counts flushes of newer out-of-order instructions to free a Miss Status Handling Register"
+  },
+  {
+    "EventName": "LSTO_FLUSH_NEWER_FOR_MSHR_CAPACITY",
+    "EventCode": "0x2000000008",
+    "BriefDescription": "Counts flushes of newer out-of-order instructions due to a Miss Status Handling Register dependency"
+  },
+  {
+    "EventName": "LSTO_FLUSH_NEWER_FOR_SELF_REPLAY",
+    "EventCode": "0x4000000008",
+    "BriefDescription": "Counts flushes of newer out-of-order instructions for self replay"
+  },
+  {
+    "EventName": "LSTO_L1_DCACHE_TAG_CORRECTABLE_ERROR",
+    "EventCode": "0x8000000008",
+    "BriefDescription": "Counts correctable errors detected in the L1 Data Cache tag array"
+  },
+  {
+    "EventName": "LSTO_L1_DCACHE_TAG_UNCORRECTABLE_ERROR",
+    "EventCode": "0x10000000008",
+    "BriefDescription": "Counts uncorrectable errors detected in the L1 Data Cache tag array"
+  },
+  {
+    "EventName": "MSHR_PF_ESTABLISH",
+    "EventCode": "0x20000000008",
+    "BriefDescription": "Counts establishments of Miss Status Handling Registers from Software Prefetches"
+  },
+  {
+    "EventName": "MSHR_PF_REUSE",
+    "EventCode": "0x40000000008",
+    "BriefDescription": "Counts reuses of Miss Status Handling Registers from the Software Prefetches"
+  },
+  {
+    "EventName": "LSTO_OP_WANTS_BUT_CANNOT_ESTABLISH_VLTB",
+    "EventCode": "0x80000000008",
+    "BriefDescription": "Counts occurrences of operations at the LSTO stage that request but cannot establish a Vector Load Transfer Buffer entry"
+  }
+]

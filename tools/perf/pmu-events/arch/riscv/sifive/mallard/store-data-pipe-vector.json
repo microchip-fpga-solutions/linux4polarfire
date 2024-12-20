@@ -1,0 +1,12 @@
+[
+  {
+    "EventName": "SD_STORE_DATA_ISSUED_AFTER_ADDRESS",
+    "EventCode": "0x10b",
+    "BriefDescription": "SD store data issued after address"
+  },
+  {
+    "EventName": "SD_REPLAY_STORE_DATA_OPERAND",
+    "EventCode": "0x20b",
+    "BriefDescription": "SD replay store data operand"
+  }
+]

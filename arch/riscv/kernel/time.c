@@ -6,6 +6,7 @@
 
 #include <linux/acpi.h>
 #include <linux/of_clk.h>
+#include <linux/of_fdt.h>
 #include <linux/clockchips.h>
 #include <linux/clocksource.h>
 #include <linux/delay.h>
@@ -21,15 +22,19 @@ void __init time_init(void)
 	struct device_node *cpu;
 	struct acpi_table_rhct *rhct;
 	acpi_status status;
-	u32 prop;
+	int size;
+	const __be32 *prop;
 
 	if (acpi_disabled) {
 		cpu = of_find_node_by_path("/cpus");
-		if (!cpu || of_property_read_u32(cpu, "timebase-frequency", &prop))
-			panic("RISC-V system with no 'timebase-frequency' in DTS\n");
+		if (!cpu)
+			goto panic_no_freq;
 
-		of_node_put(cpu);
-		riscv_timebase = prop;
+		prop = of_get_property(cpu, "timebase-frequency", &size);
+		if (!prop)
+			goto panic_no_freq;
+
+		riscv_timebase = of_read_number(prop, size / 4);
 		of_clk_init(NULL);
 	} else {
 		status = acpi_get_table(ACPI_SIG_RHCT, 0, (struct acpi_table_header **)&rhct);
@@ -45,4 +50,8 @@ void __init time_init(void)
 	timer_probe();
 
 	tick_setup_hrtimer_broadcast();
+	return;
+
+panic_no_freq:
+	panic("RISC-V system with no 'timebase-frequency' in DTS\n");
 }

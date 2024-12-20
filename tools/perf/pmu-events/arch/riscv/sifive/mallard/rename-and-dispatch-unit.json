@@ -1,0 +1,152 @@
+[
+  {
+    "EventName": "LOAD_STORE_UNIT_DISPATCH_BUSY",
+    "EventCode": "0x104",
+    "BriefDescription": "Load/store unit dispatch busy"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_CSR_WRITE",
+    "EventCode": "0x204",
+    "BriefDescription": "ROB flush due to CSR write"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_OTHER_EVENT",
+    "EventCode": "0x404",
+    "BriefDescription": "ROB flush due to other event"
+  },
+  {
+    "EventName": "MOVE_ELIMINATED",
+    "EventCode": "0x804",
+    "BriefDescription": "Move eliminated"
+  },
+  {
+    "EventName": "CONDITIONAL_MOVE_CONVERTED",
+    "EventCode": "0x1004",
+    "BriefDescription": "Conditional move converted"
+  },
+  {
+    "EventName": "LUI_FUSED",
+    "EventCode": "0x2004",
+    "BriefDescription": "LUI fused"
+  },
+  {
+    "EventName": "AUIPC_FUSED",
+    "EventCode": "0x4004",
+    "BriefDescription": "AUIPC fused"
+  },
+  {
+    "EventName": "INTEGER_PIPELINE_DISPATCH_BUFFER_STALL",
+    "EventCode": "0x8004",
+    "BriefDescription": "Integer pipeline dispatch buffer stall"
+  },
+  {
+    "EventName": "LOAD_STORE_UNIT_DISPATCH_BUFFER_STALL",
+    "EventCode": "0x10004",
+    "BriefDescription": "Load/Store Unit dispatch buffer stall"
+  },
+  {
+    "EventName": "FLOATING_POINT_PIPELINE_DISPATCH_BUFFER_STALL",
+    "EventCode": "0x20004",
+    "BriefDescription": "Floating-point pipeline dispatch buffer stall"
+  },
+  {
+    "EventName": "RENAME_HISTORY_FILE_STALL",
+    "EventCode": "0x40004",
+    "BriefDescription": "Rename history file stall"
+  },
+  {
+    "EventName": "ROB_STALL",
+    "EventCode": "0x80004",
+    "BriefDescription": "ROB stall"
+  },
+  {
+    "EventName": "PC_MAP_TABLE_STALL",
+    "EventCode": "0x100004",
+    "BriefDescription": "PC map table stall"
+  },
+  {
+    "EventName": "INTEGER_PIPELINE_FREE_LIST_STALL",
+    "EventCode": "0x200004",
+    "BriefDescription": "Integer pipeline free list stall"
+  },
+  {
+    "EventName": "FLOATING_POINT_PIPELINE_FREE_LIST_STALL",
+    "EventCode": "0x400004",
+    "BriefDescription": "Floating-point pipeline free list stall"
+  },
+  {
+    "EventName": "BRANCH_RESOLUTION_QUEUE_STALL",
+    "EventCode": "0x800004",
+    "BriefDescription": "Branch resolution queue stall"
+  },
+  {
+    "EventName": "MDP_ALLOCATE",
+    "EventCode": "0x1000004",
+    "BriefDescription": "MDP allocate"
+  },
+  {
+    "EventName": "MDP_OVER-ALLOCATE_WHEN_FULL",
+    "EventCode": "0x2000004",
+    "BriefDescription": "MDP over-allocate when full"
+  },
+  {
+    "EventName": "MDP_UPDATE_USEFUL_INCREMENT",
+    "EventCode": "0x4000004",
+    "BriefDescription": "MDP update useful increment"
+  },
+  {
+    "EventName": "MDP_UPDATE_USEFUL_INCREMENT_MAXED",
+    "EventCode": "0x8000004",
+    "BriefDescription": "MDP update useful increment maxed"
+  },
+  {
+    "EventName": "MDP_UPDATE_NOT_USEFUL_DECREMENT",
+    "EventCode": "0x10000004",
+    "BriefDescription": "MDP update not useful decrement"
+  },
+  {
+    "EventName": "MDP_UPDATE_NOT_USEFUL_DECREMENT_ZEROED",
+    "EventCode": "0x20000004",
+    "BriefDescription": "MDP update not useful decrement zeroed"
+  },
+  {
+    "EventName": "MDP_UPDATE_MULTI_SET_SET",
+    "EventCode": "0x40000004",
+    "BriefDescription": "MDP update multi-set set"
+  },
+  {
+    "EventName": "MDP_UPDATE_MULTI_SET_CLEAR",
+    "EventCode": "0x80000004",
+    "BriefDescription": "MDP update multi-set clear"
+  },
+  {
+    "EventName": "MDP_AGE_DECAYED",
+    "EventCode": "0x100000004",
+    "BriefDescription": "MDP age decayed"
+  },
+  {
+    "EventName": "INSTRUCTION_DECODE_STALL_FROM_RENAME_HISTORY_FILE_REWIND",
+    "EventCode": "0x200000004",
+    "BriefDescription": "Instruction decode stall from rename history file rewind"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_ECALL_EBREAK",
+    "EventCode": "0x400000004",
+    "BriefDescription": "ROB flush due to ECALL/EBREAK"
+  },
+  {
+    "EventName": "ROB_FLUSH_DUE_TO_FENCE.I",
+    "EventCode": "0x800000004",
+    "BriefDescription": "ROB flush due to FENCE.I"
+  },
+  {
+    "EventName": "ROB_FLUSH_BEFORE_FROM_LSU",
+    "EventCode": "0x1000000004",
+    "BriefDescription": "ROB flush-before from LSU"
+  },
+  {
+    "EventName": "ROB_FLUSH_AFTER_FROM_LSU",
+    "EventCode": "0x2000000004",
+    "BriefDescription": "ROB flush-after from LSU"
+  }
+]

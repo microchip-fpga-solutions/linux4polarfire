@@ -1,0 +1,147 @@
+[
+  {
+    "EventName": "L1_DATA_CACHE_TAG_MISS",
+    "EventCode": "0x106",
+    "BriefDescription": "L1 data cache tag miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_TAG_HIT",
+    "EventCode": "0x206",
+    "BriefDescription": "L1 data cache tag hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_WAY_PREDICTOR_MISS",
+    "EventCode": "0x806",
+    "BriefDescription": "L1 data cache way predictor miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_WAY_PREDICTOR_HIT",
+    "EventCode": "0x1006",
+    "BriefDescription": "L1 data cache way predictor hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x2006",
+    "BriefDescription": "L1 data cache way predictor unknown"
+  },
+  {
+    "EventName": "MEMORY_NON_CACHEABLE",
+    "EventCode": "0x4006",
+    "BriefDescription": "Memory non_cacheable"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_LOAD_TAG_MISS",
+    "EventCode": "0x8006",
+    "BriefDescription": "L1 data cache load tag miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_LOAD_TAG_HIT",
+    "EventCode": "0x10006",
+    "BriefDescription": "L1 data cache load tag hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_LOAD_WAY_PREDICTOR_MISS",
+    "EventCode": "0x40006",
+    "BriefDescription": "L1 data cache load way predictor miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_LOAD_WAY_PREDICTOR_HIT",
+    "EventCode": "0x80006",
+    "BriefDescription": "L1 data cache load way predictor hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_LOAD_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x100006",
+    "BriefDescription": "L1 data cache load way predictor unknown"
+  },
+  {
+    "EventName": "LOAD_NON_CACHEABLE",
+    "EventCode": "0x200006",
+    "BriefDescription": "Load non_cacheable"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_STORE_TAG_MISS",
+    "EventCode": "0x400006",
+    "BriefDescription": "L1 data cache store tag miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_STORE_TAG_HIT",
+    "EventCode": "0x800006",
+    "BriefDescription": "L1 data cache store tag hit"
+  },
+  {
+    "EventName": "STORE_NON_CACHEABLE",
+    "EventCode": "0x2000006",
+    "BriefDescription": "Store non_cacheable"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_AMO_LR_SC_TAG_MISS",
+    "EventCode": "0x4000006",
+    "BriefDescription": "L1 data cache AMO_LR_SC tag miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_AMO_LR_SC_TAG_HIT",
+    "EventCode": "0x8000006",
+    "BriefDescription": "L1 data cache AMO_LR_SC tag hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_AMO_LR_SC_WAY_PREDICTOR_MISS",
+    "EventCode": "0x20000006",
+    "BriefDescription": "L1 data cache AMO_LR_SC way predictor miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_AMO_LR_SC_WAY_PREDICTOR_HIT",
+    "EventCode": "0x40000006",
+    "BriefDescription": "L1 data cache AMO_LR_SC way predictor hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_AMO_LR_SC_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x80000006",
+    "BriefDescription": "L1 data cache AMO_LR_SC way predictor unknown"
+  },
+  {
+    "EventName": "AMO_LR_SC_NON_CACHEABLE",
+    "EventCode": "0x100000006",
+    "BriefDescription": "AMO_LR_SC non_cacheable"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_PTW_TAG_MISS",
+    "EventCode": "0x200000006",
+    "BriefDescription": "L1 data cache PTW tag miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_PTW_TAG_HIT",
+    "EventCode": "0x400000006",
+    "BriefDescription": "L1 data cache PTW tag hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_PTW_WAY_PREDICTOR_MISS",
+    "EventCode": "0x800000006",
+    "BriefDescription": "L1 data cache PTW way predictor miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_PTW_WAY_PREDICTOR_HIT",
+    "EventCode": "0x1000000006",
+    "BriefDescription": "L1 data cache PTW way predictor hit"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_PTW_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x2000000006",
+    "BriefDescription": "L1 data cache PTW way predictor unknown"
+  },
+  {
+    "EventName": "PTW_NON_CACHEABLE",
+    "EventCode": "0x4000000006",
+    "BriefDescription": "PTW non_cacheable"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_HWPF_TAG_MISS",
+    "EventCode": "0x8000000006",
+    "BriefDescription": "L1 data cache HWPF tag miss"
+  },
+  {
+    "EventName": "L1_DATA_CACHE_HWPF_TAG_HIT",
+    "EventCode": "0x10000000006",
+    "BriefDescription": "L1 data cache HWPF tag hit"
+  }
+]

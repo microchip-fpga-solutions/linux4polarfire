@@ -32,6 +32,9 @@
 #define PERF_EVENT_FLAG_USER_ACCESS	BIT(SYSCTL_USER_ACCESS)
 #define PERF_EVENT_FLAG_LEGACY		BIT(SYSCTL_LEGACY)
 
+#define HW_OP_UNSUPPORTED       -1
+#define CACHE_OP_UNSUPPORTED       -1
+
 PMU_FORMAT_ATTR(event, "config:0-47");
 PMU_FORMAT_ATTR(firmware, "config:63");
 
@@ -93,9 +96,7 @@ static const struct sbi_pmu_event_data pmu_hw_event_map[] = {
 	[PERF_COUNT_HW_INSTRUCTIONS]		= {.hw_gen_event = {
 							SBI_PMU_HW_INSTRUCTIONS,
 							SBI_PMU_EVENT_TYPE_HW, 0}},
-	[PERF_COUNT_HW_CACHE_REFERENCES]	= {.hw_gen_event = {
-							SBI_PMU_HW_CACHE_REFERENCES,
-							SBI_PMU_EVENT_TYPE_HW, 0}},
+	[PERF_COUNT_HW_CACHE_REFERENCES]	= {.event_idx = HW_OP_UNSUPPORTED},
 	[PERF_COUNT_HW_CACHE_MISSES]		= {.hw_gen_event = {
 							SBI_PMU_HW_CACHE_MISSES,
 							SBI_PMU_EVENT_TYPE_HW, 0}},
@@ -105,18 +106,10 @@ static const struct sbi_pmu_event_data pmu_hw_event_map[] = {
 	[PERF_COUNT_HW_BRANCH_MISSES]		= {.hw_gen_event = {
 							SBI_PMU_HW_BRANCH_MISSES,
 							SBI_PMU_EVENT_TYPE_HW, 0}},
-	[PERF_COUNT_HW_BUS_CYCLES]		= {.hw_gen_event = {
-							SBI_PMU_HW_BUS_CYCLES,
-							SBI_PMU_EVENT_TYPE_HW, 0}},
-	[PERF_COUNT_HW_STALLED_CYCLES_FRONTEND]	= {.hw_gen_event = {
-							SBI_PMU_HW_STALLED_CYCLES_FRONTEND,
-							SBI_PMU_EVENT_TYPE_HW, 0}},
-	[PERF_COUNT_HW_STALLED_CYCLES_BACKEND]	= {.hw_gen_event = {
-							SBI_PMU_HW_STALLED_CYCLES_BACKEND,
-							SBI_PMU_EVENT_TYPE_HW, 0}},
-	[PERF_COUNT_HW_REF_CPU_CYCLES]		= {.hw_gen_event = {
-							SBI_PMU_HW_REF_CPU_CYCLES,
-							SBI_PMU_EVENT_TYPE_HW, 0}},
+	[PERF_COUNT_HW_BUS_CYCLES]		= {.event_idx = HW_OP_UNSUPPORTED},
+	[PERF_COUNT_HW_STALLED_CYCLES_FRONTEND]	= {.event_idx = HW_OP_UNSUPPORTED},
+	[PERF_COUNT_HW_STALLED_CYCLES_BACKEND]	= {.event_idx = HW_OP_UNSUPPORTED},
+	[PERF_COUNT_HW_REF_CPU_CYCLES]		= {.event_idx = HW_OP_UNSUPPORTED},
 };
 
 #define C(x) PERF_COUNT_HW_CACHE_##x
@@ -125,142 +118,103 @@ static const struct sbi_pmu_event_data pmu_cache_event_map[PERF_COUNT_HW_CACHE_M
 [PERF_COUNT_HW_CACHE_RESULT_MAX] = {
 	[C(L1D)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_READ), C(L1D), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_READ), C(L1D), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(L1D), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(L1D), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(L1D), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(L1D), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 	[C(L1I)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event =	{C(RESULT_ACCESS),
-					C(OP_READ), C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS), C(OP_READ),
-					C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+	    [C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+	    [C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS), C(OP_READ),
+		    C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(L1I), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 	[C(LL)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_READ), C(LL), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_READ), C(LL), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(LL), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(LL), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(LL), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(LL), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 	[C(DTLB)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_READ), C(DTLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
 					C(OP_READ), C(DTLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(DTLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(DTLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(DTLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(DTLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 	[C(ITLB)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_READ), C(ITLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
 					C(OP_READ), C(ITLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(ITLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(ITLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(ITLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(ITLB), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 	[C(BPU)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_READ), C(BPU), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_READ), C(BPU), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(BPU), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(BPU), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(BPU), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(BPU), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 	[C(NODE)] = {
 		[C(OP_READ)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_READ), C(NODE), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_READ), C(NODE), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_WRITE)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_WRITE), C(NODE), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_WRITE), C(NODE), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 		[C(OP_PREFETCH)] = {
-			[C(RESULT_ACCESS)] = {.hw_cache_event = {C(RESULT_ACCESS),
-					C(OP_PREFETCH), C(NODE), SBI_PMU_EVENT_TYPE_CACHE, 0}},
-			[C(RESULT_MISS)] = {.hw_cache_event = {C(RESULT_MISS),
-					C(OP_PREFETCH), C(NODE), SBI_PMU_EVENT_TYPE_CACHE, 0}},
+			[C(RESULT_ACCESS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
+			[C(RESULT_MISS)] = {.event_idx = CACHE_OP_UNSUPPORTED},
 		},
 	},
 };

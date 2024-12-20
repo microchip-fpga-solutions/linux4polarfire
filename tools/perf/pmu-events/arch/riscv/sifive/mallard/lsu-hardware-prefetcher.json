@@ -1,0 +1,132 @@
+[
+  {
+    "EventName": "L1_HWPF_SENT",
+    "EventCode": "0x10f",
+    "BriefDescription": "L1 HWPF sent"
+  },
+  {
+    "EventName": "L2_HWPF_SENT",
+    "EventCode": "0x20f",
+    "BriefDescription": "L2 HWPF sent"
+  },
+  {
+    "EventName": "L3_HWPF_SENT",
+    "EventCode": "0x40f",
+    "BriefDescription": "L3 HWPF sent"
+  },
+  {
+    "EventName": "DEMAND_HIT_MISS_MATCHED_AN_ENGINE_AND_CAUSED_ANY_NUMBER_OF_PREFETCHES",
+    "EventCode": "0x80f",
+    "BriefDescription": "Demand hit miss matched an engine and caused any number of prefetches"
+  },
+  {
+    "EventName": "LATE_DEMAND_MATCHED_AN_EXISTED_MSHR_THAT_WAS_ALLOCATED_BY_L1_HWPF",
+    "EventCode": "0x100f",
+    "BriefDescription": "Late demand matched an existed MSHR that was allocated by L1 HWPF"
+  },
+  {
+    "EventName": "VERY_LATE_L1_HWPF_REUSED_AN_EXISTING_MSHR_THAT_WAS_ALLOCATED_BY_DEMAND",
+    "EventCode": "0x200f",
+    "BriefDescription": "Very late L1 HWPF reused an existing MSHR that was allocated by demand"
+  },
+  {
+    "EventName": "NEW_STREAMS_STARTED",
+    "EventCode": "0x400f",
+    "BriefDescription": "New streams started"
+  },
+  {
+    "EventName": "INCREASE_DISTANCE_AGGRESSIVENESS",
+    "EventCode": "0x800f",
+    "BriefDescription": "Increase distance aggressiveness"
+  },
+  {
+    "EventName": "STREAM_REPLACED_BY_NEW_ALLOCATION",
+    "EventCode": "0x1000f",
+    "BriefDescription": "Stream replaced by new allocation"
+  },
+  {
+    "EventName": "STREAM_UNTRAINED_BY_WINDOW_MATCH_AND_STRIDE_MISMATCH",
+    "EventCode": "0x2000f",
+    "BriefDescription": "Stream untrained by window match and stride mismatch"
+  },
+  {
+    "EventName": "L1_HWPF_REQUEST_BLOCKED_BY_L1_MSHR_THRESHOLD",
+    "EventCode": "0x4000f",
+    "BriefDescription": "L1 HWPF request blocked by L1 MSHR threshold"
+  },
+  {
+    "EventName": "L2_HWPF_REQUEST_BLOCKED_BY_L2_MSHR_THRESHOLD",
+    "EventCode": "0x8000f",
+    "BriefDescription": "L2 HWPF request blocked by L2 MSHR threshold"
+  },
+  {
+    "EventName": "L3_HWPF_REQUEST_BLOCKED_BY_L3_MSHR_THRESHOLD",
+    "EventCode": "0x10000f",
+    "BriefDescription": "L3 HWPF request blocked by L3 MSHR threshold"
+  },
+  {
+    "EventName": "HWPF_ISSUE_BLOCKED",
+    "EventCode": "0x20000f",
+    "BriefDescription": "HWPF issue blocked"
+  },
+  {
+    "EventName": "HWPF_ISSUE_QUEUE_WAITING_FOR_DATA_TLB",
+    "EventCode": "0x40000f",
+    "BriefDescription": "HWPF issue queue waiting for data TLB"
+  },
+  {
+    "EventName": "HWPF_ISSUE_QUEUE_WAITING_FOR_MSHR",
+    "EventCode": "0x80000f",
+    "BriefDescription": "HWPF issue queue waiting for MSHR"
+  },
+  {
+    "EventName": "HWPF_ISSUE_QUEUEWAITING_FOR_L2_QUEUE",
+    "EventCode": "0x100000f",
+    "BriefDescription": "HWPF issue queuewaiting for L2 queue"
+  },
+  {
+    "EventName": "STREAM_STOPPED_BY_HITL1CACHE_THRESHOLD",
+    "EventCode": "0x200000f",
+    "BriefDescription": "Stream stopped by HitL1Cache threshold"
+  },
+  {
+    "EventName": "L2_HWPF_STOPPED_BY_HITL2CACHE_THRESHOLD",
+    "EventCode": "0x400000f",
+    "BriefDescription": "L2 HWPF stopped by HitL2Cache threshold"
+  },
+  {
+    "EventName": "L3_HWPF_STOPPED_BY_HITL3CACHE_THRESHOLD",
+    "EventCode": "0x800000f",
+    "BriefDescription": "L3 HWPF stopped by HitL3Cache threshold"
+  },
+  {
+    "EventName": "L1_HWPF_HIT_L2_CACHE_TAG_ARRAY",
+    "EventCode": "0x1000000f",
+    "BriefDescription": "L1 HWPF hit L2 cache tag array"
+  },
+  {
+    "EventName": "UNNECESSARY_L2_HWPF_HIT_L2_CACHE_TAG_ARRAY",
+    "EventCode": "0x2000000f",
+    "BriefDescription": "Unnecessary L2 HWPF hit L2 cache tag array"
+  },
+  {
+    "EventName": "LATE_L2_HWPF_L1_HWPF_MATCH_L2_MSHR_IN_PROGRESS",
+    "EventCode": "0x4000000f",
+    "BriefDescription": "Late L2 HWPF L1 HWPF match L2 MSHR in progress"
+  },
+  {
+    "EventName": "LATE_L2_HWPF_MATCH_L2_MSHR_IN_PROGRESS",
+    "EventCode": "0x8000000f",
+    "BriefDescription": "Late L2 HWPF match L2 MSHR in progress"
+  },
+  {
+    "EventName": "L1_HWPF_REQUEST_BLOCKED_BY_HWPF_ISSUE_QUEUE_THRESHOLD",
+    "EventCode": "0x10000000f",
+    "BriefDescription": "L1 HWPF request blocked by HWPF issue queue threshold"
+  },
+  {
+    "EventName": "L2_HWPF_REQUEST_BLOCKED_BY_HWPF_ISSUE_QUEUE_THRESHOLD",
+    "EventCode": "0x20000000f",
+    "BriefDescription": "L2 HWPF request blocked by HWPF issue queue threshold"
+  }
+]

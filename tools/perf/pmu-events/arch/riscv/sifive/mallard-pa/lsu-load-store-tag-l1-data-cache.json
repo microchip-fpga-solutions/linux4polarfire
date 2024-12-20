@@ -1,0 +1,202 @@
+[
+  {
+    "EventName": "L1_DCACHE_TAG_MISS",
+    "EventCode": "0x106",
+    "BriefDescription": "Counts L1 Data Cache Tag misses from all memory accesses"
+  },
+  {
+    "EventName": "L1_DCACHE_TAG_HIT",
+    "EventCode": "0x206",
+    "BriefDescription": "Counts L1 Data Cache Tag hits from all memory accesses"
+  },
+  {
+    "EventName": "NON_CACHEABLE_ACCESS",
+    "EventCode": "0x406",
+    "BriefDescription": "Counts non-cacheable memory accesses"
+  },
+  {
+    "EventName": "L1_DCACHE_WAY_PREDICTOR_MISS",
+    "EventCode": "0x806",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor misses from all memory accesses"
+  },
+  {
+    "EventName": "L1_DCACHE_WAY_PREDICTOR_HIT",
+    "EventCode": "0x1006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor hits from all memory accesses"
+  },
+  {
+    "EventName": "L1_DCACHE_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x2006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor unknown outcomes from all memory accesses"
+  },
+  {
+    "EventName": "MMIO_ACCESS",
+    "EventCode": "0x4006",
+    "BriefDescription": "Counts accesses to memory-mapped I/O"
+  },
+  {
+    "EventName": "L1_DCACHE_LOAD_TAG_MISS",
+    "EventCode": "0x8006",
+    "BriefDescription": "Counts L1 Data Cache tag misses from loads"
+  },
+  {
+    "EventName": "L1_DCACHE_LOAD_TAG_HIT",
+    "EventCode": "0x10006",
+    "BriefDescription": "Counts L1 Data Cache load tag hits from loads"
+  },
+  {
+    "EventName": "LOAD_NON_CACHEABLE",
+    "EventCode": "0x20006",
+    "BriefDescription": "Counts loads from non-cacheable memory"
+  },
+  {
+    "EventName": "L1_DCACHE_LOAD_WAY_PREDICTOR_MISS",
+    "EventCode": "0x40006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor misses from loads"
+  },
+  {
+    "EventName": "L1_DCACHE_LOAD_WAY_PREDICTOR_HIT",
+    "EventCode": "0x80006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor hits from loads"
+  },
+  {
+    "EventName": "L1_DCACHE_LOAD_WAY_PREDICTOR_HIT",
+    "EventCode": "0x100006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor unknown outcomes from loads"
+  },
+  {
+    "EventName": "MMIO_LOAD",
+    "EventCode": "0x200006",
+    "BriefDescription": "Counts loads from memory-mapped I/O"
+  },
+  {
+    "EventName": "L1_DCACHE_STORE_TAG_MISS",
+    "EventCode": "0x400006",
+    "BriefDescription": "Counts L1 Data Cache tag misses from stores"
+  },
+  {
+    "EventName": "L1_DCACHE_STORE_TAG_HIT",
+    "EventCode": "0x800006",
+    "BriefDescription": "Counts L1 Data Cache tag hits from stores"
+  },
+  {
+    "EventName": "STORE_NON_CACHEABLE",
+    "EventCode": "0x1000006",
+    "BriefDescription": "Counts stores to non-cacheable memory"
+  },
+  {
+    "EventName": "MMIO_STORE",
+    "EventCode": "0x2000006",
+    "BriefDescription": "Counts stores to memory-mapped I/O"
+  },
+  {
+    "EventName": "L1_DCACHE_AMO_TAG_MISS",
+    "EventCode": "0x4000006",
+    "BriefDescription": "Counts L1 Data Cache tag misses from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "L1_DCACHE_AMO_TAG_HIT",
+    "EventCode": "0x8000006",
+    "BriefDescription": "Counts L1 Data Cache tag hits from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "AMO_NON_CACHEABLE",
+    "EventCode": "0x10000006",
+    "BriefDescription": "Counts atomic and LR/SC instruction accesses to non-cacheable memory"
+  },
+  {
+    "EventName": "L1_DCACHE_AMO_WAY_PREDICTOR_MISS",
+    "EventCode": "0x20000006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor misses from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "L1_DCACHE_AMO_WAY_PREDICTOR_HIT",
+    "EventCode": "0x40000006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor hits from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "L1_DCACHE_AMO_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x80000006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor unknown outcomes from atomics and LR/SC instructions"
+  },
+  {
+    "EventName": "AMO_MMIO",
+    "EventCode": "0x100000006",
+    "BriefDescription": "Counts atomic and LR/SC instruction accesses to memory-mapped I/O"
+  },
+  {
+    "EventName": "L1_DCACHE_PTW_TAG_MISS",
+    "EventCode": "0x200000006",
+    "BriefDescription": "Counts L1 Data Cache tag misses from the Page Table Walker"
+  },
+  {
+    "EventName": "L1_DCACHE_PTW_TAG_HIT",
+    "EventCode": "0x400000006",
+    "BriefDescription": "Counts L1 Data Cache tag hits from the Page Table Walker"
+  },
+  {
+    "EventName": "L1_DCACHE_PTW_WAY_PREDICTOR_MISS",
+    "EventCode": "0x800000006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor misses from the Page Table Walker"
+  },
+  {
+    "EventName": "L1_DCACHE_PTW_WAY_PREDICTOR_HIT",
+    "EventCode": "0x1000000006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor hits from the Page Table Walker"
+  },
+  {
+    "EventName": "L1_DCACHE_PTW_WAY_PREDICTOR_UNKNOWN",
+    "EventCode": "0x2000000006",
+    "BriefDescription": "Counts L1 Data Cache Way Predictor unknown outcomes from the Page Table Walker"
+  },
+  {
+    "EventName": "PTW_NON_CACHEABLE_MMIO",
+    "EventCode": "0x4000000006",
+    "BriefDescription": "Counts Page Table Walker accesses to non-cacheable memory and memory-mapped I/O"
+  },
+  {
+    "EventName": "L1_DCACHE_HWPF_TAG_MISS",
+    "EventCode": "0x8000000006",
+    "BriefDescription": "Counts L1 Data Cache tag misses from the Hardware Prefetcher"
+  },
+  {
+    "EventName": "L1_DCACHE_HWPF_TAG_HIT",
+    "EventCode": "0x10000000006",
+    "BriefDescription": "Counts L1 Data Cache tag hits from the Hardware Prefetcher"
+  },
+  {
+    "EventName": "HWPF_DROPPED_NON_CACHEABLE",
+    "EventCode": "0x20000000006",
+    "BriefDescription": "Counts Hardware Prefetcher accesses dropped due to non-cacheable memory"
+  },
+  {
+    "EventName": "HWPF_DROPPED_NON_PREFETCHABLE",
+    "EventCode": "0x40000000006",
+    "BriefDescription": "Counts Hardware Prefetcher accesses dropped due to non-prefetchable memory"
+  },
+  {
+    "EventName": "L1_DCACHE_PF_TAG_MISS",
+    "EventCode": "0x80000000006",
+    "BriefDescription": "Counts L1 Data Cache tag misses from the Software Prefetches"
+  },
+  {
+    "EventName": "L1_DCACHE_PF_TAG_HIT",
+    "EventCode": "0x100000000006",
+    "BriefDescription": "Counts L1 Data Cache tag hits from the Software Prefetches"
+  },
+  {
+    "EventName": "SWPF_DROPPED_NON_CACHEABLE",
+    "EventCode": "0x200000000006",
+    "BriefDescription": "Counts Software Prefetches dropped due to non-cacheable memory"
+  },
+  {
+    "EventName": "SWPF_DROPPED_NON_PREFETCHABLE",
+    "EventCode": "0x400000000006",
+    "BriefDescription": "Counts Software Prefetches dropped due to non-prefetchable memory"
+  },
+  {
+    "EventName": "SO_ACCESS",
+    "EventCode": "0x800000000006",
+    "BriefDescription": "Counts accesses to PBMT-strongly-ordered memory-mapped I/O"
+  }
+]

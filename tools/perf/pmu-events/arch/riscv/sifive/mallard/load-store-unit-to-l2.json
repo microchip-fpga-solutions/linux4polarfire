@@ -1,0 +1,97 @@
+[
+  {
+    "EventName": "L2_REQUEST_BLOCKED",
+    "EventCode": "0x10e",
+    "BriefDescription": "L2 request blocked"
+  },
+  {
+    "EventName": "L2_REQUEST_ACQUIRE_FROMN",
+    "EventCode": "0x20e",
+    "BriefDescription": "L2 request Acquire fromN"
+  },
+  {
+    "EventName": "L2_REQUEST_ACQUIRE_FROMB",
+    "EventCode": "0x40e",
+    "BriefDescription": "L2 request Acquire fromB"
+  },
+  {
+    "EventName": "L2_REQUEST_ACQUIREPERM_NO_DATA",
+    "EventCode": "0x80e",
+    "BriefDescription": "L2 request AcquirePerm no data"
+  },
+  {
+    "EventName": "L2_REQUEST_GETDATA",
+    "EventCode": "0x100e",
+    "BriefDescription": "L2 request GetData"
+  },
+  {
+    "EventName": "L2_REQUEST_PUTFULL",
+    "EventCode": "0x200e",
+    "BriefDescription": "L2 request PutFull"
+  },
+  {
+    "EventName": "L2_REQUEST_PUTPARTIAL",
+    "EventCode": "0x400e",
+    "BriefDescription": "L2 request PutPartial"
+  },
+  {
+    "EventName": "L2_REQUEST_ATOMIC",
+    "EventCode": "0x800e",
+    "BriefDescription": "L2 request Atomic"
+  },
+  {
+    "EventName": "L2_REQUEST_HINT",
+    "EventCode": "0x1000e",
+    "BriefDescription": "L2 request Hint"
+  },
+  {
+    "EventName": "PROBE_REQUEST_BLOCKED",
+    "EventCode": "0x2000e",
+    "BriefDescription": "Probe request blocked"
+  },
+  {
+    "EventName": "EVICT_REQUEST_OR_PROBE_RESPONSE_BLOCKED",
+    "EventCode": "0x4000e",
+    "BriefDescription": "Evict request or Probe response blocked"
+  },
+  {
+    "EventName": "EVICT_RELEASE_DIRTY_DATA",
+    "EventCode": "0x8000e",
+    "BriefDescription": "Evict release dirty data"
+  },
+  {
+    "EventName": "EVICT_RELEASE_CLEAN_NO_DATA",
+    "EventCode": "0x10000e",
+    "BriefDescription": "Evict release clean no data"
+  },
+  {
+    "EventName": "PROBE_ACK_HIT_DIRTY_DATA",
+    "EventCode": "0x20000e",
+    "BriefDescription": "Probe ack hit dirty data"
+  },
+  {
+    "EventName": "PROBE_ACK_HIT_CLEAN_NO_DATA",
+    "EventCode": "0x40000e",
+    "BriefDescription": "Probe ack hit clean no data"
+  },
+  {
+    "EventName": "PROBE_ACK_MISS",
+    "EventCode": "0x80000e",
+    "BriefDescription": "Probe ack miss"
+  },
+  {
+    "EventName": "PROBE_MATCH_RELEASE_QUEUE",
+    "EventCode": "0x100000e",
+    "BriefDescription": "Probe match release queue"
+  },
+  {
+    "EventName": "L2_RESPONSE_BUS_ERROR_CORRUPT",
+    "EventCode": "0x200000e",
+    "BriefDescription": "L2 response bus error corrupt"
+  },
+  {
+    "EventName": "L2_RESPONSE_BUS_ERROR_DENIED",
+    "EventCode": "0x400000e",
+    "BriefDescription": "L2 response bus error denied"
+  }
+]

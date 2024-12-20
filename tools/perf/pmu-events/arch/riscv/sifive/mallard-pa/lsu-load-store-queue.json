@@ -1,0 +1,147 @@
+[
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_DTLB",
+    "EventCode": "0x10c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for the Data TLB"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_STQ",
+    "EventCode": "0x20c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for a free Store Queue entry"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_LDQ",
+    "EventCode": "0x40c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for a free Load Queue entry"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_MSHR",
+    "EventCode": "0x80c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for a free Miss Status Handling Register"
+  },
+  {
+    "EventName": "LDQ_RETURN_HOLD_FOR_L1_TAG",
+    "EventCode": "0x100c",
+    "BriefDescription": "Counts cycles in which data return from the Load Queue is blocked waiting for an L1 Data Cache Tag update"
+  },
+  {
+    "EventName": "LDQ_RETURN_RETRY_FOR_NO_DATA",
+    "EventCode": "0x200c",
+    "BriefDescription": "Counts cycles in which data return from the Load Queue is retried while waiting for data"
+  },
+  {
+    "EventName": "LDQ_RETURN_FROM_MSHR_DATA",
+    "EventCode": "0x400c",
+    "BriefDescription": "Counts data returns from the Load Queue with data sourced from a Miss Status Handling Register"
+  },
+  {
+    "EventName": "LDQ_RETURN_FROM_L2_DATA_FAST",
+    "EventCode": "0x800c",
+    "BriefDescription": "Counts data returns from the Load Queue with data sourced from the Level 2 Cache"
+  },
+  {
+    "EventName": "LDQ_ROB_RESOLVE",
+    "EventCode": "0x1000c",
+    "BriefDescription": "Counts Resolve notifications sent from the Load Queue to the Reorder Buffer"
+  },
+  {
+    "EventName": "LDQ_ROB_FLUSH_BEFORE",
+    "EventCode": "0x2000c",
+    "BriefDescription": "Counts Flush-before notifications sent from the Load Queue to the Reorder Buffer"
+  },
+  {
+    "EventName": "LDQ_WAITING_FOR_CACHEABLE",
+    "EventCode": "0x4000c",
+    "BriefDescription": "Counts cycles in which a Load Queue entry is waiting for cacheable data"
+  },
+  {
+    "EventName": "LDQ_WAITING_FOR_UNCACHEABLE",
+    "EventCode": "0x8000c",
+    "BriefDescription": "Counts cycles in which a Load Queue entry is waiting for uncacheable data"
+  },
+  {
+    "EventName": "LDQ_WAITING_FOR_MSHR",
+    "EventCode": "0x10000c",
+    "BriefDescription": "Counts cycles in which a Load Queue entry is waiting for a Miss Status Handling Register dependency"
+  },
+  {
+    "EventName": "STQ_RETIRE",
+    "EventCode": "0x20000c",
+    "BriefDescription": "Counts retirements from the Store Queue"
+  },
+  {
+    "EventName": "STQ_RETIRE_WRITE_L1_DATA",
+    "EventCode": "0x40000c",
+    "BriefDescription": "Counts retirements from the Store Queue that write data to the L1 Data Cache"
+  },
+  {
+    "EventName": "STQ_RETIRE_WRITE_MSHR",
+    "EventCode": "0x80000c",
+    "BriefDescription": "Counts retirements from the Store Queue that write data to a Miss Status Handling Register"
+  },
+  {
+    "EventName": "STQ_RETIRE_WRITE_L1_DATA_CLEAN",
+    "EventCode": "0x100000c",
+    "BriefDescription": "Counts retirements from the Store Queue that write data to a line in the L1 Data Cache that is not dirty"
+  },
+  {
+    "EventName": "STQ_RETIRE_WRITE_MSHR_CLEAN",
+    "EventCode": "0x200000c",
+    "BriefDescription": "Counts retirements from the Store Queue that write data to a Miss Status Handling Register for a line in the L1 Data Cache that is not dirty"
+  },
+  {
+    "EventName": "STQ_RETIRE_HOLD_L1_TAG",
+    "EventCode": "0x400000c",
+    "BriefDescription": "Counts cycles in which the Store Queue is held waiting for an L1 Data Cache Tag"
+  },
+  {
+    "EventName": "STQ_RETIRE_MSHR_DEPENDENCY",
+    "EventCode": "0x800000c",
+    "BriefDescription": "Counts cycles in which the Store Queue is held due to a Miss Status Handling Register dependency"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_ADDRESS",
+    "EventCode": "0x1000000c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for an address"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_DATA",
+    "EventCode": "0x2000000c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for store data"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_OLDER_IN_ORDER",
+    "EventCode": "0x4000000c",
+    "BriefDescription": "Counts cycles in which an operation in the LSU Issue Queue is stalled waiting for an older in-order operation"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_IN_ORDER_WAITING_OLDER",
+    "EventCode": "0x8000000c",
+    "BriefDescription": "Counts cycles in which an in-order operation in the LSU Issue Queue is stalled waiting for an older operation"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_OLDER_NON_SPECULATIVE",
+    "EventCode": "0x10000000c",
+    "BriefDescription": "Counts cycles in which an operation in the LSU Issue Queue is stalled waiting for an older non-speculative operation"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_FOR_VLTB",
+    "EventCode": "0x20000000c",
+    "BriefDescription": "Counts cycles in which the LSU Issue Queue is stalled waiting for a free VLTB entry"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_ONE_OLDER_MDP_HAZARD",
+    "EventCode": "0x40000000c",
+    "BriefDescription": "Counts cycles in which a load in the LSU Issue Queue is stalled waiting for one predicted store hazard to resolve"
+  },
+  {
+    "EventName": "LSU_ISSUE_QUEUE_WAITING_MULTIPLE_OLDER_MDP_HAZARD",
+    "EventCode": "0x80000000c",
+    "BriefDescription": "Counts cycles in which a load in the LSU Issue Queue is stalled waiting for multiple predicted store hazards to resolve"
+  },
+  {
+    "EventName": "STQ_RETIRE_MULTIPLE",
+    "EventCode": "0x100000000c",
+    "BriefDescription": "Counts cycles in which multiple entries retired from the Store Queue"
+  }
+]
