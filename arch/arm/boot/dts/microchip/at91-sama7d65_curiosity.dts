@@ -341,16 +341,14 @@
 		     &pinctrl_gmac0_txck_default
 		     &pinctrl_gmac0_phy_irq>;
 	phy-mode = "rgmii-id";
-	status = "okay";
 
 	nvmem-cells = <&eeprom0_eui48>;
 	nvmem-cell-names = "mac-address";
-
+	status = "disabled";
 	ethernet-phy@7 {
 		reg = <0x7>;
 		interrupt-parent = <&pioA>;
 		interrupts = <PIN_PC1 IRQ_TYPE_LEVEL_LOW>;
-		status = "okay";
 	};
 };
 
@@ -363,7 +361,7 @@
 		     &pinctrl_gmac1_mdio_default
 		     &pinctrl_gmac1_txck_default
 		     &pinctrl_gmac1_phy_irq>;
-	phy-mode = "rgmii-id";
+	phy-mode = "rmii";
 	status = "okay";
 
 	ethernet-phy@1 {
@@ -371,6 +369,7 @@
 		interrupt-parent = <&pioA>;
 		interrupts = <PIN_PE3 IRQ_TYPE_LEVEL_LOW>;
 		status = "okay";
+
 	};
 };
 
@@ -439,14 +438,10 @@
 	pinctrl_gmac1_default: gmac1-default{
 		pinmux = <PIN_PD22__G1_TX0>,
 			 <PIN_PD23__G1_TX1>,
-			 <PIN_PE0__G1_TX2>,
-			 <PIN_PE1__G1_TX3>,
 			 <PIN_PD27__G1_RX0>,
 			 <PIN_PD28__G1_RX1>,
-			 <PIN_PD30__G1_RX2>,
-			 <PIN_PD31__G1_RX3>,
+			 <PIN_PD30__G1_RXER>,
 			 <PIN_PD21__G1_TXCTL>,
-			 <PIN_PE2__G1_RXCK>,
 			 <PIN_PD24__G1_RXCTL>;
 		slew-rate = <0>;
 		bias-disable;

@@ -1,0 +1,23 @@
+diff --git a/sound/soc/atmel/mchp-asrc-card.c b/sound/soc/atmel/mchp-asrc-card.c
+index e619087cda7e..922c203b96f5 100644
+--- a/sound/soc/atmel/mchp-asrc-card.c
++++ b/sound/soc/atmel/mchp-asrc-card.c
+@@ -650,7 +650,7 @@ static int mchp_asrc_card_probe(struct platform_device *pdev)
+ 		dai_link->codecs = &comp[1];
+ 		dai_link->platforms = &comp[2];
+ 
+-		dai_link->cpus->of_node = asrc;
++		// dai_link->cpus->of_node = asrc;
+ 		dai_link->platforms->of_node = asrc;
+ 		dai_link->codecs->name = "snd-soc-dummy";
+ 		dai_link->codecs->dai_name = "snd-soc-dummy-dai";
+@@ -661,7 +661,8 @@ static int mchp_asrc_card_probe(struct platform_device *pdev)
+ 		dai_link->dpcm_playback = 1;
+ 		dai_link->dpcm_capture = 1;
+ 		dai_link->dynamic = 1;
+-		dai_link->dpcm_loopback = 1;
++		// dai_link->dpcm_loopback = 1;
++		dai_link->num_c2c_params = 1;
+ 		dai_link->id = card->num_links;
+ 		dai_link->trigger[SNDRV_PCM_STREAM_PLAYBACK] =
+ 			dai_link->trigger[SNDRV_PCM_STREAM_CAPTURE] = SND_SOC_DPCM_TRIGGER_PRE;
