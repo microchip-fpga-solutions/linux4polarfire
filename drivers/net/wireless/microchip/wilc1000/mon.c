@@ -7,12 +7,20 @@
 #include "cfg80211.h"
 
 struct wilc_wfi_radiotap_hdr {
+#if KERNEL_VERSION(6, 12, 0) <= LINUX_VERSION_CODE
 	struct ieee80211_radiotap_header_fixed hdr;
+#else
+	struct ieee80211_radiotap_header hdr;
+#endif
 	u8 rate;
 } __packed;
 
 struct wilc_wfi_radiotap_cb_hdr {
+#if KERNEL_VERSION(6, 12, 0) <= LINUX_VERSION_CODE
 	struct ieee80211_radiotap_header_fixed hdr;
+#else
+	struct ieee80211_radiotap_header hdr;
+#endif
 	u8 rate;
 	u8 dump;
 	u16 tx_flags;
