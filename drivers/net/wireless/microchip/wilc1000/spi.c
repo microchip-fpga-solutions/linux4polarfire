@@ -162,6 +162,7 @@ static int wilc_bus_probe(struct spi_device *spi)
 	struct wilc *wilc;
 	struct device *dev = &spi->dev;
 	struct wilc_spi *spi_priv;
+	struct wilc_vif *vif;
 
 	spi_priv = kzalloc(sizeof(*spi_priv), GFP_KERNEL);
 	if (!spi_priv)
@@ -198,11 +199,21 @@ static int wilc_bus_probe(struct spi_device *spi)
 	if (ret)
 		goto disable_rtc_clk;
 
+
+	vif = wilc_netdev_ifc_init(wilc, "wlan%d", WILC_STATION_MODE,
+				   NL80211_IFTYPE_STATION, false);
+	if (IS_ERR(vif)) {
+		ret = PTR_ERR(vif);
+		goto unregister_wiphy;
+	}
+
 	wilc_bt_init(wilc);
 
 	dev_info(dev, "WILC SPI probe success\n");
 	return 0;
 
+unregister_wiphy:
+	wiphy_unregister(wilc->wiphy);
 disable_rtc_clk:
 	if (!IS_ERR(wilc->rtc_clk))
 		clk_disable_unprepare(wilc->rtc_clk);

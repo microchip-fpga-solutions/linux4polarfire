@@ -168,6 +168,7 @@ static int wilc_sdio_probe(struct sdio_func *func,
 	struct wilc_sdio *sdio_priv;
 	struct device_node *np;
 	int irq_num;
+	struct wilc_vif *vif;
 
 	sdio_priv = kzalloc(sizeof(*sdio_priv), GFP_KERNEL);
 	if (!sdio_priv)
@@ -271,11 +272,21 @@ static int wilc_sdio_probe(struct sdio_func *func,
 	if (ret)
 		goto disable_rtc_clk;
 
+
+	vif = wilc_netdev_ifc_init(wilc, "wlan%d", WILC_STATION_MODE,
+				   NL80211_IFTYPE_STATION, false);
+	if (IS_ERR(vif)) {
+		ret = PTR_ERR(vif);
+		goto unregister_wiphy;
+	}
+
 	wilc_bt_init(wilc);
 
 	dev_info(&func->dev, "Driver Initializing success\n");
 	return 0;
 
+unregister_wiphy:
+	wiphy_unregister(wilc->wiphy);
 disable_rtc_clk:
 	if (!IS_ERR(wilc->rtc_clk))
 		clk_disable_unprepare(wilc->rtc_clk);

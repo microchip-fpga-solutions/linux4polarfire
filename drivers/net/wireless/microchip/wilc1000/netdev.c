@@ -1479,10 +1479,6 @@ struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
 	return vif;
 
 error:
-	if (rtnl_locked)
-		cfg80211_unregister_netdevice(ndev);
-	else
-		unregister_netdev(ndev);
 	free_netdev(ndev);
 	return ERR_PTR(ret);
 }
