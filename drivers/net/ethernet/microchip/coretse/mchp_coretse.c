@@ -581,24 +581,29 @@ static int mchp_core1588_get_ts_info(struct net_device *dev,
 {
 	struct coretse *bp = netdev_priv(dev);
 
-	ethtool_op_get_ts_info(dev, info);
+	if (bp->timer) {
+		ethtool_op_get_ts_info(dev, info);
 
-	info->so_timestamping =
-		SOF_TIMESTAMPING_TX_SOFTWARE |
-		SOF_TIMESTAMPING_RX_SOFTWARE |
-		SOF_TIMESTAMPING_SOFTWARE |
-		SOF_TIMESTAMPING_TX_HARDWARE |
-		SOF_TIMESTAMPING_RX_HARDWARE |
-		SOF_TIMESTAMPING_RAW_HARDWARE;
-	info->tx_types =
-		(1 << HWTSTAMP_TX_ONESTEP_SYNC) |
-		(1 << HWTSTAMP_TX_OFF) |
-		(1 << HWTSTAMP_TX_ON);
-	info->rx_filters =
-		(1 << HWTSTAMP_FILTER_NONE) |
-		(1 << HWTSTAMP_FILTER_ALL);
+		info->so_timestamping =
+			SOF_TIMESTAMPING_TX_SOFTWARE |
+			SOF_TIMESTAMPING_RX_SOFTWARE |
+			SOF_TIMESTAMPING_SOFTWARE |
+			SOF_TIMESTAMPING_TX_HARDWARE |
+			SOF_TIMESTAMPING_RX_HARDWARE |
+			SOF_TIMESTAMPING_RAW_HARDWARE;
+		info->tx_types =
+			(1 << HWTSTAMP_TX_ONESTEP_SYNC) |
+			(1 << HWTSTAMP_TX_OFF) |
+			(1 << HWTSTAMP_TX_ON);
+		info->rx_filters =
+			(1 << HWTSTAMP_FILTER_NONE) |
+			(1 << HWTSTAMP_FILTER_ALL);
 
-	info->phc_index = bp->timer->ptp_clock ? bp->timer->phc_index : -1;
+		info->phc_index = bp->timer->ptp_clock ? bp->timer->phc_index : -1;
+	} else {
+		info->phc_index = -1;
+		netdev_info(dev, " PTP is not supported for this network interface\n");
+	}
 
 	return 0;
 }
@@ -665,13 +670,11 @@ static int mchp_coretse_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 			return bp->timer->get_hwtst(bp->timer, rq);
 		else
 			return -EOPNOTSUPP;
-
 	default:
 		return -EOPNOTSUPP;
 	}
 #endif
-
-	return phylink_mii_ioctl(bp->phylink, rq, cmd);
+	return -EOPNOTSUPP;
 }
 
 /**
