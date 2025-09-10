@@ -476,18 +476,28 @@ static int mchp_coretse_open(struct net_device *dev)
 {
 	struct coretse *lp = netdev_priv(dev);
 	int ret;
+	int dev_state;
 
 	napi_enable(&lp->queues[0].napi_rx);
 
-	ret = coretse_phylink_connect(lp);
-	if (ret)
-		goto stop;
+	if (!lp->nophy) {
+		ret = coretse_phylink_connect(lp);
+		if (ret)
+			goto stop;
+	}
 
 	ret = mchp_coretse_start(lp);
 	if (ret)
 		goto open_exit;
 
 	netif_start_queue(dev);
+	if (lp->nophy) {
+		dev_state = netif_running(dev);
+		if (dev_state) {
+			netif_carrier_on(dev);
+			netdev_info(dev, "netif_carrier_on is started\n");
+		}
+	}
 
 	return 0;
 
@@ -504,8 +514,11 @@ static int mchp_coretse_close(struct net_device *dev)
 
 	netif_stop_queue(dev);
 	netif_carrier_off(dev);
-	phylink_stop(lp->phylink);
-	phylink_disconnect_phy(lp->phylink);
+
+	if (!lp->nophy) {
+		phylink_stop(lp->phylink);
+		phylink_disconnect_phy(lp->phylink);
+	}
 
 	mchp_coretse_stop(lp);
 	napi_disable(&lp->queues[0].napi_rx);
@@ -765,28 +778,34 @@ static int mchp_coretse_mii_init(struct coretse *bp)
 
 	dev_set_drvdata(&bp->dev->dev, bp->mii_bus);
 
-	np = of_parse_phandle(bp->pdev->dev.of_node, "pcs-handle", 0);
-	if (!np)
-		np = of_parse_phandle(bp->pdev->dev.of_node, "phy-handle", 0);
+	if (!bp->nophy) {
+		np = of_parse_phandle(bp->pdev->dev.of_node, "pcs-handle", 0);
+		if (!np)
+			np = of_parse_phandle(bp->pdev->dev.of_node, "phy-handle", 0);
 
-	if (!np) {
-		err = -EINVAL;
-		goto err_out_free_mdiobus;
-	}
+		if (!np) {
+			err = -EINVAL;
+			goto err_out_free_mdiobus;
+		}
 
-	if (np) {
+		if (np) {
+			err = mchp_coretse_mdiobus_register(bp);
+			if (err)
+				goto err_out_free_mdiobus;
+		}
+
+		of_node_put(np);
+		bp->pcs.ops = &coretse_pcs_ops;
+		bp->pcs.poll = true;
+
+		err = mchp_coretse_mii_probe(bp->dev);
+		if (err)
+			goto err_out_unregister_bus;
+	} else {
 		err = mchp_coretse_mdiobus_register(bp);
 		if (err)
 			goto err_out_free_mdiobus;
 	}
-
-	of_node_put(np);
-	bp->pcs.ops = &coretse_pcs_ops;
-	bp->pcs.poll = true;
-
-	err = mchp_coretse_mii_probe(bp->dev);
-	if (err)
-		goto err_out_unregister_bus;
 
 	return 0;
 
@@ -949,6 +968,7 @@ static int mchp_coretse_probe(struct platform_device *pdev)
 	struct clk *pclk, *pcdma_clk;
 	void __iomem *mem;
 	int ret;
+	bool nophy = 0;
 
 	mem = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(mem))
@@ -1029,6 +1049,12 @@ static int mchp_coretse_probe(struct platform_device *pdev)
 	ret = mchp_coretse_hw_init(pdev);
 	if (ret)
 		goto err_out_free_netdev;
+
+	nophy = of_property_read_bool(pdev->dev.of_node, "microchip,phy-null");
+	if (nophy)
+		pr_info("Configured CoreTSE node as TSN end-point\n");
+
+	bp->nophy = nophy;
 
 	ret = mchp_coretse_mii_init(bp);
 	if (ret)
