@@ -381,5 +381,6 @@ struct coretse {
 	struct coretse_tx_skb	rm9200_txq[2];
 	unsigned int		max_tx_length;
 	struct mchp_core1588_timer *timer;
+	bool nophy;
 };
 #endif /* _CORETSE_H */
