@@ -57,11 +57,6 @@
 #define POLL_TIMEOUT_U_SEC		1000
 #define POLL_SLEEP_U_SEC		10
 
-static struct coretse *pcs_to_coretse(struct phylink_pcs *pcs)
-{
-	return container_of(pcs, struct coretse, pcs);
-}
-
 static int coretse_mdio_wait_for_idle(struct coretse *tse, u32 flags)
 {
 	u32 val;
@@ -89,9 +84,7 @@ static void coretse_pcs_get_state(struct phylink_pcs *pcs,
 
 static void coretse_pcs_an_restart(struct phylink_pcs *pcs)
 {
-	struct mdio_device *pcs_phy = pcs_to_coretse(pcs)->pcs_phy;
-
-	phylink_mii_c22_pcs_an_restart(pcs_phy);
+	/* nothing meaningful to do */
 }
 
 static int coretse_pcs_config(struct phylink_pcs *pcs, unsigned int mode,
@@ -99,15 +92,8 @@ static int coretse_pcs_config(struct phylink_pcs *pcs, unsigned int mode,
 			      const unsigned long *advertising,
 			      bool permit_pause_to_mac)
 {
-	struct mdio_device *pcs_phy = pcs_to_coretse(pcs)->pcs_phy;
-	struct net_device *ndev = pcs_to_coretse(pcs)->dev;
-	int ret;
-
-	ret = phylink_mii_c22_pcs_config(pcs_phy, interface, advertising,
-					 mode);
-	if (ret < 0)
-		netdev_warn(ndev, "Failed to configure PCS: %d\n", ret);
-	return ret;
+	/* nothing meaningful to do */
+	return 0;
 }
 
 static const struct phylink_pcs_ops coretse_pcs_ops = {
@@ -792,13 +778,6 @@ static int mchp_coretse_mii_init(struct coretse *bp)
 		err = mchp_coretse_mdiobus_register(bp);
 		if (err)
 			goto err_out_free_mdiobus;
-	}
-
-	bp->pcs_phy = of_mdio_find_device(np);
-	if (!bp->pcs_phy) {
-		err = -EPROBE_DEFER;
-		of_node_put(np);
-		goto err_out_unregister_bus;
 	}
 
 	of_node_put(np);
