@@ -12,6 +12,7 @@
 
 #define WAKE_UP_TRIAL_RETRY		10000
 #define CMD_RETRY_LIMIT			200
+#define WILC3000_BLE_RAM_ADDR		0x424000
 
 void acquire_bus(struct wilc *wilc, enum bus_acquire acquire, int source)
 {
@@ -1431,6 +1432,53 @@ void wilc_handle_isr(struct wilc *wilc)
 	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP, DEV_WIFI);
 }
 
+int wilc3000_prepare_ble_ram(struct wilc *wilc)
+{
+	int ret;
+	u32 reg;
+
+	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP, DEV_WIFI);
+
+	ret = wilc->hif_func->hif_write_reg(wilc, 0x4f0000, 0x71);
+	if (ret) {
+		pr_err("%s fail write reg 0x4f0000", __func__);
+		goto fail;
+	}
+
+	/*
+	 * Avoid booting from BT boot ROM. Make sure that Drive IRQN
+	 * [SDIO platform] or SD_DAT3 [SPI platform] to ?1?
+	 */
+	/* Set cortus reset register to register control. */
+	ret = wilc->hif_func->hif_read_reg(wilc, 0x3b0090, &reg);
+	if (ret) {
+		pr_err("%s fail read reg 0x3b0090", __func__);
+		goto fail;
+	}
+
+	reg |= (1 << 0);
+	ret = wilc->hif_func->hif_write_reg(wilc, 0x3b0090, reg);
+	if (ret) {
+		pr_err("%s fail write reg 0x3b0090", __func__);
+		goto fail;
+	}
+
+	wilc->hif_func->hif_read_reg(wilc, 0x3B0400, &reg);
+
+	if (reg & (1ul << 2)) {
+		reg &= ~(1ul << 2);
+	} else {
+		reg |= (1ul << 2);
+		wilc->hif_func->hif_write_reg(wilc, 0x3B0400, reg);
+		reg &= ~(1ul << 2);
+	}
+	wilc->hif_func->hif_write_reg(wilc, 0x3B0400, reg);
+fail:
+	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP, DEV_WIFI);
+
+	return ret;
+}
+
 int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
 				u32 buffer_size)
 {
@@ -1469,6 +1517,15 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
 			addr = get_unaligned_le32(&buffer[offset]);
 			size = get_unaligned_le32(&buffer[offset + 4]);
 				offset += 8;
+
+			if (is_wilc3000(wilc->chipid) && addr == WILC3000_BLE_RAM_ADDR) {
+				if (wilc3000_prepare_ble_ram(wilc))
+					goto fail;
+				blksz = BIT(9);
+			} else {
+				blksz = BIT(12);
+			}
+
 		}
 		acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP, DEV_WIFI);
 

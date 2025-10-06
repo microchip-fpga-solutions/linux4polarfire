@@ -541,4 +541,5 @@ void release_bus(struct wilc *wilc, enum bus_release release, int source);
 int wilc_wlan_init(struct net_device *dev);
 u32 wilc_get_chipid(struct wilc *wilc, bool update);
 int wilcs02_init_vmm_registers(struct wilc *wilc);
+int wilc3000_prepare_ble_ram(struct wilc *wilc);
 #endif
