@@ -1,4 +1,5 @@
 obj-$(CONFIG_VIDEO_MCHP_DSCMI) += mchp-dscmi.o
 obj-$(CONFIG_VIDEO_MICROCHIP_COMMON) += microchip-common.o
 obj-$(CONFIG_VIDEO_MICROCHIP_VIDEO_CAPTURE) += microchip-vcpp.o
+obj-$(CONFIG_VIDEO_MICROCHIP_IMAGE_ENHANCEMENT) += microchip-image-enhancement.o
 
