@@ -10,6 +10,9 @@
 
 #include "microchip-tsn.h"
 #include "microchip-tsn-cmds.h"
+#include <linux/unaligned.h>
+
+static const struct of_device_id mchp_tsn_match[];
 
 static const u16 addr_frag_size[] = {60, 124, 188, 252}; /* Supported Frag sizes */
 
@@ -34,6 +37,15 @@ static u32 gcl_time_to_ns(struct mchp_tsn_dev *tsn_dev, u32 time_interval_gcl)
 	return time_interval_32_ns;
 }
 
+static u64 gcl_time_to_ns_64(struct mchp_tsn_dev *tsn_dev, u32 time_interval_gcl)
+{
+	u64 time_interval_64;
+
+	time_interval_64 = (u64)time_interval_gcl * tsn_dev->qbv_gcl_div;
+	time_interval_64 = div64_u64(time_interval_64, tsn_dev->qbv_gcl_mul);
+	return time_interval_64;
+}
+
 static u32 ns_to_gcl_time(struct mchp_tsn_dev *tsn_dev, u32 time_interval_ns)
 {
 	u64 time_interval_64;
@@ -46,12 +58,37 @@ static u32 ns_to_gcl_time(struct mchp_tsn_dev *tsn_dev, u32 time_interval_ns)
 	return time_interval_gcl;
 }
 
+static u64 ns_to_gcl_time_64(struct mchp_tsn_dev *tsn_dev, u64 time_interval_ns)
+{
+	u64 time_interval_64;
+
+	time_interval_64 = time_interval_ns * tsn_dev->qbv_gcl_mul;
+	time_interval_64 = div64_u64(time_interval_64, tsn_dev->qbv_gcl_div);
+	return time_interval_64;
+}
+
+static int mchp_tsn_get_caps(struct mchp_tsn_dev *tsn_dev,
+			     struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_caps *caps = (void *)tsn_conf->tsn_config_data;
+
+	tsn_conf->cmd_status = 0;
+	memset(caps, 0, sizeof(*caps));
+	caps->rtl_ver = tsn_dev->rtl ? tsn_dev->rtl->rtl_ver : 0;
+	caps->num_queues = tsn_dev->rtl ? tsn_dev->rtl->num_queues : 0;
+	caps->num_streamid_per_q = tsn_dev->rtl ? tsn_dev->rtl->num_streamid_per_q : 0;
+	caps->features = cpu_to_be32(tsn_dev->rtl ? tsn_dev->rtl->features : 0);
+	tsn_conf->tsn_config_size = cpu_to_be16(sizeof(*caps));
+	return 0;
+}
+
 static int mchp_tsn_get_qci_config(struct mchp_tsn_dev *tsn_dev,
 				   struct mchp_tsn_config_cmd_resp *tsn_conf)
 {
 	struct mchp_tsn_config_qci *tsn_qciconf;
 	u32 mac_addr_mb;
 	u16 mac_addr_lb;
+
 	__be32 mac_addr_msb;
 	__be16 mac_addr_lsb;
 
@@ -113,13 +150,13 @@ static int mchp_tsn_get_qbu_config(struct mchp_tsn_dev *tsn_dev,
 static int mchp_tsn_get_qbv_config(struct mchp_tsn_dev *tsn_dev,
 				   struct mchp_tsn_config_cmd_resp *tsn_conf)
 {
-	struct mchp_tsn_config_qbv *tsn_qbvconf;
+	struct mchp_tsn_config_qbv_v2 *tsn_qbvconf;
 	u32 regval;
 	u32 time_interval, gate_state;
 	u32 cycle_time, basetimehigh0, basetimehigh1;
 	u16 i, control_list_length = 0;
 
-	tsn_qbvconf = (struct mchp_tsn_config_qbv *)&tsn_conf->tsn_config_data;
+	tsn_qbvconf = (struct mchp_tsn_config_qbv_v2 *)&tsn_conf->tsn_config_data;
 	tsn_conf->cmd_status = 0;
 
 	tsn_qbvconf->initial_gate_state = mchp_tsn_get(tsn_dev, TSN_REG_SGSR,
@@ -170,8 +207,8 @@ static int mchp_tsn_get_qbv_config(struct mchp_tsn_dev *tsn_dev,
 			time_interval, gate_state);
 		tsn_qbvconf->gcle[i].gate_state = gate_state;
 	}
-	tsn_conf->tsn_config_size = cpu_to_be16(sizeof(struct mchp_tsn_config_qbv)
-			+ control_list_length
+	tsn_conf->tsn_config_size = cpu_to_be16(sizeof(struct mchp_tsn_config_qbv_v2)
+						       + control_list_length
 			* sizeof(struct mchp_tsn_gcl_entry));
 
 	return 0;
@@ -231,7 +268,7 @@ static int mchp_tsn_get_misc_length_deduct_byte(struct mchp_tsn_dev *tsn_dev,
 
 	tsn_ldbconf->crc_deduct_len = cpu_to_be16(ldb);
 	tsn_conf->tsn_config_size = cpu_to_be16(sizeof(struct
-						mchp_tsn_config_misc_length_deduct_byte));
+						       mchp_tsn_config_misc_length_deduct_byte));
 
 	return 0;
 }
@@ -240,6 +277,7 @@ static int mchp_tsn_set_qci_config(struct mchp_tsn_dev *tsn_dev,
 				   struct mchp_tsn_config_cmd_resp *tsn_conf)
 {
 	struct mchp_tsn_config_qci *tsn_qciconf;
+
 	__be32 mac_addr_msb;
 	__be16 mac_addr_lsb;
 
@@ -277,9 +315,11 @@ static int mchp_tsn_set_qci_config(struct mchp_tsn_dev *tsn_dev,
 			be32_to_cpu(mac_addr_msb));
 		dev_dbg(&tsn_dev->pdev->dev, "qciconf dst mac addr lsb : %08x\n",
 			be16_to_cpu(mac_addr_lsb));
-		mchp_tsn_set(tsn_dev, TSN_REG_DST_MAC_MSB, be32_to_cpu(mac_addr_msb),
+		mchp_tsn_set(tsn_dev, TSN_REG_DST_MAC_MSB,
+			     be32_to_cpu(mac_addr_msb),
 			     TSN_MASK_MAC_MSB);
-		mchp_tsn_set(tsn_dev, TSN_REG_DST_MAC_LSB, be16_to_cpu(mac_addr_lsb),
+		mchp_tsn_set(tsn_dev, TSN_REG_DST_MAC_LSB,
+			     be16_to_cpu(mac_addr_lsb),
 			     TSN_MASK_MAC_LSB);
 	}
 
@@ -290,9 +330,11 @@ static int mchp_tsn_set_qci_config(struct mchp_tsn_dev *tsn_dev,
 			be32_to_cpu(mac_addr_msb));
 		dev_dbg(&tsn_dev->pdev->dev, "qciconf src mac addr lsb : %08x\n",
 			be16_to_cpu(mac_addr_lsb));
-		mchp_tsn_set(tsn_dev, TSN_REG_SRC_MAC_MSB, be32_to_cpu(mac_addr_msb),
+		mchp_tsn_set(tsn_dev, TSN_REG_SRC_MAC_MSB,
+			     be32_to_cpu(mac_addr_msb),
 			     TSN_MASK_MAC_MSB);
-		mchp_tsn_set(tsn_dev, TSN_REG_SRC_MAC_LSB, be16_to_cpu(mac_addr_lsb),
+		mchp_tsn_set(tsn_dev, TSN_REG_SRC_MAC_LSB,
+			     be16_to_cpu(mac_addr_lsb),
 			     TSN_MASK_MAC_LSB);
 	}
 	tsn_conf->tsn_config_size = 0;
@@ -334,13 +376,15 @@ static int mchp_tsn_set_qbu_config(struct mchp_tsn_dev *tsn_dev,
 		}
 	}
 
-	mchp_tsn_set(tsn_dev, TSN_REG_PREEMPT_CONTROL, tsn_qbuconf->pre_empt_en,
+	mchp_tsn_set(tsn_dev, TSN_REG_PREEMPT_CONTROL,
+		     tsn_qbuconf->pre_empt_en,
 		     TSN_MASK_PREEMPT_EN);
 
 	if (tsn_qbuconf->pre_empt_en) {
 		dev_dbg(&tsn_dev->pdev->dev, "Setting QBU conf with addr_frag_sze : %d\n",
 			addr_frag_sze);
-		mchp_tsn_set(tsn_dev, TSN_REG_PREEMPT_CONTROL, addr_frag_sze,
+		mchp_tsn_set(tsn_dev, TSN_REG_PREEMPT_CONTROL,
+			     addr_frag_sze,
 			     TSN_MASK_PREEMPT_FRAG_SIZE);
 	}
 
@@ -349,16 +393,16 @@ static int mchp_tsn_set_qbu_config(struct mchp_tsn_dev *tsn_dev,
 	return 0;
 }
 
-static int mchp_tsn_set_qbv_config(struct mchp_tsn_dev *tsn_dev,
-				   struct mchp_tsn_config_cmd_resp *tsn_conf)
+static int mchp_tsn_set_qbv_config_v2(struct mchp_tsn_dev *tsn_dev,
+				      struct mchp_tsn_config_cmd_resp *tsn_conf)
 {
-	struct mchp_tsn_config_qbv *tsn_qbvconf;
+	struct mchp_tsn_config_qbv_v2 *tsn_qbvconf;
 	u32 cycle_time;
 	u32 time_interval;
 	u16 i, control_list_length = 0;
 	u32 prioq_enable;
 
-	tsn_qbvconf = (struct mchp_tsn_config_qbv *)&tsn_conf->tsn_config_data;
+	tsn_qbvconf = (struct mchp_tsn_config_qbv_v2 *)&tsn_conf->tsn_config_data;
 	tsn_conf->cmd_status = 0;
 
 	if (tsn_qbvconf->control_list_length > MAX_TSN_GCL_LEN) {
@@ -371,11 +415,13 @@ static int mchp_tsn_set_qbv_config(struct mchp_tsn_dev *tsn_dev,
 	}
 
 	mchp_tsn_set(tsn_dev, TSN_REG_PCR, TSN_REG_PREEMPT_CONTROL, TSN_MASK_CONFIG_EN);
+	/* Ensure prior register writes complete */
 	mb(); /* Config writes should be done after cfg_val is 0 */
 
 	mchp_tsn_set(tsn_dev, TSN_REG_PCR, tsn_qbvconf->gate_enable, TSN_MASK_GATE_ENABLE);
 	mchp_tsn_set(tsn_dev, TSN_REG_PCR, tsn_qbvconf->priority_enable, TSN_MASK_PRIO_ENABLE);
-	mchp_tsn_set(tsn_dev, TSN_REG_SGSR, tsn_qbvconf->initial_gate_state,
+	mchp_tsn_set(tsn_dev, TSN_REG_SGSR,
+		     tsn_qbvconf->initial_gate_state,
 		     TSN_MASK_INIT_GATE_STATE);
 
 	dev_dbg(&tsn_dev->pdev->dev, "Initial Gate state : %08x\n",
@@ -393,20 +439,24 @@ static int mchp_tsn_set_qbv_config(struct mchp_tsn_dev *tsn_dev,
 	dev_dbg(&tsn_dev->pdev->dev, "PQE : %08x\n", tsn_qbvconf->priority_queue_enable);
 
 	cycle_time = be32_to_cpu(tsn_qbvconf->cycle_time);
-	mchp_tsn_set(tsn_dev, TSN_REG_SCTR, ns_to_gcl_time(tsn_dev, cycle_time),
+	mchp_tsn_set(tsn_dev, TSN_REG_SCTR,
+		     ns_to_gcl_time(tsn_dev, cycle_time),
 		     TSN_MASK_CYCLE_TIME);
 
 	dev_dbg(&tsn_dev->pdev->dev, "cycletime : %08x\n", be32_to_cpu(tsn_qbvconf->cycle_time));
 
-	mchp_tsn_set(tsn_dev, TSN_REG_BTHR0, lower_32_bits(be64_to_cpu(tsn_qbvconf->basetime_sec)),
+	mchp_tsn_set(tsn_dev, TSN_REG_BTHR0,
+		     lower_32_bits(be64_to_cpu(tsn_qbvconf->basetime_sec)),
 		     TSN_MASK_BASETIME_HIGH);
-	mchp_tsn_set(tsn_dev, TSN_REG_BTHR1, upper_32_bits(be64_to_cpu(tsn_qbvconf->basetime_sec)),
+	mchp_tsn_set(tsn_dev, TSN_REG_BTHR1,
+		     upper_32_bits(be64_to_cpu(tsn_qbvconf->basetime_sec)),
 		     TSN_MASK_BASETIME_HIGH);
 
 	dev_dbg(&tsn_dev->pdev->dev, "basetime sec : %llx\n",
 		be64_to_cpu(tsn_qbvconf->basetime_sec));
 
-	mchp_tsn_set(tsn_dev, TSN_REG_BTLR, be32_to_cpu(tsn_qbvconf->basetime_nsec),
+	mchp_tsn_set(tsn_dev, TSN_REG_BTLR,
+		     be32_to_cpu(tsn_qbvconf->basetime_nsec),
 		     TSN_MASK_BASETIME_LOW);
 
 	dev_dbg(&tsn_dev->pdev->dev, "basetime ns : %08x\n",
@@ -416,7 +466,8 @@ static int mchp_tsn_set_qbv_config(struct mchp_tsn_dev *tsn_dev,
 	mchp_tsn_set(tsn_dev, TSN_REG_SCLLR, control_list_length, TSN_MASK_CONTROL_LIST_LENGTH);
 	dev_dbg(&tsn_dev->pdev->dev, "control_list_length : %d\n", control_list_length);
 
-	mchp_tsn_set(tsn_dev, TSN_REG_TIME_ADJUST, tsn_qbvconf->basetime_adjust,
+	mchp_tsn_set(tsn_dev, TSN_REG_TIME_ADJUST,
+		     tsn_qbvconf->basetime_adjust,
 		     TSN_MASK_BASETIME_ADJUST);
 
 	dev_dbg(&tsn_dev->pdev->dev, "basetime adjust : %08x\n", tsn_qbvconf->basetime_adjust);
@@ -434,7 +485,7 @@ static int mchp_tsn_set_qbv_config(struct mchp_tsn_dev *tsn_dev,
 			"Gate : %d, gate state : %02x, gate interval : %u\n",
 			i,
 			tsn_qbvconf->gcle[i].gate_state,
-			be32_to_cpu(tsn_qbvconf->gcle[i].time_interval));
+				be32_to_cpu(tsn_qbvconf->gcle[i].time_interval));
 
 		time_interval = ns_to_gcl_time(tsn_dev,
 					       be32_to_cpu(tsn_qbvconf->gcle[i].time_interval));
@@ -444,12 +495,257 @@ static int mchp_tsn_set_qbv_config(struct mchp_tsn_dev *tsn_dev,
 			     TSN_MASK_TIME_INTERVAL);
 	}
 
+	/* Ensure prior register writes complete */
 	mb(); /*  cfg_val should be set to 1 after config writes are completed */
 	mchp_tsn_set(tsn_dev, TSN_REG_PCR, 1, TSN_MASK_CONFIG_EN);
 exit_invalid_control_list_length:
 
 	tsn_conf->tsn_config_size = 0;
 
+	return 0;
+}
+
+static int mchp_tsn_get_qbv_config_v3(struct mchp_tsn_dev *tsn_dev,
+				      struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_qbv_v3 *q;
+	struct mchp_tsn_config_qbv_streamid_v3 *sid;
+	u32 regval;
+	u32 time_interval, gate_state;
+	u32 cycle_time_raw, basetimehigh0, basetimehigh1;
+	u64 cycle_time_u64;
+	u16 i, j, k = 0, control_list_length;
+	u32 lsb_reg, msb_reg, mask_reg;
+	u32 mac_addr_lb;
+	u16 mac_addr_mb;
+
+	q = (struct mchp_tsn_config_qbv_v3 *)&tsn_conf->tsn_config_data;
+	tsn_conf->cmd_status = 0;
+
+	q->initial_gate_state = mchp_tsn_get(tsn_dev, TSN_REG_SGSR,
+					     TSN_MASK_INIT_GATE_STATE);
+	q->priority_enable = mchp_tsn_get(tsn_dev, TSN_REG_PCR, TSN_MASK_PRIO_ENABLE);
+	q->gate_enable = mchp_tsn_get(tsn_dev, TSN_REG_PCR, TSN_MASK_GATE_ENABLE);
+	q->priority_queue_enable = mchp_tsn_get(tsn_dev, TSN_REG_PQE,
+						TSN_MASK_PRIOQ_ENABLE);
+
+	cycle_time_raw = mchp_tsn_get(tsn_dev, TSN_REG_SCTR, TSN_MASK_CYCLE_TIME);
+	cycle_time_u64 = gcl_time_to_ns_64(tsn_dev, cycle_time_raw);
+	q->cycle_time = cpu_to_be64(cycle_time_u64);
+
+	basetimehigh0 = mchp_tsn_get(tsn_dev, TSN_REG_BTHR0, TSN_MASK_BASETIME_HIGH);
+	basetimehigh1 = mchp_tsn_get(tsn_dev, TSN_REG_BTHR1, TSN_MASK_BASETIME_HIGH);
+	q->basetime_sec = cpu_to_be64((u64)basetimehigh0 | ((u64)basetimehigh1 << 32));
+
+	regval = mchp_tsn_get(tsn_dev, TSN_REG_BTLR, TSN_MASK_BASETIME_LOW);
+	q->basetime_nsec = cpu_to_be32(regval);
+
+	q->basetime_adjust = mchp_tsn_get(tsn_dev, TSN_REG_TIME_ADJUST,
+					  TSN_MASK_BASETIME_ADJUST);
+
+	regval = mchp_tsn_get(tsn_dev, TSN_RX_STREAMID_TIMEOUT,
+			      TSN_MASK_RX_STREAMID_TIMEOUT);
+	q->rx_streamid_reset = cpu_to_be32(regval);
+
+	control_list_length = mchp_tsn_get(tsn_dev, TSN_REG_SCLLR,
+					   TSN_MASK_CONTROL_LIST_LENGTH);
+	q->control_list_length = control_list_length;
+
+	for (i = 0; i < MCHP_TSN_NUM_PRIO_QUEUES_V3; i++) {
+		regval = mchp_tsn_get(tsn_dev, TSN_REG_PQ0VR + i * TSN_REG_SIZE,
+				      TSN_MASK_PRIOQ_PRIO);
+		q->priority_queue_prios[i] = regval;
+	}
+
+	k = 0;
+	for (i = 0; i < MCHP_TSN_NUM_PRIO_QUEUES_V3; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_STREAM_ID_PER_Q_V3; j++) {
+			lsb_reg = STREAM_ID_1_0 + (0xc * k);
+			mac_addr_lb = mchp_tsn_get(tsn_dev, lsb_reg, TSN_MASK_LSB);
+
+			msb_reg = STREAM_ID_1_1 + (0xc * k);
+			mac_addr_mb = mchp_tsn_get(tsn_dev, msb_reg, TSN_MASK_MSB);
+
+			sid = &q->priority_queue_prios_que[i].streamid[j];
+
+			sid->da[0] = (mac_addr_mb >> 8) & 0xFF;
+			sid->da[1] = mac_addr_mb & 0xFF;
+			sid->da[2] = (mac_addr_lb >> 24) & 0xFF;
+			sid->da[3] = (mac_addr_lb >> 16) & 0xFF;
+			sid->da[4] = (mac_addr_lb >> 8) & 0xFF;
+			sid->da[5] = mac_addr_lb & 0xFF;
+
+			regval = mchp_tsn_get(tsn_dev, msb_reg, TSN_MASK_VID);
+			sid->vid = cpu_to_be16(regval);
+
+			regval = mchp_tsn_get(tsn_dev, msb_reg, TSN_MASK_FRER_EN);
+			sid->frer = regval;
+
+			regval = mchp_tsn_get(tsn_dev, msb_reg, TSN_MASK_PCP);
+			sid->pcp = regval;
+
+			mask_reg = STREAM_ID_1_MASK + (0xc * k);
+			regval = mchp_tsn_get(tsn_dev, mask_reg, TSN_MASK_EN);
+			sid->mask = regval;
+
+			k++;
+		}
+	}
+
+	for (i = 0; i < control_list_length; i++) {
+		gate_state = mchp_tsn_get(tsn_dev, TSN_REG_SGCL0ER + i * TSN_REG_SIZE,
+					  TSN_MASK_GATESTATE);
+		time_interval = mchp_tsn_get(tsn_dev, TSN_REG_SGCL0ER + i * TSN_REG_SIZE,
+					     TSN_MASK_TIME_INTERVAL);
+		time_interval = gcl_time_to_ns(tsn_dev, time_interval);
+
+		q->gcle[i].time_interval = cpu_to_be32(time_interval);
+		q->gcle[i].gate_state = gate_state;
+	}
+
+	tsn_conf->tsn_config_size = cpu_to_be16(sizeof(struct mchp_tsn_config_qbv_v3)
+						       + control_list_length
+			* sizeof(struct mchp_tsn_gcl_entry));
+	return 0;
+}
+
+static int mchp_tsn_set_qbv_config_v3(struct mchp_tsn_dev *tsn_dev,
+				      struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_qbv_v3 *q;
+	struct mchp_tsn_config_qbv_streamid_v3 *sid;
+	u64 cycle_time;
+	u32 time_interval;
+	u16 i, j, control_list_length;
+	u32 prioq_enable;
+	u32 lsb_reg, msb_reg, mask_reg;
+	u16 k = 0;
+	int frer_enabled = 0;
+
+	q = (struct mchp_tsn_config_qbv_v3 *)&tsn_conf->tsn_config_data;
+	tsn_conf->cmd_status = 0;
+
+	if (q->control_list_length > MAX_TSN_GCL_LEN) {
+		tsn_conf->cmd_status = EINVAL;
+		tsn_conf->cmd_status_string_avail = 1;
+		snprintf(tsn_conf->cmd_status_string, TSN_CMD_ERR_STR_LEN,
+			 "Invalid gate control list length : %d valid values are 0 to 32\n",
+			 q->control_list_length);
+		tsn_conf->tsn_config_size = 0;
+		return 0;
+	}
+
+	mchp_tsn_set(tsn_dev, TSN_REG_PCR, TSN_REG_PREEMPT_CONTROL, TSN_MASK_CONFIG_EN);
+	/* Ensure prior register writes complete */
+	mb();
+	mchp_tsn_set(tsn_dev, TSN_REG_PCR, q->gate_enable, TSN_MASK_GATE_ENABLE);
+	mchp_tsn_set(tsn_dev, TSN_REG_PCR, q->priority_enable, TSN_MASK_PRIO_ENABLE);
+	mchp_tsn_set(tsn_dev, TSN_REG_SGSR, q->initial_gate_state, TSN_MASK_INIT_GATE_STATE);
+
+	prioq_enable = q->priority_queue_enable & TSN_MASK_PRIOQ_ENABLE;
+
+	dev_dbg(&tsn_dev->pdev->dev,
+		"QBV v3 raw priority_queue_enable=0x%02x masked prioq_enable=0x%08x\n",
+		q->priority_queue_enable, prioq_enable);
+
+	mchp_tsn_set(tsn_dev, TSN_REG_PQE, prioq_enable, TSN_MASK_PRIOQ_ENABLE);
+	dev_dbg(&tsn_dev->pdev->dev, "QBV v3 PQE readback after write = 0x%08x\n",
+		mchp_tsn_get(tsn_dev, TSN_REG_PQE, TSN_MASK_PRIOQ_ENABLE));
+
+	cycle_time = be64_to_cpu(q->cycle_time);
+	mchp_tsn_set(tsn_dev, TSN_REG_SCTR,
+		     (u32)ns_to_gcl_time_64(tsn_dev, cycle_time),
+		     TSN_MASK_CYCLE_TIME);
+
+	mchp_tsn_set(tsn_dev, TSN_REG_BTHR0,
+		     lower_32_bits(be64_to_cpu(q->basetime_sec)),
+		     TSN_MASK_BASETIME_HIGH);
+	mchp_tsn_set(tsn_dev, TSN_REG_BTHR1,
+		     upper_32_bits(be64_to_cpu(q->basetime_sec)),
+		     TSN_MASK_BASETIME_HIGH);
+	mchp_tsn_set(tsn_dev, TSN_REG_BTLR, be32_to_cpu(q->basetime_nsec), TSN_MASK_BASETIME_LOW);
+
+	control_list_length = q->control_list_length;
+	mchp_tsn_set(tsn_dev, TSN_REG_SCLLR, control_list_length, TSN_MASK_CONTROL_LIST_LENGTH);
+	mchp_tsn_set(tsn_dev, TSN_REG_TIME_ADJUST, q->basetime_adjust, TSN_MASK_BASETIME_ADJUST);
+	mchp_tsn_set(tsn_dev, TSN_RX_STREAMID_TIMEOUT,
+		     be32_to_cpu(q->rx_streamid_reset),
+		     TSN_MASK_RX_STREAMID_TIMEOUT);
+	dev_dbg(&tsn_dev->pdev->dev, "rx streamid timeout : %08x\n",
+		be32_to_cpu(q->rx_streamid_reset));
+
+	for (i = 0; i < MCHP_TSN_NUM_PRIO_QUEUES_V3; i++)
+		mchp_tsn_set(tsn_dev, TSN_REG_PQ0VR + i * TSN_REG_SIZE,
+			     q->priority_queue_prios[i], TSN_MASK_PRIOQ_PRIO);
+
+	/* Stream-ID programming */
+	k = 0;
+	for (i = 0; i < MCHP_TSN_NUM_PRIO_QUEUES_V3; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_STREAM_ID_PER_Q_V3; j++) {
+			sid = &q->priority_queue_prios_que[i].streamid[j];
+			if (sid->mask & 0x1) {
+				u32 mac_lsb_raw;
+				u16 mac_msb_raw;
+
+				mac_lsb_raw = ((u32)sid->da[2] << 24) |
+					((u32)sid->da[3] << 16) |
+					((u32)sid->da[4] << 8) |
+					((u32)sid->da[5]);
+				mac_msb_raw = ((u16)sid->da[0] << 8) |
+					((u16)sid->da[1]);
+				lsb_reg = STREAM_ID_1_0 + (0xc * k);
+				mchp_tsn_set(tsn_dev, lsb_reg,
+					     mac_lsb_raw, TSN_MASK_LSB);
+				msb_reg = STREAM_ID_1_1 + (0xc * k);
+				mchp_tsn_set(tsn_dev, msb_reg,
+					     mac_msb_raw, TSN_MASK_MSB);
+			}
+			if (sid->mask & 0x2) {
+				msb_reg = STREAM_ID_1_1 + (0xc * k);
+				mchp_tsn_set(tsn_dev, msb_reg,
+					     be16_to_cpu(sid->vid),
+					     TSN_MASK_VID);
+			}
+			msb_reg = STREAM_ID_1_1 + (0xc * k);
+			mchp_tsn_set(tsn_dev, msb_reg,
+				     sid->frer ? 1 : 0,
+				     TSN_MASK_FRER_EN);
+			if (sid->frer)
+				frer_enabled = 1;
+			if (sid->mask & 0x4) {
+				msb_reg = STREAM_ID_1_1 + (0xc * k);
+				mchp_tsn_set(tsn_dev, msb_reg,
+					     sid->pcp,
+					     TSN_MASK_PCP);
+			}
+			mask_reg = STREAM_ID_1_MASK + (0xc * k);
+			mchp_tsn_set(tsn_dev, mask_reg,
+				     sid->mask,
+				     TSN_MASK_EN);
+			k++;
+		}
+	}
+	/* FRER global block control */
+	if (frer_enabled)
+		mchp_tsn_set(tsn_dev, TSN_REG_FRER_PSFP_DEFAULT_PORT,
+			     FRER_ENABLE_VALUE, TSN_MASK_FRER_BLOCK_EN);
+	else
+		mchp_tsn_set(tsn_dev, TSN_REG_FRER_PSFP_DEFAULT_PORT,
+			     0x0, TSN_MASK_FRER_BLOCK_EN);
+
+	for (i = 0; i < control_list_length; i++) {
+		time_interval = ns_to_gcl_time(tsn_dev, be32_to_cpu(q->gcle[i].time_interval));
+		mchp_tsn_set(tsn_dev, TSN_REG_SGCL0ER + i * TSN_REG_SIZE,
+			     q->gcle[i].gate_state, TSN_MASK_GATESTATE);
+		mchp_tsn_set(tsn_dev, TSN_REG_SGCL0ER + i * TSN_REG_SIZE,
+			     time_interval, TSN_MASK_TIME_INTERVAL);
+	}
+
+	/* Ensure prior register writes complete */
+	mb();
+	mchp_tsn_set(tsn_dev, TSN_REG_PCR, 1, TSN_MASK_CONFIG_EN);
+
+	tsn_conf->tsn_config_size = 0;
 	return 0;
 }
 
@@ -467,7 +763,8 @@ static int mchp_tsn_set_misc_rx_port_id_config(struct mchp_tsn_dev *tsn_dev,
 		dev_dbg(&tsn_dev->pdev->dev, "set port id rx : %d\n",
 			be16_to_cpu(tsn_rxportconf->port_id_rx));
 
-	mchp_tsn_set(tsn_dev, TSN_REG_PSC, tsn_rxportconf->port_id_rx_check,
+	mchp_tsn_set(tsn_dev, TSN_REG_PSC,
+		     tsn_rxportconf->port_id_rx_check,
 		     TSN_MASK_PORT_ID_RX_CHECK);
 
 	if (tsn_rxportconf->port_id_rx_check)
@@ -489,7 +786,8 @@ static int mchp_tsn_set_misc_ptp_tx_prioq(struct mchp_tsn_dev *tsn_dev,
 
 	dev_dbg(&tsn_dev->pdev->dev, "set PTP TX PRIOQ : %d\n", tsn_ptpconf->ptp_tx_prioq);
 
-	mchp_tsn_set(tsn_dev, TSN_REG_PTP_TX_PRIOQ, tsn_ptpconf->ptp_tx_prioq,
+	mchp_tsn_set(tsn_dev, TSN_REG_PTP_TX_PRIOQ,
+		     tsn_ptpconf->ptp_tx_prioq,
 		     TSN_MASK_PTP_TX_PRIOQ);
 	tsn_conf->tsn_config_size = 0;
 
@@ -506,10 +804,428 @@ static int mchp_tsn_set_misc_length_deduct_byte(struct mchp_tsn_dev *tsn_dev,
 	tsn_conf->cmd_status = 0;
 
 	dev_dbg(&tsn_dev->pdev->dev, "set length_deduct_byte (new): %d\n",
-		be16_to_cpu(tsn_ldbconf->crc_deduct_len) & 0x7ff);
+			be16_to_cpu(tsn_ldbconf->crc_deduct_len) & 0x7ff);
 
 	mchp_tsn_set(tsn_dev, TSN_REG_LDB, be16_to_cpu(tsn_ldbconf->crc_deduct_len), TSN_MASK_LDB);
 	tsn_conf->tsn_config_size = 0;
+
+	return 0;
+}
+
+static int mchp_tsn_set_qav(struct mchp_tsn_dev *tsn_dev,
+			    struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_qav *tsn_qavconf;
+	int i;
+
+	tsn_qavconf = (struct mchp_tsn_config_qav *)&tsn_conf->tsn_config_data;
+	tsn_conf->cmd_status = 0;
+
+	if (tsn_qavconf->num_cbs_queues > 2) {
+		tsn_conf->cmd_status = EINVAL;
+		tsn_conf->cmd_status_string_avail = 1;
+		strscpy(tsn_conf->cmd_status_string,
+			"Number of CBS Queues need to be 1 or 2");
+		return 0;
+	}
+
+	for (i = 0; i < tsn_qavconf->num_cbs_queues; i++) {
+		if (tsn_qavconf->cqc[i].cbs_q_num > 1) {
+			tsn_conf->cmd_status = EINVAL;
+			tsn_conf->cmd_status_string_avail = 1;
+			strscpy(tsn_conf->cmd_status_string,
+				"CBS Queues need to be 0 or 1");
+			return 0;
+		}
+	}
+
+	for (i = 0; i < tsn_qavconf->num_cbs_queues; i++) {
+		switch (tsn_qavconf->cqc[i].cbs_q_num) {
+		case 0:
+			mchp_tsn_set(tsn_dev, TSN_REG_CBS_CONTROL,
+				     tsn_qavconf->cqc[i].cbs_en,
+				     TSN_MASK_CBS_EN_Q0);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_QUEUE0,
+				     be16_to_cpu(tsn_qavconf->cqc[i].cbs_inc),
+				     TSN_MASK_CREDIT_INCR);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_QUEUE0,
+				     be16_to_cpu(tsn_qavconf->cqc[i].cbs_dec),
+				     TSN_MASK_CREDIT_DECR);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_MIN_Q0,
+				     be32_to_cpu(tsn_qavconf->cqc[i].cred_min),
+				     TSN_MASK_CREDIT_MIN);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_MAX_Q0,
+				     be32_to_cpu(tsn_qavconf->cqc[i].cred_max),
+				     TSN_MASK_CREDIT_MAX);
+			break;
+		case 1:
+			mchp_tsn_set(tsn_dev, TSN_REG_CBS_CONTROL,
+				     tsn_qavconf->cqc[i].cbs_en,
+				     TSN_MASK_CBS_EN_Q1);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_QUEUE1,
+				     be16_to_cpu(tsn_qavconf->cqc[i].cbs_inc),
+				     TSN_MASK_CREDIT_INCR);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_QUEUE1,
+				     be16_to_cpu(tsn_qavconf->cqc[i].cbs_dec),
+				     TSN_MASK_CREDIT_DECR);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_MIN_Q1,
+				     be32_to_cpu(tsn_qavconf->cqc[i].cred_min),
+				     TSN_MASK_CREDIT_MIN);
+			mchp_tsn_set(tsn_dev, TSN_REG_CREDIT_MAX_Q1,
+				     be32_to_cpu(tsn_qavconf->cqc[i].cred_max),
+				     TSN_MASK_CREDIT_MAX);
+			break;
+		}
+	}
+
+	tsn_conf->tsn_config_size = 0;
+	return 0;
+}
+
+static int mchp_tsn_get_qav(struct mchp_tsn_dev *tsn_dev,
+			    struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_qav *tsn_qavconf;
+
+	tsn_qavconf = (struct mchp_tsn_config_qav *)&tsn_conf->tsn_config_data;
+	tsn_conf->cmd_status = 0;
+
+	tsn_qavconf->num_cbs_queues = 2;
+
+	tsn_qavconf->cqc[0].cbs_q_num = 0;
+	tsn_qavconf->cqc[0].cbs_en =
+		mchp_tsn_get(tsn_dev, TSN_REG_CBS_CONTROL, TSN_MASK_CBS_EN_Q0);
+	tsn_qavconf->cqc[0].cbs_inc =
+		cpu_to_be16(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_QUEUE0,
+					 TSN_MASK_CREDIT_INCR));
+	tsn_qavconf->cqc[0].cbs_dec =
+		cpu_to_be16(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_QUEUE0,
+					 TSN_MASK_CREDIT_DECR));
+	tsn_qavconf->cqc[0].cred_min =
+		cpu_to_be32(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_MIN_Q0,
+					 TSN_MASK_CREDIT_MIN));
+	tsn_qavconf->cqc[0].cred_max =
+		cpu_to_be32(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_MAX_Q0,
+					 TSN_MASK_CREDIT_MAX));
+
+	tsn_qavconf->cqc[1].cbs_q_num = 1;
+	tsn_qavconf->cqc[1].cbs_en =
+		mchp_tsn_get(tsn_dev, TSN_REG_CBS_CONTROL, TSN_MASK_CBS_EN_Q1);
+	tsn_qavconf->cqc[1].cbs_inc =
+		cpu_to_be16(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_QUEUE1,
+					 TSN_MASK_CREDIT_INCR));
+	tsn_qavconf->cqc[1].cbs_dec =
+		cpu_to_be16(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_QUEUE1,
+					 TSN_MASK_CREDIT_DECR));
+	tsn_qavconf->cqc[1].cred_min =
+		cpu_to_be32(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_MIN_Q1,
+					 TSN_MASK_CREDIT_MIN));
+	tsn_qavconf->cqc[1].cred_max =
+		cpu_to_be32(mchp_tsn_get(tsn_dev, TSN_REG_CREDIT_MAX_Q1,
+					 TSN_MASK_CREDIT_MAX));
+
+	tsn_conf->tsn_config_size =
+		cpu_to_be16(sizeof(struct mchp_tsn_config_qav) +
+				   2 * sizeof(struct mchp_tsn_cbs_q_config));
+	return 0;
+}
+
+static int mchp_tsn_get_statistics(struct mchp_tsn_dev *tsn_dev,
+				   struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_statistics *stats;
+	int i, j, stream_index = 0;
+	u32 pack_drop_reg, pack_sent_reg;
+	u32 pfsp_pack_drop_reg, pfsp_pack_rcvd_reg;
+
+	stats = (struct mchp_tsn_config_statistics *)&tsn_conf->tsn_config_data;
+	tsn_conf->cmd_status = 0;
+
+	for (i = 0; i < MCHP_TSN_NUM_PRIO_QUEUES_V3; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_STREAM_ID_PER_Q_V3; j++) {
+			pack_drop_reg = STREAM_ID_PKT_DROP_BASE + (0x4 * stream_index);
+			stats->queues[i].stream_info[j].packets_dropped =
+				mchp_tsn_get(tsn_dev, pack_drop_reg, TSN_MASK_PKT_DROP);
+
+			pack_sent_reg = STREAM_ID_PKT_SENT_BASE + (0x4 * stream_index);
+			stats->queues[i].stream_info[j].packets_sent =
+				mchp_tsn_get(tsn_dev, pack_sent_reg, TSN_MASK_PKT_SENT);
+
+			stream_index++;
+		}
+	}
+
+	stats->rx_port0_prmpt_pkts_drop =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT0_PRMPT_PKTS_DROP, TSN_MASK_PKT_DROP);
+	stats->rx_port0_prmpt_pkts_rcvd =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT0_PRMPT_PKTS_RCVD, TSN_MASK_PKT_DROP);
+	stats->rx_port0_exp_pkts_drop =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT0_EXP_PKTS_DROP, TSN_MASK_PKT_DROP);
+	stats->rx_port0_exp_pkts_rcvd =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT0_EXP_PKTS_RCVD, TSN_MASK_PKT_DROP);
+
+	stats->rx_port1_prmpt_pkts_drop =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT1_PRMPT_PKTS_DROP, TSN_MASK_PKT_DROP);
+	stats->rx_port1_prmpt_pkts_rcvd =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT1_PRMPT_PKTS_RCVD, TSN_MASK_PKT_DROP);
+	stats->rx_port1_exp_pkts_drop =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT1_EXP_PKTS_DROP, TSN_MASK_PKT_DROP);
+	stats->rx_port1_exp_pkts_rcvd =
+		mchp_tsn_get(tsn_dev, TSN_RX_PORT1_EXP_PKTS_RCVD, TSN_MASK_PKT_DROP);
+
+	stats->tx_port0_exp_pkts =
+		mchp_tsn_get(tsn_dev, TSN_TX_PORT0_EXP_PKTS, TSN_MASK_PKT_DROP);
+	stats->tx_port0_prmpt_pkts =
+		mchp_tsn_get(tsn_dev, TSN_TX_PORT0_PRMPT_PKTS, TSN_MASK_PKT_DROP);
+	stats->tx_port1_exp_pkts =
+		mchp_tsn_get(tsn_dev, TSN_TX_PORT1_EXP_PKTS, TSN_MASK_PKT_DROP);
+	stats->tx_port1_prmpt_pkts =
+		mchp_tsn_get(tsn_dev, TSN_TX_PORT1_PRMPT_PKTS, TSN_MASK_PKT_DROP);
+
+	stream_index = 0;
+	for (i = 0; i < MCHP_TSN_NUM_PSFP_PORT; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_PSFP_PORT_STREAM_ID; j++) {
+			pfsp_pack_drop_reg = PFSP_STREAM_ID_PKT_DROP_BASE + (0x8 * stream_index);
+			stats->ports[i].pfsp_stream_info[j].pfsp_packets_dropped =
+				mchp_tsn_get(tsn_dev, pfsp_pack_drop_reg, TSN_MASK_PKT_DROP);
+
+			pfsp_pack_rcvd_reg = PFSP_STREAM_ID_PKT_RCVD_BASE + (0x8 * stream_index);
+			stats->ports[i].pfsp_stream_info[j].pfsp_packets_rcvd =
+				mchp_tsn_get(tsn_dev, pfsp_pack_rcvd_reg, TSN_MASK_PKT_RCVD);
+
+			stream_index++;
+		}
+	}
+
+	tsn_conf->tsn_config_size =
+		cpu_to_be16(sizeof(struct mchp_tsn_config_statistics));
+	return 0;
+}
+
+static int mchp_tsn_set_qci_config_v3(struct mchp_tsn_dev *tsn_dev,
+				      struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_qci_v3 *tsn_qciconf;
+	int i, j, k = 0;
+	const struct per_port_streamid *stream;
+	u32 lsb_reg, msb_reg, mask_reg, sdu_reg, fm_lsb_reg, fm_msb_reg;
+	u32 fm_cir_reg, fm_eir_reg, fm_en;
+	bool pfsp_enabled = false;
+
+	tsn_qciconf = (struct mchp_tsn_config_qci_v3 *)&tsn_conf->tsn_config_data[0];
+	tsn_conf->cmd_status = 0;
+
+	for (i = 0; i < MCHP_TSN_NUM_PSFP_PORT; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_PSFP_PORT_STREAM_ID; j++) {
+			stream = &tsn_qciconf->ports[i].port_psfp[j];
+			if (stream->mask == 0x1 || stream->mask == 0x3) {
+				pfsp_enabled = true;
+				goto check_done;
+			}
+		}
+	}
+check_done:
+
+	if (pfsp_enabled)
+		mchp_tsn_set(tsn_dev, TSN_REG_FRER_PSFP_DEFAULT_PORT,
+			     1, TSN_MASK_PSFP_BLOCK_EN);
+	else
+		mchp_tsn_set(tsn_dev, TSN_REG_FRER_PSFP_DEFAULT_PORT,
+			     0x0, TSN_MASK_PSFP_BLOCK_EN);
+
+	k = 0;
+	for (i = 0; i < MCHP_TSN_NUM_PSFP_PORT; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_PSFP_PORT_STREAM_ID; j++) {
+			stream = &tsn_qciconf->ports[i].port_psfp[j];
+
+			fm_en = TSN_PFSP_PORT_0_STREAM_ID_EN + (TSN_PFSP_STREAM_REG_SIZE * k);
+			mchp_tsn_set(tsn_dev, fm_en, 0x0, TSN_PSFP_MAX_CFG_UPDATE);
+			/* Ensure prior register writes complete */
+			mb();
+
+			if (stream->mask & 0x1) {
+				u32 mac_lsb_raw;
+				u16 mac_msb_raw;
+
+				mac_lsb_raw = ((u32)stream->da[2] << 24) |
+					((u32)stream->da[3] << 16) |
+					((u32)stream->da[4] << 8) |
+					((u32)stream->da[5]);
+				mac_msb_raw = ((u16)stream->da[0] << 8) |
+					((u16)stream->da[1]);
+				lsb_reg = TSN_PFSP_PORT_STREAMID + (TSN_PFSP_STREAM_REG_SIZE * k);
+				mchp_tsn_set(tsn_dev, lsb_reg,
+					     mac_lsb_raw, TSN_PFSP_MASK_LSB);
+				msb_reg = TSN_PFSP_PORT_STREAM_ID_1_1 +
+					  (TSN_PFSP_STREAM_REG_SIZE * k);
+				mchp_tsn_set(tsn_dev, msb_reg,
+					     mac_msb_raw, TSN_PFSP_MASK_MSB);
+			}
+
+			if (stream->mask & 0x2) {
+				msb_reg = TSN_PFSP_PORT_STREAM_ID_1_1 +
+					  (TSN_PFSP_STREAM_REG_SIZE * k);
+				mchp_tsn_set(tsn_dev, msb_reg,
+					     be16_to_cpu(stream->vid), TSN_PSFP_MASK_VID);
+			}
+
+			mask_reg = TSN_PFSP_PORT_STREAM_ID_1_MASK + (TSN_PFSP_STREAM_REG_SIZE * k);
+			mchp_tsn_set(tsn_dev, mask_reg, stream->mask,
+				     TSN_PSFP_MASK_SA_EN | TSN_PSFP_MASK_VID_EN);
+
+			sdu_reg = TSN_PFSP_PORT_MAX_SDU_SIZE + (TSN_PFSP_STREAM_REG_SIZE * k);
+			mchp_tsn_set(tsn_dev, sdu_reg,
+				     be16_to_cpu(stream->max_sdu_size), TSN_PSFP_MASK_MAX_SDU_SIZE);
+
+			{
+				u32 cbs = be32_to_cpu(stream->psfp_cbs);
+				u32 ebs = be32_to_cpu(stream->psfp_ebs);
+				u16 cbs_lsb = (u16)(cbs & 0xFFFF);
+				u16 cbs_msb_val = (u16)((cbs >> 16) & 0xFFFF);
+				u16 ebs_lsb = (u16)(ebs & 0xFFFF);
+				u16 ebs_msb_val = (u16)((ebs >> 16) & 0xFFFF);
+				u32 lsb_val = ((u32)ebs_lsb << 16) | cbs_lsb;
+				u32 msb_val = ((u32)ebs_msb_val << 16) | cbs_msb_val;
+
+				fm_lsb_reg = TSN_PFSP_PORT_STREAM_ID_1_FM_0 +
+					(TSN_PFSP_STREAM_REG_SIZE * k);
+				mchp_tsn_set(tsn_dev, fm_lsb_reg, lsb_val,
+					     TSN_PSFP_MASK_FM_CBS_LSB | TSN_PSFP_MASK_FM_EBS_LSB);
+
+				fm_msb_reg = TSN_PFSP_PORT_STREAM_ID_1_FM_MSB +
+					(TSN_PFSP_STREAM_FM_MSB_REG_SIZE * k);
+				mchp_tsn_set(tsn_dev, fm_msb_reg, msb_val,
+					     TSN_PSFP_MASK_FM_CBS_MSB | TSN_PSFP_MASK_FM_EBS_MSB);
+			}
+
+			fm_cir_reg = TSN_PFSP_PORT_STREAM_ID_1_FM_CIR +
+				(TSN_PFSP_STREAM_REG_SIZE * k);
+			mchp_tsn_set(tsn_dev, fm_cir_reg,
+				     be32_to_cpu(stream->psfp_port_cir), TSN_PSFP_MASK_FM_CIR);
+
+			fm_eir_reg = TSN_PFSP_PORT_STREAM_ID_1_FM_EIR +
+				(TSN_PFSP_STREAM_REG_SIZE * k);
+			mchp_tsn_set(tsn_dev, fm_eir_reg,
+				     be32_to_cpu(stream->psfp_port_eir), TSN_PSFP_MASK_FM_EIR);
+
+			mchp_tsn_set(tsn_dev, fm_en, stream->psfp_port_filter_en_dis,
+				     TSN_PSFP_MASK_FILTER_EN);
+			mchp_tsn_set(tsn_dev, fm_en, stream->psfp_port_fm_en_dis,
+				     TSN_PSFP_MASK_FM_EN);
+			mchp_tsn_set(tsn_dev, fm_en, stream->psfp_port_drop_on_yellow,
+				     TSN_PSFP_MASK_DROP_ON_YELLOW);
+			mchp_tsn_set(tsn_dev, fm_en, stream->max_sdu_size_exceed,
+				     TSN_PSFP_MAX_SDU_SIZE_EXCEED);
+
+			mchp_tsn_set(tsn_dev, fm_en, 0x1, TSN_PSFP_MAX_CFG_UPDATE);
+			/* Ensure prior register writes complete */
+			mb();
+
+			k++;
+		}
+	}
+
+	tsn_conf->tsn_config_size = 0;
+	return 0;
+}
+
+static int mchp_tsn_get_qci_config_v3(struct mchp_tsn_dev *tsn_dev,
+				      struct mchp_tsn_config_cmd_resp *tsn_conf)
+{
+	struct mchp_tsn_config_qci_v3 *tsn_qciconf;
+	int i, j, k = 0;
+	struct per_port_streamid *stream;
+	u32 reg_val, fm_lsb_packed, fm_msb_packed;
+	u32 mac_lb;
+	u16 mac_mb;
+
+	tsn_qciconf = (struct mchp_tsn_config_qci_v3 *)&tsn_conf->tsn_config_data[0];
+	tsn_conf->cmd_status = 0;
+	tsn_conf->tsn_config_size = cpu_to_be16(sizeof(struct mchp_tsn_config_qci_v3));
+
+	for (i = 0; i < MCHP_TSN_NUM_PSFP_PORT; i++) {
+		for (j = 0; j < MCHP_TSN_NUM_PSFP_PORT_STREAM_ID; j++) {
+			u32 lsb_reg = TSN_PFSP_PORT_STREAMID + (TSN_PFSP_STREAM_REG_SIZE * k);
+			u32 msb_reg = TSN_PFSP_PORT_STREAM_ID_1_1 + (TSN_PFSP_STREAM_REG_SIZE * k);
+
+			u32 mask_reg =
+				TSN_PFSP_PORT_STREAM_ID_1_MASK + (TSN_PFSP_STREAM_REG_SIZE * k);
+			u32 sdu_reg = TSN_PFSP_PORT_MAX_SDU_SIZE + (TSN_PFSP_STREAM_REG_SIZE * k);
+
+			u32 fm_reg =
+				TSN_PFSP_PORT_STREAM_ID_1_FM_0 + (TSN_PFSP_STREAM_REG_SIZE * k);
+			u32 fm_cir_reg =
+				TSN_PFSP_PORT_STREAM_ID_1_FM_CIR + (TSN_PFSP_STREAM_REG_SIZE * k);
+			u32 fm_eir_reg =
+				TSN_PFSP_PORT_STREAM_ID_1_FM_EIR + (TSN_PFSP_STREAM_REG_SIZE * k);
+			u32 fm_en = TSN_PFSP_PORT_0_STREAM_ID_EN + (TSN_PFSP_STREAM_REG_SIZE * k);
+
+			u32 fm_msb_reg_r = TSN_PFSP_PORT_STREAM_ID_1_FM_MSB +
+				(TSN_PFSP_STREAM_FM_MSB_REG_SIZE * k);
+
+			stream = &tsn_qciconf->ports[i].port_psfp[j];
+
+			reg_val = mchp_tsn_get(tsn_dev, fm_en, TSN_PFSP_MASK_EN_DIS);
+			stream->psfp_port_filter_en_dis = !!(reg_val & TSN_PSFP_MASK_FILTER_EN);
+			stream->psfp_port_fm_en_dis = !!(reg_val & TSN_PSFP_MASK_FM_EN);
+			stream->psfp_port_drop_on_yellow =
+				!!(reg_val & TSN_PSFP_MASK_DROP_ON_YELLOW);
+			stream->max_sdu_size_exceed = !!(reg_val & TSN_PSFP_MAX_SDU_SIZE_EXCEED);
+
+			reg_val = mchp_tsn_get(tsn_dev, mask_reg, TSN_PFSP_MASK_MASK_REG);
+			stream->mask = (u8)reg_val;
+
+			if (stream->mask & 0x1) {
+				memset(stream->da, 0, ETHER_ADDR_LEN);
+				mac_lb = mchp_tsn_get(tsn_dev, lsb_reg, TSN_PFSP_MASK_LSB);
+				mac_mb = mchp_tsn_get(tsn_dev, msb_reg, TSN_PFSP_MASK_MSB);
+				stream->da[0] = (mac_mb >> 8) & 0xFF;
+				stream->da[1] = mac_mb & 0xFF;
+				stream->da[2] = (mac_lb >> 24) & 0xFF;
+				stream->da[3] = (mac_lb >> 16) & 0xFF;
+				stream->da[4] = (mac_lb >> 8) & 0xFF;
+				stream->da[5] = mac_lb & 0xFF;
+			}
+
+			if (stream->mask & 0x2) {
+				u32 vid_raw = mchp_tsn_get(tsn_dev, msb_reg, TSN_PSFP_MASK_VID);
+
+				stream->vid = cpu_to_be16((u16)vid_raw);
+			}
+
+			stream->max_sdu_size =
+				cpu_to_be16(mchp_tsn_get(tsn_dev, sdu_reg,
+							 TSN_PSFP_MASK_MAX_SDU_SIZE));
+
+			fm_lsb_packed = mchp_tsn_get(tsn_dev, fm_reg,
+						     TSN_PSFP_MASK_FM_CBS_LSB |
+						     TSN_PSFP_MASK_FM_EBS_LSB);
+			fm_msb_packed = mchp_tsn_get(tsn_dev, fm_msb_reg_r,
+						     TSN_PSFP_MASK_FM_CBS_MSB |
+						     TSN_PSFP_MASK_FM_EBS_MSB);
+
+			{
+				u16 cbs_lsb_r = fm_lsb_packed & 0xFFFF;
+				u16 ebs_lsb_r = (fm_lsb_packed >> 16) & 0xFFFF;
+				u16 cbs_msb_r = fm_msb_packed & 0xFFFF;
+				u16 ebs_msb_r = (fm_msb_packed >> 16) & 0xFFFF;
+				u32 cbs_full = ((u32)cbs_msb_r << 16) | cbs_lsb_r;
+				u32 ebs_full = ((u32)ebs_msb_r << 16) | ebs_lsb_r;
+
+				stream->psfp_cbs = cpu_to_be32(cbs_full);
+				stream->psfp_ebs = cpu_to_be32(ebs_full);
+			}
+
+			stream->psfp_port_cir =
+				cpu_to_be32(mchp_tsn_get(tsn_dev, fm_cir_reg,
+							 TSN_PSFP_MASK_FM_CIR));
+			stream->psfp_port_eir =
+				cpu_to_be32(mchp_tsn_get(tsn_dev, fm_eir_reg,
+							 TSN_PSFP_MASK_FM_EIR));
+
+			k++;
+		}
+	}
 
 	return 0;
 }
@@ -549,7 +1265,7 @@ static long mchp_tsn_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigne
 	pr_debug("mchp_tsn ioctl cmd : %08x\n", cmd);
 
 	copy_ret = copy_from_user((void *)&config_cmd, (const void __user *)arg,
-				  sizeof(config_cmd));
+							sizeof(config_cmd));
 
 	tsn_dev_id = be64_to_cpu(config_cmd.tsn_dev_id);
 	if (tsn_dev_id != tsn_dev->tsn_dev_id)
@@ -562,11 +1278,26 @@ static long mchp_tsn_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigne
 	dev_dbg(&tsn_dev->pdev->dev, "Copying from user buffer with conf size : %u\n",
 		be16_to_cpu(tsn_conf->tsn_config_size));
 	copy_ret = copy_from_user((void *)tsn_conf, (const void __user *)arg, sizeof(config_cmd)
-				  + be16_to_cpu(config_cmd.tsn_config_size));
+
+						+ be16_to_cpu(config_cmd.tsn_config_size));
 	dev_dbg(&tsn_dev->pdev->dev, "cmd is  %d\n", tsn_conf->cmd);
 	switch (tsn_conf->cmd) {
+	case MCHP_TSN_GET_CAPS:
+		mchp_tsn_get_caps(tsn_dev, tsn_conf);
+		break;
 	case MCHP_TSN_GET_QBV:
+		if (tsn_dev->rtl && tsn_dev->rtl->rtl_ver != MCHP_TSN_RTL_V2) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
 		mchp_tsn_get_qbv_config(tsn_dev, tsn_conf);
+		break;
+	case MCHP_TSN_GET_QBV_V3:
+		if (tsn_dev->rtl && tsn_dev->rtl->rtl_ver != MCHP_TSN_RTL_V3) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_get_qbv_config_v3(tsn_dev, tsn_conf);
 		break;
 	case MCHP_TSN_GET_QBU:
 		mchp_tsn_get_qbu_config(tsn_dev, tsn_conf);
@@ -581,7 +1312,18 @@ static long mchp_tsn_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigne
 		mchp_tsn_set_qbu_config(tsn_dev, tsn_conf);
 		break;
 	case MCHP_TSN_SET_QBV:
-		mchp_tsn_set_qbv_config(tsn_dev, tsn_conf);
+		if (tsn_dev->rtl && tsn_dev->rtl->rtl_ver != MCHP_TSN_RTL_V2) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_set_qbv_config_v2(tsn_dev, tsn_conf);
+		break;
+	case MCHP_TSN_SET_QBV_V3:
+		if (tsn_dev->rtl && tsn_dev->rtl->rtl_ver != MCHP_TSN_RTL_V3) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_set_qbv_config_v3(tsn_dev, tsn_conf);
 		break;
 	case MCHP_TSN_SET_MISC_RX_PORT:
 		mchp_tsn_set_misc_rx_port_id_config(tsn_dev, tsn_conf);
@@ -601,6 +1343,41 @@ static long mchp_tsn_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigne
 	case MCHP_TSN_GET_MISC_LENGTH_DEDUCT_BYTE:
 		mchp_tsn_get_misc_length_deduct_byte(tsn_dev, tsn_conf);
 		break;
+	case MCHP_TSN_SET_QAV:
+		if (!(tsn_dev->rtl->features & MCHP_TSN_F_QAV)) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_set_qav(tsn_dev, tsn_conf);
+		break;
+	case MCHP_TSN_GET_QAV:
+		if (!(tsn_dev->rtl->features & MCHP_TSN_F_QAV)) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+	case MCHP_TSN_GET_STATS:
+		if (!(tsn_dev->rtl->features & MCHP_TSN_F_STATS)) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_get_statistics(tsn_dev, tsn_conf);
+		break;
+	case MCHP_TSN_SET_QCI_V3:
+		if (!(tsn_dev->rtl->features & MCHP_TSN_F_QCI_V3)) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_set_qci_config_v3(tsn_dev, tsn_conf);
+		break;
+	case MCHP_TSN_GET_QCI_V3:
+		if (!(tsn_dev->rtl->features & MCHP_TSN_F_QCI_V3)) {
+			ioctl_ret = -EOPNOTSUPP;
+			break;
+		}
+		mchp_tsn_get_qci_config_v3(tsn_dev, tsn_conf);
+		break;
+		}
+		mchp_tsn_get_qav(tsn_dev, tsn_conf);
+		break;
 	default:
 		ioctl_ret = -EINVAL;
 		break;
@@ -612,7 +1389,7 @@ static long mchp_tsn_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigne
 		dev_dbg(&tsn_dev->pdev->dev, "Copying to user buffer with conf size : %u\n",
 			be16_to_cpu(tsn_conf->tsn_config_size));
 		copy_ret = copy_to_user((void __user *)arg, tsn_conf,
-					sizeof(struct mchp_tsn_config_cmd_resp)
+					 sizeof(struct mchp_tsn_config_cmd_resp)
 					+ be16_to_cpu((tsn_conf->tsn_config_size)));
 	}
 
@@ -681,6 +1458,7 @@ static int mchp_tsn_class_destroy(struct class *class)
 static int mchp_tsn_cdevice_init(struct mchp_tsn_dev *tsn_dev)
 {
 	struct device *classdev;
+
 	static struct class *local_class;
 	int error;
 	int mchp_tsn_major;
@@ -788,6 +1566,13 @@ static int mchp_tsn_probe(struct platform_device *pdev)
 
 	dev_dbg(&pdev->dev, "Created tsn_dev : %p\n", tsn_dev);
 	tsn_dev->pdev = pdev;
+	{
+		const struct of_device_id *match;
+
+		match = of_match_device(mchp_tsn_match, &pdev->dev);
+		if (match)
+			tsn_dev->rtl = match->data;
+	}
 
 	tsn_dev->tsn_reg_base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(tsn_dev->tsn_reg_base))
@@ -798,12 +1583,12 @@ static int mchp_tsn_probe(struct platform_device *pdev)
 	apb = devm_clk_get(&pdev->dev, "apb");
 	if (IS_ERR(apb))
 		return dev_err_probe(&pdev->dev, PTR_ERR(apb),
-				     "could not get clock apb\n");
+							 "could not get clock apb\n");
 
 	core_clk = devm_clk_get(&pdev->dev, "core");
 	if (IS_ERR(core_clk))
 		return dev_err_probe(&pdev->dev, PTR_ERR(core_clk),
-				     "could not get clock core\n");
+							 "could not get clock core\n");
 
 	ret = clk_prepare_enable(apb);
 	if (ret)
@@ -849,8 +1634,23 @@ static void mchp_tsn_remove(struct platform_device *pdev)
 
 }
 
+static const struct mchp_tsn_rtl_info tsn_old_rtl = {
+	.rtl_ver = MCHP_TSN_RTL_V2,
+	.num_queues = MCHP_TSN_NUM_PRIO_QUEUES_V2,
+	.num_streamid_per_q = 0,
+	.features = MCHP_TSN_F_QBV_V2,
+};
+
+static const struct mchp_tsn_rtl_info tsn_new_rtl = {
+	.rtl_ver = MCHP_TSN_RTL_V3,
+	.num_queues = MCHP_TSN_NUM_PRIO_QUEUES_V3,
+	.num_streamid_per_q = MCHP_TSN_NUM_STREAM_ID_PER_Q_V3,
+	.features = MCHP_TSN_F_QBV_V3 | MCHP_TSN_F_QAV | MCHP_TSN_F_STATS | MCHP_TSN_F_QCI_V3,
+};
+
 static const struct of_device_id mchp_tsn_match[] = {
-	{ .compatible = "microchip,coretsn-rtl-v2" },
+	{ .compatible = "microchip,coretsn-rtl-v2", .data = &tsn_old_rtl },
+	{ .compatible = "microchip,coretsn-rtl-v3", .data = &tsn_new_rtl },
 	{  }
 };
 MODULE_DEVICE_TABLE(of, mchp_tsn_match);
