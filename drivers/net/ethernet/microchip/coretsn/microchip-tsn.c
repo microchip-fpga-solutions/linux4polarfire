@@ -12,6 +12,9 @@
 #include "microchip-tsn-cmds.h"
 #include <linux/unaligned.h>
 
+#include <linux/mm.h>
+#include <linux/io.h>
+
 static const struct of_device_id mchp_tsn_match[];
 
 static const u16 addr_frag_size[] = {60, 124, 188, 252}; /* Supported Frag sizes */
@@ -1415,11 +1418,57 @@ static void qbv_gcl_mul_and_div_init(struct mchp_tsn_dev *tsn_dev)
 		tsn_dev->qbv_gcl_mul, tsn_dev->qbv_gcl_div);
 }
 
+static int mchp_tsn_mmap(struct file *filp, struct vm_area_struct *vma)
+{
+	struct mchp_tsn_dev *tsn_dev = filp->private_data;
+	struct resource *res;
+	unsigned long size = vma->vm_end - vma->vm_start;
+	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
+	phys_addr_t phys;
+
+	if (!tsn_dev)
+		return -EINVAL;
+
+	res = platform_get_resource(tsn_dev->pdev, IORESOURCE_MEM, 0);
+	if (!res)
+		return -ENODEV;
+
+	/* Reject zero-length mappings */
+	if (size == 0)
+		return -EINVAL;
+
+	/* Bounds check: mapping must stay within the device's register region */
+	if (offset >= resource_size(res))
+		return -EINVAL;
+	if (size > resource_size(res) - offset)
+		return -EINVAL;
+
+	/* Register space must be mapped as device memory (non-cached) */
+	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+
+	/* Prevent the mapping from being copied on fork and dumped to core */
+	vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
+
+	phys = res->start + offset;
+
+	dev_dbg(&tsn_dev->pdev->dev,
+			"mmap: phys=0x%llx size=0x%lx offset=0x%lx\n",
+			(u64)phys, size, offset);
+
+	if (io_remap_pfn_range(vma, vma->vm_start,
+				phys >> PAGE_SHIFT,
+				size, vma->vm_page_prot))
+		return -EAGAIN;
+
+	return 0;
+}
+
 static const struct file_operations mchp_tsn_ops = {
 	.owner = THIS_MODULE,
 	.open = mchp_chardev_tsn_open,
 	.release = mchp_chardev_tsn_release,
 	.unlocked_ioctl = mchp_tsn_unlocked_ioctl,
+	.mmap = mchp_tsn_mmap,
 };
 
 static int class_device_count(const struct class *class)
