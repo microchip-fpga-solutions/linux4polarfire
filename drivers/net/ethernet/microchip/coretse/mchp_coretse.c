@@ -965,7 +965,17 @@ static int mchp_coretse_mii_probe(struct net_device *dev)
 		MAC_10FD | MAC_100FD | MAC_1000FD;
 	bp->phylink_config.poll_fixed_state = true;
 
-	__set_bit(bp->phy_interface,
+	__set_bit(PHY_INTERFACE_MODE_SGMII,
+		  bp->phylink_config.supported_interfaces);
+	__set_bit(PHY_INTERFACE_MODE_1000BASEX,
+		  bp->phylink_config.supported_interfaces);
+	__set_bit(PHY_INTERFACE_MODE_RGMII,
+		  bp->phylink_config.supported_interfaces);
+	__set_bit(PHY_INTERFACE_MODE_RGMII_ID,
+		  bp->phylink_config.supported_interfaces);
+	__set_bit(PHY_INTERFACE_MODE_RGMII_RXID,
+		  bp->phylink_config.supported_interfaces);
+	__set_bit(PHY_INTERFACE_MODE_RGMII_TXID,
 		  bp->phylink_config.supported_interfaces);
 
 	bp->phylink = phylink_create(&bp->phylink_config,
