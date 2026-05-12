@@ -900,10 +900,13 @@ static int mchp_coretse_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 		if (bp->timer && bp->timer->get_hwtst)
 			return bp->timer->get_hwtst(bp->timer, rq);
 		return -EOPNOTSUPP;
-	default:
-		return -EOPNOTSUPP;
 	}
 #endif
+
+	/* Handle phytool / mii-tool register access */
+	if (!bp->nophy && bp->phylink)
+		return phylink_mii_ioctl(bp->phylink, rq, cmd);
+
 	return -EOPNOTSUPP;
 }
 
