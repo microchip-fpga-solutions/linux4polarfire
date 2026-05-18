@@ -1,0 +1,3 @@
+mpfs-dpsub-y := mpfs_kms.o mpfs_dpsub.o
+obj-$(CONFIG_DRM_MPFS_DPSUB) += mpfs-dpsub.o
+
