@@ -88,7 +88,7 @@
 #define MCHP_VCPP_NUM_CTRLS			1
 
 /* Minimum wait time for camera to stabilize */
-#define MCHP_VCPP_DELAYED_CAM_M_SEC		100
+#define MCHP_VCPP_DELAYED_CAM_M_SEC		10
 
 #define MCHP_VCPP_POLL_TIMEOUT_U_SEC		500000
 #define MCHP_VCPP_POLL_SLEEP_U_SEC		10000
