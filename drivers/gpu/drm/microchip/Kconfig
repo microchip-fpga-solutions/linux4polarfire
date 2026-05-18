@@ -19,3 +19,21 @@ config DRM_MICROCHIP_GFX2D
 	  - ROP: the rectangle in the target surface is the result of a
 	  raster operation on two (ROP2), three (ROP3), or four (ROP4)
 	  source surfaces, depending on the selected raster mode.
+
+config DRM_MPFS_DPSUB
+	tristate "Microchip Display Controller Driver"
+	depends on ARCH_MICROCHIP_POLARFIRE || COMPILE_TEST
+	depends on COMMON_CLK && DRM && OF
+	depends on DMADEVICES
+	select DRM_CLIENT_SELECTION
+	select DMA_ENGINE
+	select VIDEOMODE_HELPERS
+	select DRM_DISPLAY_HELPER
+	select DRM_BRIDGE_CONNECTOR
+	select DRM_GEM_DMA_HELPER
+	select DRM_KMS_HELPER
+	select GENERIC_PHY
+	help
+	  This is a DRM/KMS driver for Microchip Display Controller. Choose
+	  this option if you have a Microchip Polarfire SoC with Display
+	  Controller subsystem.
