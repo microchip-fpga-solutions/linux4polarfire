@@ -101,6 +101,48 @@
 			reg = <0x0 0xd8000000 0x0 0x2000000>;
 			no-map;
 		};
+
+		fabricddrbuff32bit: buffer@E0000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0xE0000000 0x0 0x2000000>;
+			no-map;
+		};
+
+		fabricddrbuff64bit: buffer@3000000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x30 0x00000000 0x0 0x2000000>;
+			no-map;
+		};
+
+		fabricddrbuff32bit0: buffer@62000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0x61000000 0x0 0x2000000>;
+			no-map;
+		};
+
+		fabric0cambuff0: buffer@64000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0x64000000 0x0 0x8000000>;
+			no-map;
+		};
+
+		fabric0disbuff0: buffer@6C000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0x6C000000 0x0 0x4000000>;
+			no-map;
+		};
+
+		fabric1cambuff1: buffer@E2000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0xE2000000 0x0 0x4000000>;
+			no-map;
+		};
+
+		fabric1disbuff1: buffer@E8000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0xE6000000 0x0 0x4000000>;
+			no-map;
+		};
 	};
 
 	udmabuf0 {
