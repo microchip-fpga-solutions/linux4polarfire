@@ -583,11 +583,18 @@ static int imx334_set_ctrl(struct v4l2_ctrl *ctrl)
 	struct imx334 *imx334 =
 		container_of(ctrl->handler, struct imx334, ctrl_handler);
 	u32 analog_gain;
-	u32 exposure;
+	u32 exposure, exposure_max, exposure_def;
 	int ret;
 
 	if (ctrl->id == V4L2_CID_VBLANK) {
 		imx334->vblank = imx334->vblank_ctrl->val;
+
+		exposure_max = imx334->vblank + imx334->cur_mode->height - IMX334_EXPOSURE_OFFSET;
+
+		if (exposure_max < IMX334_EXPOSURE_DEFAULT)
+			exposure_def = exposure_max;
+		else
+			exposure_def = IMX334_EXPOSURE_DEFAULT;
 
 		dev_dbg(imx334->dev, "Received vblank %u, new lpfr %u\n",
 			imx334->vblank,
@@ -595,10 +602,8 @@ static int imx334_set_ctrl(struct v4l2_ctrl *ctrl)
 
 		ret = __v4l2_ctrl_modify_range(imx334->exp_ctrl,
 					       IMX334_EXPOSURE_MIN,
-					       imx334->vblank +
-					       imx334->cur_mode->height -
-					       IMX334_EXPOSURE_OFFSET,
-					       1, IMX334_EXPOSURE_DEFAULT);
+					       exposure_max,
+					       1, exposure_def);
 		if (ret)
 			return ret;
 	}
