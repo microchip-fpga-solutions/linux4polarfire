@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/microchip,mpfs-dpsub.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: MPFS Display Subsystem
+
+description: The Display subsystem of MPFS implements the display pipeline.
+
+maintainers:
+  - Shravan chippa <shravan.chippa@microchip.com>
+
+properties:
+  compatible:
+    enum:
+      - microchip,mpfs-dpsub-2.0
+
+  reg:
+    items:
+      - description: Primary plane (required)
+      - description: Display controller (required)
+      - description: Overlay plane (optional)
+      - description: Cursor plane (optional)
+    minItems: 2
+    maxItems: 4
+
+  reg-names:
+    items:
+      - const: primary
+      - const: display-controller
+      - const: overlay
+      - const: cursor
+    minItems: 2
+
+  interrupts:
+    minItems: 1
+    maxItems: 1
+
+  clocks:
+    items:
+      - description: AXI Lite clock
+      - description: Video frame clock
+    minItems: 2
+    maxItems: 2
+
+  clock-names:
+    items:
+      - const: axi
+      - const: video
+
+  memory-region:
+    description: Reserved memory for drm buffers (optional)
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - interrupts
+  - clocks
+  - clock-names
+
+additionalProperties: false
+
+examples:
+  - |
+      video-display-pipeline@6000a000 {
+                  compatible = "microchip,mpfs-dpsub-2.0";
+                  reg = <0x6000a000 0x1000>,
+                        <0x6000c000 0x1000>,
+                        <0x6000d000 0x1000>,
+                        <0x6000e000 0x1000>;
+                  reg-names = "primary", "display-controller", "overlay", "cursor";
+                  interrupts = <120>;
+                  clock-names = "axi", "video";
+                  clocks = <&axi_clk_video_out_0>, <&video_clk_video_out_0>;
+                  memory-region = <&fabric1disbuff1>;
+      };
+
+...
