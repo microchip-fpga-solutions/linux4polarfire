@@ -242,7 +242,6 @@ static int mchp_core1588_ptp_adjtime(struct ptp_clock_info *ptp, s64 delta)
 					  (const struct timespec64 *)&now);
 	} else {
 		adj = (sign << CORE1588_ADDSUB_OFFSET) | delta;
-
 		mchp_core1588_timer_reg_write(timer, MCHP_CORE1588_RTCCTRL, adj);
 	}
 
@@ -316,32 +315,61 @@ static int mchp_core1588_get_ptp_peer(struct sk_buff *skb, int ptp_class)
 }
 
 /**
- * mchp_core1588_rx_hwtstamp - utility function which checks for RX time stamp
+ * mchp_core1588_rx_hwtstamp - read RX timestamp and deliver to network stack
  * @timer: the private struct
  * @skb: particular skb to send timestamp with
+ * @peer_ev: indicates peer event (Pdelay) or normal event frame
  *
- * Check for Peer/Event RX timestamp and convert it into the timecounter ns
- * value, then store that result into the shhwtstamps structure which
- * is passed up the network stack
+ * Checks RIS bits to confirm Core1588 captured a timestamp for this frame,
+ * reads the timestamp registers, clears ALL relevant RIS bits to unblock
+ * the hardware for the next capture, and delivers to the network stack.
  */
 static void mchp_core1588_rx_hwtstamp(struct mchp_core1588_timer *timer, struct sk_buff *skb,
 				      int peer_ev)
 {
 	struct skb_shared_hwtstamps *shhwtstamps = skb_hwtstamps(skb);
 	struct timespec64 ts;
+	u32 ris_val;
+	u32 ris_check_mask;
+	u32 ris_clear;
 
+	if (peer_ev)
+		ris_check_mask = CORE1588_RIS_RIRTS |
+				 CORE1588_RIS_RIPTPRXPDELAYREQ |
+				 CORE1588_RIS_RIPTPRXPDELAYRESP;
+	else
+		ris_check_mask = CORE1588_RIS_RIRTS |
+				 CORE1588_RIS_RIPTPRXSYNC |
+				 CORE1588_RIS_RIPTPRXDELAYREQ |
+				 CORE1588_RIS_RIPTPRXDELAYRESP;
+
+	ris_val = mchp_core1588_timer_reg_read(timer, CORE1588_RIS);
+	if (!(ris_val & ris_check_mask))
+		return;
+
+	/* Read timestamp registers */
 	if (peer_ev) {
-		/* PTP Peer Event Frame packets */
 		ts.tv_sec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_PEERRTSM);
 		ts.tv_nsec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_PEERRTSL);
+		ris_clear = CORE1588_RIS_RIRTS |
+			    CORE1588_RIS_RIPEERRTSID |
+			    CORE1588_RIS_RIPTPRXPDELAYREQ |
+			    CORE1588_RIS_RIPTPRXPDELAYRESP;
 	} else {
-		/* PTP Event Frame packets */
 		ts.tv_sec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_RTSM);
 		ts.tv_nsec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_RTSL);
+		ris_clear = CORE1588_RIS_RIRTS |
+			    CORE1588_RIS_RIRTSID |
+			    CORE1588_RIS_RIPTPRXSYNC |
+			    CORE1588_RIS_RIPTPRXDELAYREQ |
+			    CORE1588_RIS_RIPTPRXDELAYRESP;
 	}
 
+	/* Clear ALL relevant bits to unblock next capture */
+	mchp_core1588_timer_reg_write(timer, CORE1588_RIS, ris_clear);
+
 	memset(shhwtstamps, 0, sizeof(struct skb_shared_hwtstamps));
-	shhwtstamps->hwtstamp = ktime_set(ts.tv_sec, ts.tv_nsec);  //github dma
+	shhwtstamps->hwtstamp = ktime_set(ts.tv_sec, ts.tv_nsec);
 }
 
 /**
@@ -374,35 +402,85 @@ static int mchp_core1588_ptp_rxstamp(struct mchp_core1588_timer *timer, struct s
 	return 0;
 }
 
+/* Maximum time to wait for Core1588 to capture a TX timestamp (in usec).
+ * A 1518-byte frame at 1Gbps takes ~12us to transmit. Add margin for
+ * MAC FIFO latency.
+ */
+
 /**
  * mchp_core1588_ptp_tx_hwtstamp - utility function which checks for TX time stamp
  * @timer: the private struct
  * @skb: the packet
  *
- * reads the TX timestamp and convert it into the timecounter ns
- * value, then store that result into the shhwtstamps structure which
- * is passed up the network stack.
+ * Polls the RITTS bit in the RIS register to wait for Core1588 to signal
+ * that a TX timestamp has been captured on the GMII interface. Then reads
+ * the TX timestamp from Core1588 registers, immediately clears RITTS to
+ * unblock the hardware for the next capture, and delivers the timestamp
+ * to the network stack via skb_tstamp_tx().
+ *
+ * Note: This function is called from TX DMA IRQ context. The udelay()
+ * polling is necessary because Core1588 timestamps at SFD on the GMII
+ * interface which occurs after the MAC FIFO latency.
  */
 static void mchp_core1588_tx_hwtstamp(struct mchp_core1588_timer *timer, struct sk_buff *skb,
 				      int peer_ev)
 {
-	struct skb_shared_hwtstamps *shhwtstamps = skb_hwtstamps(skb);
+	struct skb_shared_hwtstamps shhwtstamps;
 	struct timespec64 ts;
+	u32 ris_clear;
+	u32 ris_val;
+	int timeout_us = CORE1588_TX_TS_POLL_TIMEOUT_US;
 
-	/* PTP Peer Event Frame packets */
+	/*
+	 * The DMA TX completion IRQ fires when the packet data has been
+	 * transferred to the MAC FIFO, but Core1588 timestamps the frame
+	 * at SFD on the GMII interface (after MAC FIFO latency). We must
+	 * wait for Core1588 to signal that the timestamp has been captured
+	 * by polling the RITTS bit in the RIS register.
+	 */
+	do {
+		ris_val = mchp_core1588_timer_reg_read(timer, CORE1588_RIS);
+		if (ris_val & CORE1588_RIS_RITTS)
+			break;
+		udelay(CORE1588_TX_TS_POLL_DELAY_US);
+		timeout_us -= CORE1588_TX_TS_POLL_DELAY_US;
+	} while (timeout_us > 0);
+
+	if (!(ris_val & CORE1588_RIS_RITTS)) {
+		pr_debug("core1588: TX timeout (RIS=0x%08x peer=%d)\n",
+			 ris_val, peer_ev);
+		return;
+	}
+
+	/* Read timestamp registers */
 	if (peer_ev) {
 		ts.tv_sec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_PEERTTSM);
 		ts.tv_nsec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_PEERTTSL);
-
-	/* PTP Event Frame packets */
+		ris_clear = CORE1588_RIS_RITTS | CORE1588_RIS_RIPEERTTSID |
+			    CORE1588_RIS_RIPTPTXPDELAYREQ |
+			    CORE1588_RIS_RIPTPTXPDELAYRESP;
 	} else {
 		ts.tv_sec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_TTSM);
 		ts.tv_nsec = mchp_core1588_timer_reg_read(timer, MCHP_CORE1588_TTSL);
+		ris_clear = CORE1588_RIS_RITTS | CORE1588_RIS_RITTSID |
+			    CORE1588_RIS_RIPTPTXSYNC |
+			    CORE1588_RIS_RIPTPTXDELAYREQ |
+			    CORE1588_RIS_RIPTPTXDELAYRESP;
 	}
 
-	memset(shhwtstamps, 0, sizeof(struct skb_shared_hwtstamps));
-	shhwtstamps->hwtstamp = ktime_set(ts.tv_sec, ts.tv_nsec);
-	skb_tstamp_tx(skb, skb_hwtstamps(skb));
+	/*
+	 * CRITICAL: Clear ALL relevant RIS bits immediately after reading.
+	 * This unblocks Core1588 to capture the next TX timestamp.
+	 * Single write clears: RITTS + seqID indicator + per-msg-type bits.
+	 */
+	mchp_core1588_timer_reg_write(timer, CORE1588_RIS, ris_clear);
+	/* Read-back to flush the posted APB write */
+	(void)mchp_core1588_timer_reg_read(timer, CORE1588_RIS);
+
+	/* Deliver timestamp to userspace via socket error queue */
+	memset(&shhwtstamps, 0, sizeof(shhwtstamps));
+	shhwtstamps.hwtstamp = ktime_set(ts.tv_sec, ts.tv_nsec);
+	skb_tstamp_tx(skb, &shhwtstamps);
 }
 
 /**
@@ -517,17 +595,43 @@ static unsigned int mchp_core1588_get_tsu_rate(struct platform_device *pdev)
 static void mchp_core1588_init(struct platform_device *pdev, struct mchp_core1588_timer *timer)
 {
 	unsigned int tsu_rate;
-	int ret;
+	u32 reg;
 
-	ret = mchp_core1588_timer_reg_read(timer, CORE1588_GCFG);
-	ret |= CORE1588_GCFG_EN;
-	mchp_core1588_timer_reg_write(timer, CORE1588_GCFG, ret);
-	ret = mchp_core1588_timer_reg_read(timer, CORE1588_GCFG);
+	reg = mchp_core1588_timer_reg_read(timer, CORE1588_GCFG);
+	reg |= CORE1588_GCFG_EN;
+	mchp_core1588_timer_reg_write(timer, CORE1588_GCFG, reg);
+	reg = mchp_core1588_timer_reg_read(timer, CORE1588_GCFG);
+
+	/*
+	 * Clear ALL pending interrupt status bits to ensure Core1588 is
+	 * ready to capture the first timestamp. Write 1 to clear per user guide.
+	 * Must clear both legacy bits (RITTS/RIRTS) AND per-message-type bits
+	 * (bits 9-22) to fully unblock the timestamp capture hardware.
+	 */
+	mchp_core1588_timer_reg_write(timer, CORE1588_RIS,
+				      CORE1588_RIS_RITTS | CORE1588_RIS_RIRTS |
+				      CORE1588_RIS_RIPTPTXSYNC |
+				      CORE1588_RIS_RIPTPTXDELAYREQ |
+				      CORE1588_RIS_RIPTPTXDELAYRESP |
+				      CORE1588_RIS_RIPTPTXPDELAYREQ |
+				      CORE1588_RIS_RIPTPTXPDELAYRESP |
+				      CORE1588_RIS_RIPTPRXSYNC |
+				      CORE1588_RIS_RIPTPRXDELAYREQ |
+				      CORE1588_RIS_RIPTPRXDELAYRESP |
+				      CORE1588_RIS_RIPTPRXPDELAYREQ |
+				      CORE1588_RIS_RIPTPRXPDELAYRESP |
+				      CORE1588_RIS_RITTSID | CORE1588_RIS_RIRTSID |
+				      CORE1588_RIS_RIPEERTTSID | CORE1588_RIS_RIPEERRTSID);
 
 	tsu_rate = mchp_core1588_get_tsu_rate(pdev);
 	mchp_core1588_ptp_init_timer(timer, tsu_rate);
 
 	mchp_core1588_init_tsu(timer);
+
+	/* Diagnostic: confirm Core1588 is enabled and RIS is clear */
+	reg = mchp_core1588_timer_reg_read(timer, CORE1588_GCFG);
+	dev_info(&pdev->dev, "Core1588 init: GCFG=0x%08x RIS=0x%08x\n",
+		 reg, mchp_core1588_timer_reg_read(timer, CORE1588_RIS));
 }
 
 /**
