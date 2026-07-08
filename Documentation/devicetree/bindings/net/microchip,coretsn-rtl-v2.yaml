@@ -7,11 +7,26 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
 title: Microchip Time Sensitive Network Device
 
 description: |
-  The Microchip CoreTSN IP implements the following
-  Time Sensitive Networking protocols for Ethernet.
-  Traffic Shaping (IEEE 802.1Qbv)
-  Frame Preemption (IEEE 802.3br and IEEE 802.1Qbu)
-  Stream Filtering and Policing (IEEE 802.1Qci)
+  The Microchip CoreTSN IP implements Time Sensitive Networking protocols
+  for Ethernet. Two RTL variants are supported:
+
+  RTL v2 supports:
+    - Traffic Shaping (IEEE 802.1Qbv)
+    - Frame Preemption (IEEE 802.3br and IEEE 802.1Qbu)
+    - Stream Filtering and Policing (IEEE 802.1Qci)
+
+  RTL v3 extends the feature set with:
+    - QBV with 64-bit cycle time, 8 priority queues, per-queue stream ID
+      configuration, RX stream ID reset timeout, and FRER stream handling
+    - QAV/CBS (Credit-Based Shaping)
+    - Statistics counters
+    - QCI/PSFP (Per-Stream Filtering and Policing)
+    - Capability reporting for runtime ABI selection
+
+  The driver uses a capability-gated extension model selected from devicetree
+  compatible data. RTL v2 continues to support the original TSN configuration
+  ABI. RTL v3 supports the extended TSN feature set without breaking v2
+  userspace.
 
 maintainers:
   - Pallela Venkat Karthik <pallela.karthik@microchip.com>
@@ -20,6 +35,7 @@ properties:
   compatible:
     enum:
       - microchip,coretsn-rtl-v2
+      - microchip,coretsn-rtl-v3
 
   reg:
     description:
@@ -38,6 +54,7 @@ properties:
 
 required:
   - compatible
+  - reg
   - clocks
   - clock-names
 
@@ -45,9 +62,18 @@ additionalProperties: false
 
 examples:
   - |
+    /* RTL v2 instance */
     tsn@40000000 {
         compatible = "microchip,coretsn-rtl-v2";
         reg = <0x40000000 0x1000>;
+        clocks = <&clkcfg 30>, <&tsnclk>;
+        clock-names = "apb", "core";
+    };
+  - |
+    /* RTL v3 instance with extended TSN feature set */
+    tsn@40004000 {
+        compatible = "microchip,coretsn-rtl-v3";
+        reg = <0x40004000 0x1000>;
         clocks = <&clkcfg 30>, <&tsnclk>;
         clock-names = "apb", "core";
     };
