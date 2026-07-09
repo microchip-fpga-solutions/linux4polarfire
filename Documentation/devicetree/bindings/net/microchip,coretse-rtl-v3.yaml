@@ -69,6 +69,19 @@ properties:
       and "phy-handle" should point to an external PHY if exists.
     maxItems: 1
 
+  microchip,phy-null:
+    type: boolean
+    description:
+      Indicates that this CoreTSE instance is configured as a TSN
+      (Time-Sensitive Networking) endpoint node, meaning it is the source
+      or destination of TSN traffic, not an intermediate switch. The endpoint
+      node itself does not have a PHY directly attached; instead it relies on
+      external PHYs for the data path. Two switch ports (Port0 and Port1)
+      are configured to act as switch ports, forwarding frames between each
+      other, supporting redundancy and reliability features as required by
+      IEEE 802.1CB (FRER). When set, the driver skips PCS/phylink setup and
+      forces the carrier on.
+
   microchip,core1588-ptp-handle:
     $ref: /schemas/types.yaml#/definitions/phandle
     description:
@@ -110,7 +123,21 @@ examples:
       interrupt-names = "mm2s_pcdma", "s2mm_pcdma";
       clock-names = "pclk", "pcdma";
       clocks = <&clkcfg 30>, <&clkcfg 27>;
-      status = "okay";
       phy-mode = "sgmii";
       pcs-handle = <&phy2>;
+    };
+  - |
+    /* TSN endpoint (no PHY) - switch ports PHY1/PHY2 act as switch ports */
+    ethernet@40003000 {
+      compatible = "microchip,coretse-rtl-v3";
+      reg = <0x40003000 0x1000>;
+      interrupts = <132>, <134>;
+      interrupt-parent = <&plic>;
+      pcdma-connected = <&pcdma1>;
+      interrupt-names = "mm2s_pcdma", "s2mm_pcdma";
+      clock-names = "pclk", "pcdma";
+      clocks = <&clkcfg 30>, <&clkcfg 27>;
+      phy-mode = "sgmii";
+      pcs-handle = <&phy3>;
+      microchip,phy-null;
     };
