@@ -251,17 +251,20 @@ struct mchp_dscmi_format {
  * @buf_list:		list of buffers queued for DMA
  * @subdev_entities:	subdevice list
  * @ctrl_handler:	control handler structure
- * @dma_cookie:		DMA engine cookie
  * @dma_lock:		DMA mutex lock for serializing dma use
  * @cambuf:		struct cam_buffer
  * @h264_ratio:		struct compression_ratio
  * @state:		state of buffers
  * @capabilities:	capabilities to identify the fabric v4l2 support
+ * @dma_cookie:		DMA engine cookie
  * @s_buff_index:	current streaming buf index
  * @s_buff_size:	current streaming buf size
  * @irq:		external IRQ for new frame
  * @contrast:		contrast value
  * @brightness:		brightness value
+ * @r_gain:		red gain value
+ * @g_gain:		green gain value
+ * @b_gain:		blue gain value
  * @sequence:		frame sequence counter
  * @drop_count:		total frame drop counter
  * @horizontal_pos:	overlay horizontal position
@@ -301,6 +304,9 @@ struct mchp_dscmi_fpga {
 	int irq;
 	int contrast;
 	int brightness;
+	int r_gain;
+	int g_gain;
+	int b_gain;
 	int sequence;
 	int drop_count;
 	int horizontal_pos;
@@ -1047,14 +1053,33 @@ static int mchp_dscmi_enum_frameintervals(struct file *file, void *fh,
  * contrast_scale_cal()
  */
 
-static inline int second_constraint_cal(int brightness, int contrast_scale)
+static inline u32 second_constraint_cal(int brightness, u32 contrast_scale)
 {
-	return (128 * ((brightness) - ((128 * (contrast_scale)) / 10)));
+	return (128 * (brightness - ((128 * (int)contrast_scale) / 320)));
 }
 
-static inline int contrast_scale_cal(int contrast)
+static inline u32 contrast_scale_cal(int contrast)
 {
-	return ((325 * (contrast + 128) / (387 - contrast)) >> 5u);
+	return (325 * (contrast + 128) / (387 - contrast));
+}
+
+static void mchp_dscmi_update_color_balance_regs(struct mchp_dscmi_fpga *mchp_dscmi)
+{
+	u32 contrast_scale, second_constraint, r_gain_val, g_gain_val, b_gain_val;
+
+	contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
+	second_constraint = second_constraint_cal(mchp_dscmi->brightness,
+						  contrast_scale);
+
+	r_gain_val = (mchp_dscmi->r_gain * contrast_scale) / 320;
+	g_gain_val = (mchp_dscmi->g_gain * contrast_scale) / 320;
+	b_gain_val = (mchp_dscmi->b_gain * contrast_scale) / 320;
+
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
+			     second_constraint);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain_val);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain_val);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain_val);
 }
 
 /*
@@ -1188,7 +1213,6 @@ static void mchp_dscmi_update_q_factor_table(struct mchp_dscmi_fpga *mchp_dscmi,
 static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct mchp_dscmi_fpga *mchp_dscmi;
-	u32 contrast_scale, second_constraint, r_gain, g_gain, b_gain;
 
 	mchp_dscmi = container_of(ctrl->handler,
 				  struct mchp_dscmi_fpga, ctrl_handler);
@@ -1196,35 +1220,23 @@ static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 	switch (ctrl->id) {
 	case V4L2_CID_BRIGHTNESS:
 		mchp_dscmi->brightness = ctrl->val;
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		second_constraint = second_constraint_cal(ctrl->val,
-							  contrast_scale);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
-				     second_constraint);
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case V4L2_CID_CONTRAST:
 		mchp_dscmi->contrast = ctrl->val;
-		contrast_scale = contrast_scale_cal(ctrl->val);
-		second_constraint = second_constraint_cal(mchp_dscmi->brightness,
-							  contrast_scale);
-
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
-				     second_constraint);
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_RED_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		r_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain);
+		mchp_dscmi->r_gain = ctrl->val;
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_GREEN_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		g_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain);
+		mchp_dscmi->g_gain = ctrl->val;
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_BLUE_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		b_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain);
+		mchp_dscmi->b_gain = ctrl->val;
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_Q_FACTOR:
 		if (mchp_dscmi->capabilities == H264)
