@@ -106,7 +106,7 @@
 #define MCHP_DSCMI_MAX_HEIGHT			1080
 
 #define MCHP_DSCMI_GAIN_AVERAGE			125
-#define MCHP_DSCMI_GAIN_MIN			40
+#define MCHP_DSCMI_GAIN_MIN			50
 #define MCHP_DSCMI_GAIN_INIT			80
 #define MCHP_DSCMI_HYSTERESIS_GAIN		4
 #define MCHP_DSCMI_R_GAIN_CTL_DEFAULT		0x7A
@@ -1637,8 +1637,6 @@ static void mchp_dscmi_gain_cal(struct mchp_dscmi_fpga *mchp_dscmi,
 	struct v4l2_control ctrl;
 	const u16 hs_threshold_high = (MCHP_DSCMI_GAIN_AVERAGE + MCHP_DSCMI_HYSTERESIS_GAIN);
 	const u16 hs_threshold_low = (MCHP_DSCMI_GAIN_AVERAGE - MCHP_DSCMI_HYSTERESIS_GAIN);
-	static u16 in_gain = MCHP_DSCMI_GAIN_INIT;
-	static u16 last_step;
 	s16 step;
 
 	/*
@@ -1655,24 +1653,24 @@ static void mchp_dscmi_gain_cal(struct mchp_dscmi_fpga *mchp_dscmi,
 		else
 			step = 0;
 
-	in_gain = in_gain + step;
+	mchp_dscmi->in_gain = mchp_dscmi->in_gain + step;
 
-	if (in_gain < MCHP_DSCMI_GAIN_MIN)
-		in_gain = MCHP_DSCMI_GAIN_MIN;
+	if (mchp_dscmi->in_gain < MCHP_DSCMI_GAIN_MIN)
+		mchp_dscmi->in_gain = MCHP_DSCMI_GAIN_MIN;
 
-	if (in_gain >= MCHP_DSCMI_GAIN_AVERAGE)
-		in_gain = MCHP_DSCMI_GAIN_AVERAGE;
+	if (mchp_dscmi->in_gain >= MCHP_DSCMI_GAIN_AVERAGE)
+		mchp_dscmi->in_gain = MCHP_DSCMI_GAIN_AVERAGE;
 
-	if (last_step != step && step != 0) {
+	if (mchp_dscmi->last_step != step && step != 0) {
 		dev_dbg(mchp_dscmi->dev, "average=%d in_gain=%d step=%d\n",
-			total_average, in_gain, step);
+			total_average, mchp_dscmi->in_gain, step);
 	}
 
-	last_step = step;
+	mchp_dscmi->last_step = step;
 	if (step != 0) {
 		memset(&ctrl, 0, sizeof(ctrl));
 		ctrl.id = V4L2_CID_ANALOGUE_GAIN;
-		ctrl.value = in_gain;
+		ctrl.value = mchp_dscmi->in_gain;
 		v4l2_s_ctrl(NULL, subdev->ctrl_handler, &ctrl);
 	}
 }
@@ -1874,6 +1872,8 @@ static int mchp_dscmi_probe(struct platform_device *pdev)
 
 	INIT_DELAYED_WORK(&mchp_dscmi->auto_gain_dw,
 			  mchp_dscmi_work_auto_analog_gain);
+
+	mchp_dscmi->in_gain = MCHP_DSCMI_GAIN_INIT;
 
 	ret = mchp_dscmi_graph_parse_dt(&pdev->dev, mchp_dscmi);
 	if (ret) {
