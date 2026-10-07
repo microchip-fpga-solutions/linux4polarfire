@@ -3,9 +3,8 @@
  * Microchip Digital Serial Camera Memory Interface Driver.
  *
  * Copyright (C) 2021-2022 Microchip Technology Inc. and its subsidiaries
- * Author: Shravan Chippa <shavan.chippa@microchip.com>
+ * Author: Shravan Chippa <shravan.chippa@microchip.com>
  *
- * Driver based on stm32-dcmi.c
  */
 
 #include <linux/bitfield.h>
@@ -14,7 +13,6 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
-#include <linux/kmod.h>
 #include <linux/mutex.h>
 #include <linux/module.h>
 #include <linux/of.h>
@@ -22,7 +20,6 @@
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
 #include <linux/videodev2.h>
-#include <linux/of_device.h>
 
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-dev.h>
@@ -35,7 +32,11 @@
 #include <media/videobuf2-dma-contig.h>
 
 #define MCHP_DSCMI_DRV_NAME			"mchp-dscmi"
-#define MCHP_DSCMI_DRV_VERSION			"0.1"
+
+#define MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_0	0x0000
+#define MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_1	0x0100
+#define MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_2	0x0200
+#define MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_3	0x0300
 
 /* Offset address to control Red, Green, Blue gain etc */
 #define MCHP_DSCMI_R_CONSTRAINT			0x1004
@@ -47,14 +48,14 @@
 /* Offset address to control space */
 #define MCHP_DSCMI_FRAME_Q_FACTOR		0x1074
 #define MCHP_DSCMI_FRAME_WIDTH			0x1078
-#define MCHP_DSCMI_FRAME_HIGHT			0x107C
+#define MCHP_DSCMI_FRAME_HEIGHT			0x107C
 #define MCHP_DSCMI_FRAME_SIZE_REG		0x1080
 #define MCHP_DSCMI_FRAME_START_REG		0x1084
 #define MCHP_DSCMI_STREAM_ADDR_LOW		0x1088
 #define MCHP_DSCMI_STREAM_ADDR_HIGH		0x108C
 #define MCHP_DSCMI_H264_RATIO			0x1108
 #define MCHP_DSCMI_R_FRAME_WIDTH		0x110C
-#define MCHP_DSCMI_R_FRAME_HIGHT		0x1110
+#define MCHP_DSCMI_R_FRAME_HEIGHT		0x1110
 #define MCHP_DSCMI_OSD_X_Y_POS			0x1100
 #define MCHP_DSCMI_OSD_COLOR			0x1104
 #define MCHP_DSCMI_OSD_EN			0x1114
@@ -66,7 +67,8 @@
 #define MCHP_DSCMI_FRAME_STOP			0x0
 
 #define MCHP_DSCMI_H264_NUM_CTRLS		11
-#define MCHP_DSCMI_NUM_CTRLS			7
+#define MCHP_DSCMI_MJPEG_NUM_CTRLS		7
+#define MCHP_DSCMI_NUM_CTRLS			6
 
 #define MCHP_DSCMI_CAM_POWER_ON			1
 #define MCHP_DSCMI_CAM_POWER_OFF		0
@@ -104,17 +106,24 @@
 #define MCHP_DSCMI_MAX_HEIGHT			1080
 
 #define MCHP_DSCMI_GAIN_AVERAGE			125
-#define MCHP_DSCMI_GAIN_MIN			5
+#define MCHP_DSCMI_GAIN_MIN			50
 #define MCHP_DSCMI_GAIN_INIT			80
 #define MCHP_DSCMI_HYSTERESIS_GAIN		4
-#define MCHP_DSCMI_GAIN_CTL_DEFAULT		112
-#define MCHP_DSCMI_GAIN_CTL_MAX			255
-#define MCHP_DSCMI_CTL_MAX			255
-#define MCHP_DSCMI_CTL_MIN			0
+#define MCHP_DSCMI_R_GAIN_CTL_DEFAULT		0x7A
+#define MCHP_DSCMI_G_GAIN_CTL_DEFAULT		0x66
+#define MCHP_DSCMI_B_GAIN_CTL_DEFAULT		0x8A
+#define MCHP_DSCMI_CONTRAST_CTL_DEFAULT		0x9A
+#define MCHP_DSCMI_BRIGHTNESS_CTL_DEFAULT	0x89
+#define MCHP_DSCMI_GAIN_CTL_MAX			220
+#define MCHP_DSCMI_CTL_MAX			220
+#define MCHP_DSCMI_CTL_MIN			25
 #define MCHP_DSCMI_CTL_STEP			1
 #define MCHP_DSCMI_Q_FACTOR_CTL_MAX		52
 #define MCHP_DSCMI_Q_FACTOR_CTL_MIN		25
 #define MCHP_DSCMI_Q_FACTOR_CTL_DEFAULT		30
+#define MCHP_DSCMI_MJPG_Q_FACTOR_CTL_MAX	70
+#define MCHP_DSCMI_MJPG_Q_FACTOR_CTL_MIN	20
+#define MCHP_DSCMI_MJPG_Q_FACTOR_CTL_DEFAULT	52
 
 /* Text overlay (On Screen Display) */
 #define MCHP_DSCMI_OSD_X_Y_POS_MAX		4096
@@ -144,6 +153,7 @@
 #define MCHP_DSCMI_DELAYED_CAM_M_SEC		100
 
 #define MCHP_DSCMI_OSD_EN_FPGA_RTL		BIT(0)
+#define MCHP_DSCMI_MJPEG_QUIRK			BIT(1)
 
 enum mchp_dscmi_state {
 	STOPPED = 0,
@@ -228,7 +238,7 @@ struct mchp_dscmi_format {
  * @dev:		device
  * @active:		current buffer in queue
  * @current_subdev:	current subdevice: the camera sensor
- * @reset_gpio:		sensor fabric rest
+ * @reset_gpio:		sensor fabric reset
  * @dma_chan:		DMA engine channel
  * @auto_gain_wq:	auto gain control work queue struct
  * @auto_gain_dw:	auto gain delayed work struct
@@ -241,22 +251,28 @@ struct mchp_dscmi_format {
  * @buf_list:		list of buffers queued for DMA
  * @subdev_entities:	subdevice list
  * @ctrl_handler:	control handler structure
- * @dma_cookie:		DMA engine cookie
  * @dma_lock:		DMA mutex lock for serializing dma use
  * @cambuf:		struct cam_buffer
  * @h264_ratio:		struct compression_ratio
  * @state:		state of buffers
  * @capabilities:	capabilities to identify the fabric v4l2 support
+ * @dma_cookie:		DMA engine cookie
  * @s_buff_index:	current streaming buf index
  * @s_buff_size:	current streaming buf size
  * @irq:		external IRQ for new frame
  * @contrast:		contrast value
  * @brightness:		brightness value
+ * @r_gain:		red gain value
+ * @g_gain:		green gain value
+ * @b_gain:		blue gain value
  * @sequence:		frame sequence counter
  * @drop_count:		total frame drop counter
  * @horizontal_pos:	overlay horizontal position
  * @vertical_pos:	overlay vertical position
- * @has_hw_osd_enable:	osd enable feture status
+ * @in_gain:		current auto-gain calibration value
+ * @last_step:		previous auto-gain adjustment step
+ * @quirks:		platform-specific quirks flags
+ * @has_hw_osd_enable:	osd enable feature status
  */
 struct mchp_dscmi_fpga {
 	void __iomem *base;
@@ -288,10 +304,16 @@ struct mchp_dscmi_fpga {
 	int irq;
 	int contrast;
 	int brightness;
+	int r_gain;
+	int g_gain;
+	int b_gain;
 	int sequence;
 	int drop_count;
 	int horizontal_pos;
 	int vertical_pos;
+	u32 in_gain;
+	u32 last_step;
+	u32 quirks;
 	bool has_hw_osd_enable;
 };
 
@@ -304,6 +326,10 @@ struct mchp_dscmi_subdev_entity {
 };
 
 static struct mchp_dscmi_framesize framesize_list[] = {
+	{
+		.width = 1920,
+		.height = 1080,
+	},
 	{
 		.width = 1920,
 		.height = 1072,
@@ -362,6 +388,9 @@ static inline u32 mchp_dscmi_reg_read(struct mchp_dscmi_fpga *mchp_dscmi,
  */
 static u32 compression_ratio_calc(u32 hres, u32 vres, u32 accumulated_frame_size)
 {
+	if (accumulated_frame_size == 0)
+		return 0;
+
 	return ((hres * vres * MCHP_DSCMI_OSD_MAX_FRAMES_RESET_COUNT * 3) /
 		(accumulated_frame_size)) / 2;
 }
@@ -448,7 +477,7 @@ static int mchp_dscmi_start_dma(struct mchp_dscmi_fpga *mchp_dscmi,
 	struct dma_slave_config config;
 	struct mchp_dscmi_compression_ratio *h264_ratio = &mchp_dscmi->h264_ratio;
 	int ret, buf_size, i;
-	int *frame_size_index = &h264_ratio->frame_size_index;
+	u32 *frame_size_index = &h264_ratio->frame_size_index;
 
 	memset(&config, 0, sizeof(config));
 
@@ -459,31 +488,33 @@ static int mchp_dscmi_start_dma(struct mchp_dscmi_fpga *mchp_dscmi,
 	buf_size = mchp_dscmi->s_buff_size;
 	spin_unlock_irq(&mchp_dscmi->qlock);
 
-	h264_ratio->frame_count++;
-	h264_ratio->frame_size[*frame_size_index] += buf_size;
+	if (mchp_dscmi->capabilities == H264) {
+		h264_ratio->frame_count++;
+		h264_ratio->frame_size[*frame_size_index] += buf_size;
 
-	if (h264_ratio->frame_count % 10 == 0)
-		(*frame_size_index)++;
+		if (h264_ratio->frame_count % 10 == 0)
+			(*frame_size_index)++;
 
-	if (*frame_size_index == MCHP_DSCMI_OSD_MAX_ARRAY)
-		*frame_size_index = 0;
+		if (*frame_size_index == MCHP_DSCMI_OSD_MAX_ARRAY)
+			*frame_size_index = 0;
 
-	if (h264_ratio->frame_count == MCHP_DSCMI_OSD_MAX_FRAMES_RESET_COUNT) {
-		u32 accumulated_frame_size = 0, compression_ratio, hres, vres;
+		if (h264_ratio->frame_count == MCHP_DSCMI_OSD_MAX_FRAMES_RESET_COUNT) {
+			u32 accumulated_frame_size = 0, compression_ratio, hres, vres;
 
-		for (i = 0; i < MCHP_DSCMI_OSD_MAX_ARRAY; i++)
-			accumulated_frame_size += h264_ratio->frame_size[i];
+			for (i = 0; i < MCHP_DSCMI_OSD_MAX_ARRAY; i++)
+				accumulated_frame_size += h264_ratio->frame_size[i];
 
-		hres = mchp_dscmi_reg_read(mchp_dscmi, MCHP_DSCMI_R_FRAME_WIDTH);
-		vres = mchp_dscmi_reg_read(mchp_dscmi, MCHP_DSCMI_R_FRAME_HIGHT);
+			hres = mchp_dscmi_reg_read(mchp_dscmi, MCHP_DSCMI_R_FRAME_WIDTH);
+			vres = mchp_dscmi_reg_read(mchp_dscmi, MCHP_DSCMI_R_FRAME_HEIGHT);
 
-		compression_ratio = compression_ratio_calc(hres, vres,
-							   accumulated_frame_size);
+			compression_ratio = compression_ratio_calc(hres, vres,
+								   accumulated_frame_size);
 
-		mchp_dscmi_osd_text(mchp_dscmi, compression_ratio);
+			mchp_dscmi_osd_text(mchp_dscmi, compression_ratio);
 
-		h264_ratio->frame_count = MCHP_DSCMI_OSD_MAX_FRAMES_INIT;
-		h264_ratio->frame_size[*frame_size_index] = 0;
+			h264_ratio->frame_count = MCHP_DSCMI_OSD_MAX_FRAMES_INIT;
+			h264_ratio->frame_size[*frame_size_index] = 0;
+		}
 	}
 
 	config.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
@@ -718,6 +749,7 @@ static int mchp_dscmi_start_streaming(struct vb2_queue *vq, unsigned int count)
 	if (ret) {
 		dev_err(mchp_dscmi->dev, "request threaded irq failed %d\n",
 			ret);
+		v4l2_subdev_call(subdev, video, s_stream, MCHP_DSCMI_CAM_STOP);
 		goto err_free_buffers;
 	}
 
@@ -753,7 +785,7 @@ static void mchp_dscmi_stop_streaming(struct vb2_queue *vq)
 
 	spin_lock_irq(&mchp_dscmi->qlock);
 
-	return_all_buffers(mchp_dscmi, VB2_BUF_STATE_QUEUED);
+	return_all_buffers(mchp_dscmi, VB2_BUF_STATE_ERROR);
 
 	mchp_dscmi->active = NULL;
 	mchp_dscmi->state = STOPPED;
@@ -795,30 +827,22 @@ static int mchp_dscmi_try_fmt(struct mchp_dscmi_fpga *mchp_dscmi,
 {
 	struct v4l2_pix_format *pix = &fmt->fmt.pix;
 	struct v4l2_pix_format *pix_present = &mchp_dscmi->fmt.fmt.pix;
-	struct v4l2_subdev *subdev = mchp_dscmi->current_subdev->subdev;
 	struct mchp_dscmi_framesize *framessize;
-	struct v4l2_subdev_format format = {
-		.which = V4L2_SUBDEV_FORMAT_ACTIVE,
-	};
-	int ret;
 
-	v4l2_fill_mbus_format(&format.format, pix,
-			      mchp_dscmi_formats[mchp_dscmi->capabilities].mbus_code);
+	if (pix->width > MCHP_DSCMI_MAX_WIDTH || pix->height > MCHP_DSCMI_MAX_HEIGHT)
+		return -EFBIG;
 
-	format.format.width = MCHP_DSCMI_MAX_WIDTH;
-	format.format.height = MCHP_DSCMI_MAX_HEIGHT;
-
-	ret = v4l2_subdev_call(subdev, pad, set_fmt, NULL, &format);
-	if (ret < 0)
-		return ret;
+	if (mchp_dscmi->capabilities == MJPEG) {
+		if (pix->width != MCHP_DSCMI_MAX_WIDTH || pix->height != MCHP_DSCMI_MAX_HEIGHT) {
+			pix->width = MCHP_DSCMI_MAX_WIDTH;
+			pix->height = MCHP_DSCMI_MAX_HEIGHT;
+		}
+	}
 
 	framessize = v4l2_find_nearest_size(framesize_list,
 					    ARRAY_SIZE(framesize_list),
 					    width, height,
 					    pix->width, pix->height);
-
-	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_FRAME_WIDTH, framessize->width);
-	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_FRAME_HIGHT, framessize->height);
 
 	/* Driver supports only fixed format */
 	pix->pixelformat = mchp_dscmi_formats[mchp_dscmi->capabilities].fourcc;
@@ -839,7 +863,34 @@ static int mchp_dscmi_try_fmt_vid_cap(struct file *file, void *priv,
 {
 	struct mchp_dscmi_fpga *mchp_dscmi = video_drvdata(file);
 
-	mchp_dscmi_try_fmt(mchp_dscmi, fmt);
+	return mchp_dscmi_try_fmt(mchp_dscmi, fmt);
+}
+
+static int mchp_dscmi_s_fmt_update(struct file *file, struct v4l2_format *fmt)
+{
+	struct mchp_dscmi_fpga *mchp_dscmi = video_drvdata(file);
+	struct v4l2_pix_format *pix_present = &mchp_dscmi->fmt.fmt.pix;
+	struct v4l2_subdev *subdev = mchp_dscmi->current_subdev->subdev;
+	struct v4l2_pix_format *pix = &fmt->fmt.pix;
+	struct v4l2_subdev_format format = {
+		.which = V4L2_SUBDEV_FORMAT_ACTIVE,
+	};
+	int ret;
+
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_FRAME_WIDTH, pix->width);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_FRAME_HEIGHT, pix->height);
+	pix_present->width = pix->width;
+	pix_present->height = pix->height;
+
+	v4l2_fill_mbus_format(&format.format, pix,
+			      mchp_dscmi_formats[mchp_dscmi->capabilities].mbus_code);
+
+	format.format.width = MCHP_DSCMI_MAX_WIDTH;
+	format.format.height = MCHP_DSCMI_MAX_HEIGHT;
+
+	ret = v4l2_subdev_call(subdev, pad, set_fmt, NULL, &format);
+	if (ret < 0)
+		return ret;
 
 	return 0;
 }
@@ -848,14 +899,32 @@ static int mchp_dscmi_s_fmt_vid_cap(struct file *file, void *priv,
 				    struct v4l2_format *fmt)
 {
 	struct mchp_dscmi_fpga *mchp_dscmi = video_drvdata(file);
+	int ret;
 
-	if (mchp_dscmi->capabilities == H264)
-		return mchp_dscmi_try_fmt_vid_cap(file, priv, fmt);
+	if (mchp_dscmi->capabilities == H264) {
+		ret = mchp_dscmi_try_fmt_vid_cap(file, priv, fmt);
+		if (ret < 0)
+			return ret;
+
+		ret = mchp_dscmi_s_fmt_update(file, fmt);
+		if (ret < 0)
+			return ret;
+
+		return 0;
+	}
 
 	if (vb2_is_streaming(&mchp_dscmi->queue))
 		return -EBUSY;
 
-	return mchp_dscmi_try_fmt_vid_cap(file, priv, fmt);
+	ret = mchp_dscmi_try_fmt_vid_cap(file, priv, fmt);
+	if (ret < 0)
+		return ret;
+
+	ret = mchp_dscmi_s_fmt_update(file, fmt);
+	if (ret < 0)
+		return ret;
+
+	return 0;
 }
 
 static int mchp_dscmi_g_fmt_vid_cap(struct file *file, void *priv,
@@ -909,6 +978,7 @@ static int mchp_dscmi_enum_framesizes(struct file *file, void *fh,
 				      struct v4l2_frmsizeenum *fsize)
 {
 	struct mchp_dscmi_fpga *mchp_dscmi = video_drvdata(file);
+	struct v4l2_pix_format *pix_present = &mchp_dscmi->fmt.fmt.pix;
 
 	if (fsize->index > 0)
 		return -EINVAL;
@@ -918,8 +988,8 @@ static int mchp_dscmi_enum_framesizes(struct file *file, void *fh,
 		return -EINVAL;
 
 	fsize->type = V4L2_FRMSIZE_TYPE_DISCRETE;
-	fsize->discrete.width = MCHP_DSCMI_FIXED_WIDTH;
-	fsize->discrete.height = MCHP_DSCMI_FIXED_HEIGHT;
+	fsize->discrete.width = pix_present->width;
+	fsize->discrete.height = pix_present->height;
 
 	return 0;
 }
@@ -983,14 +1053,33 @@ static int mchp_dscmi_enum_frameintervals(struct file *file, void *fh,
  * contrast_scale_cal()
  */
 
-static inline int second_constraint_cal(int brightness, int contrast_scale)
+static inline u32 second_constraint_cal(int brightness, u32 contrast_scale)
 {
-	return (128 * ((brightness) - ((128 * (contrast_scale)) / 10)));
+	return (128 * (brightness - ((128 * (int)contrast_scale) / 320)));
 }
 
-static inline int contrast_scale_cal(int contrast)
+static inline u32 contrast_scale_cal(int contrast)
 {
-	return ((325 * (contrast + 128) / (387 - contrast)) >> 5u);
+	return (325 * (contrast + 128) / (387 - contrast));
+}
+
+static void mchp_dscmi_update_color_balance_regs(struct mchp_dscmi_fpga *mchp_dscmi)
+{
+	u32 contrast_scale, second_constraint, r_gain_val, g_gain_val, b_gain_val;
+
+	contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
+	second_constraint = second_constraint_cal(mchp_dscmi->brightness,
+						  contrast_scale);
+
+	r_gain_val = (mchp_dscmi->r_gain * contrast_scale) / 320;
+	g_gain_val = (mchp_dscmi->g_gain * contrast_scale) / 320;
+	b_gain_val = (mchp_dscmi->b_gain * contrast_scale) / 320;
+
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
+			     second_constraint);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain_val);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain_val);
+	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain_val);
 }
 
 /*
@@ -1010,10 +1099,120 @@ static void update_osd_coordinates(struct mchp_dscmi_fpga *mchp_dscmi, bool enab
 	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_OSD_X_Y_POS, val);
 }
 
+static void mchp_dscmi_update_q_factor_table(struct mchp_dscmi_fpga *mchp_dscmi,
+					     int quality_cur)
+{
+	u32 i, offset_addr, offset_addr_0, offset_addr_1, offset_addr_2, offset_addr_3;
+
+	u16 y_value, c_value, y_value_1, c_value_1;
+
+	static const u16 y[64] = {
+		0x10, 0x0b, 0x0a, 0x10, 0x18, 0x28, 0x33, 0x3d,
+		0x0c, 0x0c, 0x0e, 0x13, 0x1a, 0x3a, 0x3c, 0x37,
+		0x0e, 0x0d, 0x10, 0x18, 0x28, 0x39, 0x45, 0x38,
+		0x0e, 0x11, 0x16, 0x1d, 0x33, 0x57, 0x50, 0x3e,
+		0x12, 0x18, 0x25, 0x38, 0x44, 0x6d, 0x67, 0x4d,
+		0x18, 0x23, 0x37, 0x40, 0x51, 0x68, 0x71, 0x5c,
+		0x31, 0x40, 0x4e, 0x57, 0x67, 0x79, 0x78, 0x65,
+		0x48, 0x5c, 0x5f, 0x62, 0x70, 0x64, 0x67, 0x63
+	};
+
+	static const u16 c[64] = {
+		0x11, 0x12, 0x17, 0x2f, 0x63, 0x63, 0x63, 0x63,
+		0x12, 0x15, 0x1a, 0x42, 0x63, 0x63, 0x63, 0x63,
+		0x18, 0x1a, 0x38, 0x63, 0x63, 0x63, 0x63, 0x63,
+		0x2f, 0x42, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
+		0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
+		0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
+		0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
+		0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63
+	};
+
+	if (quality_cur < 1 || quality_cur > 100) {
+		return;
+	} else if (quality_cur < 50) {
+		for (i = 0; i < 64; i++) {
+			offset_addr = i << 2;
+			offset_addr_0 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_0 + offset_addr;
+			offset_addr_1 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_1 + offset_addr;
+			offset_addr_2 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_2 + offset_addr;
+			offset_addr_3 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_3 + offset_addr;
+
+			y_value = (((5000 / quality_cur) * y[i]) / 100);
+
+			if (y_value > 255)
+				y_value = 255;
+
+			if (y_value == 0)
+				y_value = 1;
+
+			y_value_1 = (4096 / y_value);
+
+			if (y_value_1 > 4095)
+				y_value_1 = 4095;
+
+			writel(y_value, mchp_dscmi->base + offset_addr_2);
+			writel(y_value_1, mchp_dscmi->base + offset_addr_0);
+			c_value = (((5000 / quality_cur) * c[i]) / 100);
+
+			if (c_value > 255)
+				c_value = 255;
+
+			if (c_value == 0)
+				c_value = 1;
+
+			c_value_1 = (4096 / c_value);
+			if (c_value_1 > 4095)
+				c_value_1 = 4095;
+
+			writel(c_value, mchp_dscmi->base + offset_addr_3);
+			writel(c_value_1, mchp_dscmi->base + offset_addr_1);
+		}
+	} else {
+		for (i = 0; i < 64; i++) {
+			offset_addr = i << 2;
+			offset_addr_0 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_0 + offset_addr;
+			offset_addr_1 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_1 + offset_addr;
+			offset_addr_2 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_2 + offset_addr;
+			offset_addr_3 = MCHP_DSCMI_MJPEG_Q_FACTOR_T_OFFSET_3 + offset_addr;
+
+			y_value = (((200 - 2 * quality_cur) * y[i]) / 100);
+
+			if (y_value > 255)
+				y_value = 255;
+
+			if (y_value == 0)
+				y_value = 1;
+
+			y_value_1 = (4096 / y_value);
+
+			if (y_value_1 > 4095)
+				y_value_1 = 4095;
+
+			writel(y_value, mchp_dscmi->base + offset_addr_2);
+			writel(y_value_1, mchp_dscmi->base + offset_addr_0);
+			c_value = (((200 - 2 * quality_cur) * c[i]) / 100);
+
+			if (c_value > 255)
+				c_value = 255;
+
+			if (c_value == 0)
+				c_value = 1;
+
+			c_value_1 = (4096 / c_value);
+
+			if (c_value_1 > 4095)
+				c_value_1 = 4095;
+
+			writel(c_value, mchp_dscmi->base + offset_addr_3);
+			writel(c_value_1, mchp_dscmi->base + offset_addr_1);
+		}
+	}
+}
+
 static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct mchp_dscmi_fpga *mchp_dscmi;
-	u32 contrast_scale, second_constraint, r_gain, g_gain, b_gain;
 
 	mchp_dscmi = container_of(ctrl->handler,
 				  struct mchp_dscmi_fpga, ctrl_handler);
@@ -1021,47 +1220,32 @@ static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 	switch (ctrl->id) {
 	case V4L2_CID_BRIGHTNESS:
 		mchp_dscmi->brightness = ctrl->val;
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		second_constraint = second_constraint_cal(ctrl->val,
-							  contrast_scale);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
-				     second_constraint);
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case V4L2_CID_CONTRAST:
 		mchp_dscmi->contrast = ctrl->val;
-		contrast_scale = contrast_scale_cal(ctrl->val);
-		second_constraint = second_constraint_cal(mchp_dscmi->brightness,
-							  contrast_scale);
-
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
-				     second_constraint);
-
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_RED_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		r_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain);
+		mchp_dscmi->r_gain = ctrl->val;
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_GREEN_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		g_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain);
+		mchp_dscmi->g_gain = ctrl->val;
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_BLUE_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		b_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain);
-		break;
-	case V4L2_CID_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		r_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, r_gain);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, r_gain);
+		mchp_dscmi->b_gain = ctrl->val;
+		mchp_dscmi_update_color_balance_regs(mchp_dscmi);
 		break;
 	case MCHP_DSCMI_CID_Q_FACTOR:
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_FRAME_Q_FACTOR,
-				     ctrl->val);
+		if (mchp_dscmi->capabilities == H264)
+			mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_FRAME_Q_FACTOR,
+					     ctrl->val);
+
+		if (mchp_dscmi->capabilities == MJPEG)
+			mchp_dscmi_update_q_factor_table(mchp_dscmi, ctrl->val);
+
 		break;
 	case MCHP_DSCMI_CID_OSD_X_POS:
 		mchp_dscmi->horizontal_pos = ctrl->val;
@@ -1179,7 +1363,7 @@ static const struct v4l2_ctrl_config mchp_dscmi_gain_ctrls[] = {
 		.name	= "Gain, Red",
 		.min	= MCHP_DSCMI_CTL_MIN,
 		.max	= MCHP_DSCMI_GAIN_CTL_MAX,
-		.def	= MCHP_DSCMI_GAIN_CTL_DEFAULT,
+		.def	= MCHP_DSCMI_R_GAIN_CTL_DEFAULT,
 		.step	= MCHP_DSCMI_CTL_STEP,
 	}, {
 		.ops	= &mchp_dscmi_ctrl_ops,
@@ -1188,7 +1372,7 @@ static const struct v4l2_ctrl_config mchp_dscmi_gain_ctrls[] = {
 		.name	= "Gain, Green",
 		.min	= MCHP_DSCMI_CTL_MIN,
 		.max	= MCHP_DSCMI_GAIN_CTL_MAX,
-		.def	= MCHP_DSCMI_GAIN_CTL_DEFAULT,
+		.def	= MCHP_DSCMI_G_GAIN_CTL_DEFAULT,
 		.step	= MCHP_DSCMI_CTL_STEP,
 	}, {
 		.ops	= &mchp_dscmi_ctrl_ops,
@@ -1197,7 +1381,7 @@ static const struct v4l2_ctrl_config mchp_dscmi_gain_ctrls[] = {
 		.name	= "Gain, Blue",
 		.min	= MCHP_DSCMI_CTL_MIN,
 		.max	= MCHP_DSCMI_GAIN_CTL_MAX,
-		.def	= MCHP_DSCMI_GAIN_CTL_DEFAULT,
+		.def	= MCHP_DSCMI_B_GAIN_CTL_DEFAULT,
 		.step	= MCHP_DSCMI_CTL_STEP,
 	}, {
 		.ops	= &mchp_dscmi_ctrl_ops,
@@ -1244,7 +1428,16 @@ static const struct v4l2_ctrl_config mchp_dscmi_gain_ctrls[] = {
 		.max	= MCHP_DSCMI_OSD_COLOR_MAX,
 		.def	= MCHP_DSCMI_OSD_COLOR_DEFAULT,
 		.step	= MCHP_DSCMI_OSD_COLOR_STEP,
-	},
+	}, {
+		.ops	= &mchp_dscmi_ctrl_ops,
+		.id	= MCHP_DSCMI_CID_Q_FACTOR,
+		.type	= V4L2_CTRL_TYPE_INTEGER,
+		.name	= "Quality Factor",
+		.min	= MCHP_DSCMI_MJPG_Q_FACTOR_CTL_MIN,
+		.max	= MCHP_DSCMI_MJPG_Q_FACTOR_CTL_MAX,
+		.def	= MCHP_DSCMI_MJPG_Q_FACTOR_CTL_DEFAULT,
+		.step	= MCHP_DSCMI_CTL_STEP,
+	}
 };
 
 static int mchp_dscmi_formats_init(struct mchp_dscmi_fpga *mchp_dscmi)
@@ -1318,40 +1511,45 @@ static int mchp_dscmi_graph_notify_complete(struct v4l2_async_notifier *notifier
 
 	if (mchp_dscmi->capabilities == H264)
 		v4l2_ctrl_handler_init(ctrl_hdlr, MCHP_DSCMI_H264_NUM_CTRLS);
+	else if (mchp_dscmi->capabilities == MJPEG)
+		v4l2_ctrl_handler_init(ctrl_hdlr, MCHP_DSCMI_MJPEG_NUM_CTRLS);
 	else
 		v4l2_ctrl_handler_init(ctrl_hdlr, MCHP_DSCMI_NUM_CTRLS);
 
 	v4l2_ctrl_new_std(ctrl_hdlr, &mchp_dscmi_ctrl_ops,
 			  V4L2_CID_BRIGHTNESS, MCHP_DSCMI_CTL_MIN, MCHP_DSCMI_CTL_MAX,
-			  MCHP_DSCMI_CTL_STEP, MCHP_DSCMI_CTL_MAX / 2);
+			  MCHP_DSCMI_CTL_STEP, MCHP_DSCMI_BRIGHTNESS_CTL_DEFAULT);
 	v4l2_ctrl_new_std(ctrl_hdlr, &mchp_dscmi_ctrl_ops,
 			  V4L2_CID_CONTRAST, MCHP_DSCMI_CTL_MIN, MCHP_DSCMI_CTL_MAX,
-			  MCHP_DSCMI_CTL_STEP, MCHP_DSCMI_CTL_MAX / 2);
-	v4l2_ctrl_new_std(ctrl_hdlr, &mchp_dscmi_ctrl_ops,
-			  V4L2_CID_GAIN, MCHP_DSCMI_CTL_MIN, MCHP_DSCMI_CTL_MAX,
-			  MCHP_DSCMI_CTL_STEP, MCHP_DSCMI_GAIN_CTL_DEFAULT);
+			  MCHP_DSCMI_CTL_STEP, MCHP_DSCMI_CONTRAST_CTL_DEFAULT);
 
 	v4l2_ctrl_new_std(ctrl_hdlr, &mchp_dscmi_ctrl_ops,
-			  V4L2_CID_AUTOGAIN, MCHP_DSCMI_CTL_MIN, 1, MCHP_DSCMI_CTL_STEP, 0);
+			  V4L2_CID_AUTOGAIN, 0, 1, MCHP_DSCMI_CTL_STEP, 0);
 
 	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[0], NULL);
 	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[1], NULL);
 	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[2], NULL);
-	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[4], NULL);
-	mchp_dscmi->horizontal_pos = MCHP_DSCMI_OSD_X_Y_POS_MIN;
-
-	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[5], NULL);
-	mchp_dscmi->vertical_pos = MCHP_DSCMI_OSD_X_Y_POS_MIN;
-
-	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[6], NULL);
-	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[7], NULL);
 
 	if (mchp_dscmi->capabilities == H264)
 		v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[3], NULL);
 
+	if (mchp_dscmi->capabilities == MJPEG)
+		v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[8], NULL);
+
+	if (mchp_dscmi->capabilities == H264) {
+		v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[4], NULL);
+		mchp_dscmi->horizontal_pos = MCHP_DSCMI_OSD_X_Y_POS_MIN;
+
+		v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[5], NULL);
+		mchp_dscmi->vertical_pos = MCHP_DSCMI_OSD_X_Y_POS_MIN;
+
+		v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[6], NULL);
+		v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_dscmi_gain_ctrls[7], NULL);
+	}
+
 	if (ctrl_hdlr->error) {
 		ret = ctrl_hdlr->error;
-		return ret;
+		goto free_ctrl_hdlr;
 	}
 	mchp_dscmi->v4l2_dev.ctrl_handler = ctrl_hdlr;
 
@@ -1386,8 +1584,8 @@ static int mchp_dscmi_graph_notify_complete(struct v4l2_async_notifier *notifier
 	vdev = &mchp_dscmi->vdev;
 	strscpy(vdev->name, KBUILD_MODNAME, sizeof(vdev->name));
 	vdev->release = video_device_release_empty;
-	vdev->fops = &mchp_dscmi_fops,
-	vdev->ioctl_ops = &mchp_dscmi_ioctl_ops,
+	vdev->fops = &mchp_dscmi_fops;
+	vdev->ioctl_ops = &mchp_dscmi_ioctl_ops;
 	vdev->device_caps = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_READWRITE |
 			    V4L2_CAP_STREAMING;
 	vdev->lock = &mchp_dscmi->lock;
@@ -1439,9 +1637,7 @@ static void mchp_dscmi_gain_cal(struct mchp_dscmi_fpga *mchp_dscmi,
 	struct v4l2_control ctrl;
 	const u16 hs_threshold_high = (MCHP_DSCMI_GAIN_AVERAGE + MCHP_DSCMI_HYSTERESIS_GAIN);
 	const u16 hs_threshold_low = (MCHP_DSCMI_GAIN_AVERAGE - MCHP_DSCMI_HYSTERESIS_GAIN);
-	static u16 in_gain = MCHP_DSCMI_GAIN_INIT;
-	static u16 last_step;
-	u16 step;
+	s16 step;
 
 	/*
 	 * The total_average feed back value from fabric is less than threshold
@@ -1457,24 +1653,24 @@ static void mchp_dscmi_gain_cal(struct mchp_dscmi_fpga *mchp_dscmi,
 		else
 			step = 0;
 
-	in_gain = in_gain + step;
+	mchp_dscmi->in_gain = mchp_dscmi->in_gain + step;
 
-	if (in_gain < MCHP_DSCMI_GAIN_MIN)
-		in_gain = MCHP_DSCMI_GAIN_MIN;
+	if (mchp_dscmi->in_gain < MCHP_DSCMI_GAIN_MIN)
+		mchp_dscmi->in_gain = MCHP_DSCMI_GAIN_MIN;
 
-	if (in_gain >= MCHP_DSCMI_GAIN_AVERAGE)
-		in_gain = MCHP_DSCMI_GAIN_AVERAGE;
+	if (mchp_dscmi->in_gain >= MCHP_DSCMI_GAIN_AVERAGE)
+		mchp_dscmi->in_gain = MCHP_DSCMI_GAIN_AVERAGE;
 
-	if (last_step != step && step != 0) {
+	if (mchp_dscmi->last_step != step && step != 0) {
 		dev_dbg(mchp_dscmi->dev, "average=%d in_gain=%d step=%d\n",
-			total_average, in_gain, step);
+			total_average, mchp_dscmi->in_gain, step);
 	}
 
-	last_step = step;
+	mchp_dscmi->last_step = step;
 	if (step != 0) {
 		memset(&ctrl, 0, sizeof(ctrl));
 		ctrl.id = V4L2_CID_ANALOGUE_GAIN;
-		ctrl.value = in_gain;
+		ctrl.value = mchp_dscmi->in_gain;
 		v4l2_s_ctrl(NULL, subdev->ctrl_handler, &ctrl);
 	}
 }
@@ -1549,6 +1745,12 @@ static int mchp_dscmi_read_capabilities(struct platform_device *pdev,
 		mchp_dscmi->capabilities = H264;
 		break;
 	case MCHP_DSCMI_CAPABILITIES_MJPEG:
+		if (!(mchp_dscmi->quirks & MCHP_DSCMI_MJPEG_QUIRK)) {
+			dev_err(&pdev->dev,
+				"MJPEG capability detected but MJPEG quirk not set in compatible\n");
+			ret = -ENODEV;
+			break;
+		}
 		dev_info(&pdev->dev, "Found mJPEG video capabilities\n");
 		mchp_dscmi->capabilities = MJPEG;
 		break;
@@ -1576,29 +1778,34 @@ static int mchp_dscmi_probe(struct platform_device *pdev)
 	mchp_dscmi = devm_kzalloc(&pdev->dev,
 				  sizeof(struct mchp_dscmi_fpga), GFP_KERNEL);
 	if (!mchp_dscmi)
-		return dev_err_probe(&pdev->dev, PTR_ERR(mchp_dscmi),
-				     "kzalloc failed\n");
+		return dev_err_probe(&pdev->dev, -ENOMEM, "kzalloc failed\n");
 
 	mchp_dscmi->base = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
 	if (IS_ERR(mchp_dscmi->base))
 		return dev_err_probe(&pdev->dev, PTR_ERR(mchp_dscmi->base),
 				     "could not get mem resource\n");
 
-	ret = mchp_dscmi_read_capabilities(pdev, mchp_dscmi);
-	if (ret < 0)
-		return ret;
-
 	ddata = of_device_get_match_data(&pdev->dev);
 	if (ddata) {
+		mchp_dscmi->quirks = ddata->quirks;
+
 		if (ddata->quirks & MCHP_DSCMI_OSD_EN_FPGA_RTL)
 			mchp_dscmi->has_hw_osd_enable = true;
 		else
 			mchp_dscmi->has_hw_osd_enable = false;
+
+		if (ddata->quirks & MCHP_DSCMI_MJPEG_QUIRK)
+			dev_info(&pdev->dev,
+				 "MJPEG quirk enabled via compatible string\n");
 	}
+
+	ret = mchp_dscmi_read_capabilities(pdev, mchp_dscmi);
+	if (ret < 0)
+		return ret;
 
 	np = of_parse_phandle(pdev->dev.of_node, "memory-region", 0);
 	if (!np)
-		return dev_err_probe(&pdev->dev, PTR_ERR(np),
+		return dev_err_probe(&pdev->dev, -EINVAL,
 				     "No memory-region specified\n");
 
 	ret = of_address_to_resource(np, 0, &r);
@@ -1608,7 +1815,7 @@ static int mchp_dscmi_probe(struct platform_device *pdev)
 				"No memory address assigned to the region\n");
 
 	mchp_dscmi->cambuf.paddr = r.start;
-	mchp_dscmi->cambuf.size = r.end - r.start;
+	mchp_dscmi->cambuf.size = resource_size(&r);
 
 	mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_STREAM_ADDR_LOW,
 			     lower_32_bits(r.start));
@@ -1657,9 +1864,16 @@ static int mchp_dscmi_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, mchp_dscmi);
 
-	mchp_dscmi->auto_gain_wq = create_workqueue("auto gain");
+	mchp_dscmi->auto_gain_wq = alloc_workqueue("auto gain", 0, 0);
+	if (!mchp_dscmi->auto_gain_wq) {
+		ret = -ENOMEM;
+		goto v4l2_unregister;
+	}
+
 	INIT_DELAYED_WORK(&mchp_dscmi->auto_gain_dw,
 			  mchp_dscmi_work_auto_analog_gain);
+
+	mchp_dscmi->in_gain = MCHP_DSCMI_GAIN_INIT;
 
 	ret = mchp_dscmi_graph_parse_dt(&pdev->dev, mchp_dscmi);
 	if (ret) {
@@ -1700,13 +1914,13 @@ static int mchp_dscmi_probe(struct platform_device *pdev)
 		}
 	}
 
-	dev_info(&pdev->dev, "Version %s loaded\n", MCHP_DSCMI_DRV_VERSION);
 	return 0;
 
 cleanup_subdev:
 	mchp_dscmi_subdev_cleanup(mchp_dscmi);
 v4l2_unregister:
 	v4l2_device_unregister(&mchp_dscmi->v4l2_dev);
+	destroy_workqueue(mchp_dscmi->auto_gain_wq);
 dma_free:
 	dma_release_channel(mchp_dscmi->dma_chan);
 	return ret;
@@ -1714,18 +1928,17 @@ dma_free:
 
 static void mchp_dscmi_remove(struct platform_device *pdev)
 {
-	struct v4l2_device *v4l2_dev = platform_get_drvdata(pdev);
-	struct mchp_dscmi_fpga *mchp_dscmi = container_of(v4l2_dev,
-							struct mchp_dscmi_fpga,
-							v4l2_dev);
+	struct mchp_dscmi_fpga *mchp_dscmi = platform_get_drvdata(pdev);
 
 	mutex_destroy(&mchp_dscmi->dma_lock);
 	mutex_destroy(&mchp_dscmi->lock);
 	cancel_delayed_work(&mchp_dscmi->auto_gain_dw);
 	flush_workqueue(mchp_dscmi->auto_gain_wq);
 	destroy_workqueue(mchp_dscmi->auto_gain_wq);
-	v4l2_async_nf_unregister(&mchp_dscmi->current_subdev->notifier);
-	v4l2_async_nf_cleanup(&mchp_dscmi->current_subdev->notifier);
+	if (mchp_dscmi->current_subdev) {
+		v4l2_async_nf_unregister(&mchp_dscmi->current_subdev->notifier);
+		v4l2_async_nf_cleanup(&mchp_dscmi->current_subdev->notifier);
+	}
 	v4l2_device_unregister(&mchp_dscmi->v4l2_dev);
 	dma_release_channel(mchp_dscmi->dma_chan);
 }
@@ -1734,12 +1947,19 @@ static const struct mchp_dscmi_driver_platdata mpfs_osd = {
 	.quirks = MCHP_DSCMI_OSD_EN_FPGA_RTL,
 };
 
+static const struct mchp_dscmi_driver_platdata mpfs_mjpeg = {
+	.quirks = MCHP_DSCMI_MJPEG_QUIRK,
+};
+
 static const struct of_device_id mchp_dscmi_of_match[] = {
 	{
 		.compatible = "microchip,fpga-dscmi",
 	}, {
 		.compatible = "microchip,fpga-dscmi-rtl-v2306",
 		.data = &mpfs_osd,
+	}, {
+		.compatible = "microchip,fpga-dscmi-mjpeg-rtl-v2608",
+		.data = &mpfs_mjpeg,
 	},
 	{}
 };

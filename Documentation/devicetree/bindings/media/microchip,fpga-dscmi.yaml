@@ -17,9 +17,15 @@ description:
 
 properties:
   compatible:
-    enum:
-      - microchip,fpga-dscmi
-      - microchip,fpga-dscmi-rtl-v2306  # Compatible hardware to enable/disable OSD feature
+    oneOf:
+      - items:
+          - const: microchip,fpga-dscmi
+      - items:
+          - const: microchip,fpga-dscmi-rtl-v2306
+        description: Compatible hardware to enable/disable OSD feature
+      - items:
+          - const: microchip,fpga-dscmi-mjpeg-rtl-v2608
+        description: Compatible for mjpeg encoder
 
   reg:
     maxItems: 1
