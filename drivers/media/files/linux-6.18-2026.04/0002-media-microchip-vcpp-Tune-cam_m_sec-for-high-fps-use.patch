@@ -1,0 +1,32 @@
+From 7d5901e440a979945525654392504c5510a801b9 Mon Sep 17 00:00:00 2001
+From: Shravan Chippa <shravan.chippa@microchip.com>
+Date: Mon, 18 May 2026 10:31:00 +0530
+Subject: [PATCH 2/8] media: microchip-vcpp: Tune cam_m_sec for high fps
+ usecases
+
+Changing the V4L2 initialization delay from 100ms to 10ms
+is a necessary adjustment for high-performance 60fps video
+streaming, particularly when using DMA-BUF for zero-copy
+sharing between V4L2 and the display system (like DRM/KMS)
+
+Signed-off-by: Shravan Chippa <shravan.chippa@microchip.com>
+---
+ drivers/media/platform/microchip/microchip-vcpp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/microchip/microchip-vcpp.c b/drivers/media/platform/microchip/microchip-vcpp.c
+index 65be698737cc..7c73caa0cfe0 100644
+--- a/drivers/media/platform/microchip/microchip-vcpp.c
++++ b/drivers/media/platform/microchip/microchip-vcpp.c
+@@ -88,7 +88,7 @@
+ #define MCHP_VCPP_NUM_CTRLS			1
+ 
+ /* Minimum wait time for camera to stabilize */
+-#define MCHP_VCPP_DELAYED_CAM_M_SEC		100
++#define MCHP_VCPP_DELAYED_CAM_M_SEC		10
+ 
+ #define MCHP_VCPP_POLL_TIMEOUT_U_SEC		500000
+ #define MCHP_VCPP_POLL_SLEEP_U_SEC		10000
+-- 
+2.34.1
+

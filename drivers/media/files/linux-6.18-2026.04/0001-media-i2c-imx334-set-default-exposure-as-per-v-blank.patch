@@ -1,0 +1,54 @@
+From 34e7f7deefc8b91f8b98f4103feba2b5d66551f9 Mon Sep 17 00:00:00 2001
+From: Shravan Chippa <shravan.chippa@microchip.com>
+Date: Mon, 18 May 2026 10:30:00 +0530
+Subject: [PATCH 1/8] media: i2c: imx334: set default exposure as per
+ v-blanking
+
+adjust the exposure default value according to blank
+and exposer_max to get max fps from sensor
+
+Signed-off-by: Shravan Chippa <shravan.chippa@microchip.com>
+---
+ drivers/media/i2c/imx334.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/i2c/imx334.c b/drivers/media/i2c/imx334.c
+index 9654f9268056..e5ac99eb8a73 100644
+--- a/drivers/media/i2c/imx334.c
++++ b/drivers/media/i2c/imx334.c
+@@ -583,22 +583,27 @@ static int imx334_set_ctrl(struct v4l2_ctrl *ctrl)
+ 	struct imx334 *imx334 =
+ 		container_of(ctrl->handler, struct imx334, ctrl_handler);
+ 	u32 analog_gain;
+-	u32 exposure;
++	u32 exposure, exposure_max, exposure_def;
+ 	int ret;
+ 
+ 	if (ctrl->id == V4L2_CID_VBLANK) {
+ 		imx334->vblank = imx334->vblank_ctrl->val;
+ 
++		exposure_max = imx334->vblank + imx334->cur_mode->height - IMX334_EXPOSURE_OFFSET;
++
++		if (exposure_max < IMX334_EXPOSURE_DEFAULT)
++			exposure_def = exposure_max;
++		else
++			exposure_def = IMX334_EXPOSURE_DEFAULT;
++
+ 		dev_dbg(imx334->dev, "Received vblank %u, new lpfr %u\n",
+ 			imx334->vblank,
+ 			imx334->vblank + imx334->cur_mode->height);
+ 
+ 		ret = __v4l2_ctrl_modify_range(imx334->exp_ctrl,
+ 					       IMX334_EXPOSURE_MIN,
+-					       imx334->vblank +
+-					       imx334->cur_mode->height -
+-					       IMX334_EXPOSURE_OFFSET,
+-					       1, IMX334_EXPOSURE_DEFAULT);
++					       exposure_max,
++					       1, exposure_def);
+ 		if (ret)
+ 			return ret;
+ 	}
+-- 
+2.34.1
+

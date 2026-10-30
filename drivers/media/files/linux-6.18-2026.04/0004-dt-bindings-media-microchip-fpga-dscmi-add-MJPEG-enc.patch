@@ -1,0 +1,42 @@
+From 4ffced7a66827d08755f70ac7a0dbd71986d0d5a Mon Sep 17 00:00:00 2001
+From: svc-fpga-sol <svc-fpga-sol@microchip.com>
+Date: Wed, 16 Sep 2026 17:09:47 +0530
+Subject: [PATCH 4/8] dt-bindings: media: microchip,fpga-dscmi: add MJPEG
+ encoder compatible
+
+Add a new compatible string 'microchip,fpga-dscmi-mjpeg-rtl-v2608' for
+the MJPEG encoder variant of the DSCMI FPGA IP. Also convert the
+compatible property from a flat enum to a oneOf schema with per-item
+descriptions to better document each hardware variant.
+
+Signed-off-by: svc-fpga-sol <svc-fpga-sol@microchip.com>
+---
+ .../bindings/media/microchip,fpga-dscmi.yaml         | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/media/microchip,fpga-dscmi.yaml b/Documentation/devicetree/bindings/media/microchip,fpga-dscmi.yaml
+index 1f291fae3205..ce4b460a2cb7 100644
+--- a/Documentation/devicetree/bindings/media/microchip,fpga-dscmi.yaml
++++ b/Documentation/devicetree/bindings/media/microchip,fpga-dscmi.yaml
+@@ -17,9 +17,15 @@ description:
+ 
+ properties:
+   compatible:
+-    enum:
+-      - microchip,fpga-dscmi
+-      - microchip,fpga-dscmi-rtl-v2306  # Compatible hardware to enable/disable OSD feature
++    oneOf:
++      - items:
++          - const: microchip,fpga-dscmi
++      - items:
++          - const: microchip,fpga-dscmi-rtl-v2306
++        description: Compatible hardware to enable/disable OSD feature
++      - items:
++          - const: microchip,fpga-dscmi-mjpeg-rtl-v2608
++        description: Compatible for mjpeg encoder
+ 
+   reg:
+     maxItems: 1
+-- 
+2.34.1
+
