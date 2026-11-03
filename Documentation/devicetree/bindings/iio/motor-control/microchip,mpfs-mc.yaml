@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/iio/motor-control/microchip,mpfs-mc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Microchip PolarFire SoC (MPFS) Motor Control IIO
+
+maintainers:
+  - Sunny Bezawda <sunny.bezawada@microchip.com>
+
+description: |
+  The Microchip PolarFire SoC motor control subsystem provides IIO-based
+  hardware blocks for driving BLDC and Stepper motors. Each block is exposed
+  as a separate platform device with a memory-mapped register interface.
+
+  The subsystem consists of:
+    - ADC scaling: Multi-channel ADC with current sensing and overcurrent
+      detection for BLDC and Stepper motor feedback.
+    - PI controller: Speed and current (Id/Iq) PI controller for closed-loop
+      motor regulation.
+    - 3-phase PWM: PWM period, dead-time, delay, and gain configuration for
+      three-phase motor drive.
+    - Rate limiter: Rate limiting, slew control, and direction management for
+      smooth motor operation.
+    - Sequencer manager: Motor start/stop/fault sequencing and state machine
+      control.
+    - Stepper theta: Step position control with slew and rate limiting for
+      stepper motors.
+
+properties:
+  compatible:
+    enum:
+      - microchip,adc-scaling-rtl-v4.3
+      - microchip,speed-id-iq-pi-rtl-v4.2
+      - microchip,pwm3ph-rtl-v4.2
+      - microchip,rate-limiter-rtl-v4.2
+      - microchip,seq-controller-rtl-v4.2
+      - microchip,stepper-theta-rtl-v4.2
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    &fabric_bus {
+      #address-cells = <2>;
+      #size-cells = <2>;
+
+      adc@60010000 {
+        compatible = "microchip,adc-scaling-rtl-v4.3";
+        reg = <0x0 0x60010000 0x0 0x400>;
+      };
+
+      pi-controller@60011000 {
+        compatible = "microchip,speed-id-iq-pi-rtl-v4.2";
+        reg = <0x0 0x60011000 0x0 0x400>;
+      };
+
+      pwm@60012000 {
+        compatible = "microchip,pwm3ph-rtl-v4.2";
+        reg = <0x0 0x60012000 0x0 0x400>;
+      };
+
+      rate-limiter@60013000 {
+        compatible = "microchip,rate-limiter-rtl-v4.2";
+        reg = <0x0 0x60013000 0x0 0x400>;
+      };
+
+      sequencer@60014000 {
+        compatible = "microchip,seq-controller-rtl-v4.2";
+        reg = <0x0 0x60014000 0x0 0x400>;
+      };
+
+      stepper-theta@60015000 {
+        compatible = "microchip,stepper-theta-rtl-v4.2";
+        reg = <0x0 0x60015000 0x0 0x400>;
+      };
+    };

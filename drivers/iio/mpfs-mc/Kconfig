@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# MPFS Motor Control IIO drivers
+#
+
+menu "MPFS Motor Control"
+
+config IIO_MPFS_MC_ADC
+	tristate "MPFS Motor Control ADC Driver"
+	depends on OF
+	select IIO_BUFFER
+	select IIO_KFIFO_BUF
+	help
+	  Say yes here to build support for the MPFS Motor Control ADC driver.
+	  This driver provides IIO interface for motor ADC with current sensing,
+	  overcurrent threshold configuration, and buffered data acquisition
+	  for BLDC and Stepper motor control applications.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mpfs_mc_adc.
+
+config IIO_MPFS_MC_PICON
+	tristate "MPFS Motor Control PI Controller Driver"
+	depends on OF
+	help
+	  Say yes here to build support for the MPFS Motor Control PI Controller driver.
+	  This driver provides IIO interface for PI (Proportional-Integral) controller
+	  configuration for motor control closed-loop operation.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mpfs_mc_picon.
+
+config IIO_MPFS_MC_PWM
+	tristate "MPFS Motor Control PWM Driver"
+	depends on OF
+	help
+	  Say yes here to build support for the MPFS Motor Control PWM driver.
+	  This driver provides IIO interface for PWM (Pulse Width Modulation)
+	  control of BLDC and Stepper motors.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mpfs_mc_pwm.
+
+config IIO_MPFS_MC_RATELIM
+	tristate "MPFS Motor Control Rate Limiter Driver"
+	depends on OF
+	help
+	  Say yes here to build support for the MPFS Motor Control Rate Limiter driver.
+	  This driver provides IIO interface for acceleration/deceleration rate
+	  limiting of motor speed changes.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mpfs_mc_ratelim.
+
+config IIO_MPFS_MC_SQMNG
+	tristate "MPFS Motor Control Sequencer Manager Driver"
+	depends on OF
+	help
+	  Say yes here to build support for the MPFS Motor Control Sequencer Manager driver.
+	  This driver provides IIO interface for motor sequencer finite state machine
+	  control including start, stop, and fault management.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mpfs_mc_sqmng.
+
+config IIO_MPFS_MC_STPTHETA
+	tristate "MPFS Motor Control Stepper Theta Driver"
+	depends on OF
+	help
+	  Say yes here to build support for the MPFS Motor Control Stepper Theta driver.
+	  This driver provides IIO interface for stepper motor position (theta)
+	  control and configuration.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mpfs_mc_stptheta.
+
+config IIO_MPFS_MC
+	tristate "MPFS Motor Control Drivers (BLDC/Stepper)"
+	select IIO_MPFS_MC_ADC
+	select IIO_MPFS_MC_PICON
+	select IIO_MPFS_MC_PWM
+	select IIO_MPFS_MC_RATELIM
+	select IIO_MPFS_MC_SQMNG
+	select IIO_MPFS_MC_STPTHETA
+	help
+	  Say yes here to build all MPFS Motor Control drivers for BLDC and Stepper
+	  motor applications. This option selects all motor control IIO drivers
+	  including ADC, PI controller, PWM, rate limiter, sequence manager, and
+	  stepper theta modules.
+
+	  To compile these drivers as modules, choose M here.
+
+endmenu
