@@ -114,9 +114,9 @@
 #define MCHP_DSCMI_B_GAIN_CTL_DEFAULT		0x8A
 #define MCHP_DSCMI_CONTRAST_CTL_DEFAULT		0x9A
 #define MCHP_DSCMI_BRIGHTNESS_CTL_DEFAULT	0x89
-#define MCHP_DSCMI_GAIN_CTL_MAX			220
-#define MCHP_DSCMI_CTL_MAX			220
-#define MCHP_DSCMI_CTL_MIN			25
+#define MCHP_DSCMI_GAIN_CTL_MAX			255
+#define MCHP_DSCMI_CTL_MAX			255
+#define MCHP_DSCMI_CTL_MIN			0
 #define MCHP_DSCMI_CTL_STEP			1
 #define MCHP_DSCMI_Q_FACTOR_CTL_MAX		52
 #define MCHP_DSCMI_Q_FACTOR_CTL_MIN		25
@@ -1188,7 +1188,7 @@ static void mchp_dscmi_update_q_factor_table(struct mchp_dscmi_fpga *mchp_dscmi,
 static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct mchp_dscmi_fpga *mchp_dscmi;
-	u32 contrast_scale, second_constraint, r_gain, g_gain, b_gain;
+	int contrast_scale, second_constraint, r_gain, g_gain, b_gain;
 
 	mchp_dscmi = container_of(ctrl->handler,
 				  struct mchp_dscmi_fpga, ctrl_handler);

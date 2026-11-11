@@ -253,7 +253,7 @@ static inline int contrast_scale_cal(int contrast)
 
 static void mchp_image_enhancement_update_ctrls(struct mchp_image_enhancement *image_enhancement)
 {
-	u32 contrast_scale, second_constraint, r_gain_val, g_gain_val, b_gain_val;
+	int contrast_scale, second_constraint, r_gain_val, g_gain_val, b_gain_val;
 
 	contrast_scale = contrast_scale_cal(image_enhancement->contrast);
 	second_constraint = second_constraint_cal(image_enhancement->brightness,
