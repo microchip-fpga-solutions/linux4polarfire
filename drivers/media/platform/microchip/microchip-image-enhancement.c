@@ -33,11 +33,16 @@
 #define MCHP_IMAGE_ENHANCEMENT_SECOND_CONSTRAINT	0x14
 #define MCHP_IMAGE_ENHANCEMENT_RGB_SUM			0x18
 
-#define MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_DEFAULT		112
 #define MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_MAX		255
 #define MCHP_IMAGE_ENHANCEMENT_CTL_MIN			0
 #define MCHP_IMAGE_ENHANCEMENT_CTL_MAX			255
 #define MCHP_IMAGE_ENHANCEMENT_CTL_STEP			1
+
+#define MCHP_IMAGE_ENHANCEMENT_R_GAIN_CTL_DEFAULT	0x7A
+#define MCHP_IMAGE_ENHANCEMENT_G_GAIN_CTL_DEFAULT	0x66
+#define MCHP_IMAGE_ENHANCEMENT_B_GAIN_CTL_DEFAULT	0x8A
+#define MCHP_IMAGE_ENHANCEMENT_CONTRAST_CTL_DEFAULT	0x9A
+#define MCHP_IMAGE_ENHANCEMENT_BRIGHTNESS_CTL_DEFAULT	0x89
 
 #define MCHP_IMAGE_ENHANCEMENT_NUM_CTRLS		6
 
@@ -253,28 +258,29 @@ static inline int contrast_scale_cal(int contrast)
 
 static void mchp_image_enhancement_update_ctrls(struct mchp_image_enhancement *image_enhancement)
 {
-	int contrast_scale, second_constraint, r_gain_val, g_gain_val, b_gain_val;
+	int contrast_scale, second_constraint;
+	int r_gain_constraint, g_gain_constraint, b_gain_constraint;
 
 	contrast_scale = contrast_scale_cal(image_enhancement->contrast);
 	second_constraint = second_constraint_cal(image_enhancement->brightness,
 						  contrast_scale);
-	r_gain_val = ((image_enhancement->r_gain * contrast_scale) / 10);
-	g_gain_val = ((image_enhancement->g_gain * contrast_scale) / 10);
-	b_gain_val = ((image_enhancement->b_gain * contrast_scale) / 10);
+	r_gain_constraint = ((image_enhancement->r_gain * contrast_scale) / 10);
+	g_gain_constraint = ((image_enhancement->g_gain * contrast_scale) / 10);
+	b_gain_constraint = ((image_enhancement->b_gain * contrast_scale) / 10);
 
 	mutex_lock(&image_enhancement->lock);
 
 	mchp_image_enhancement_reg_write(image_enhancement,
 					 MCHP_IMAGE_ENHANCEMENT_R_CONSTRAINT,
-					 r_gain_val);
+					 r_gain_constraint);
 
 	mchp_image_enhancement_reg_write(image_enhancement,
 					 MCHP_IMAGE_ENHANCEMENT_G_CONSTRAINT,
-					 g_gain_val);
+					 g_gain_constraint);
 
 	mchp_image_enhancement_reg_write(image_enhancement,
 					 MCHP_IMAGE_ENHANCEMENT_B_CONSTRAINT,
-					 b_gain_val);
+					 b_gain_constraint);
 
 	mchp_image_enhancement_reg_write(image_enhancement,
 					 MCHP_IMAGE_ENHANCEMENT_SECOND_CONSTRAINT,
@@ -357,7 +363,7 @@ static struct v4l2_ctrl_config mchp_image_enhancement_ctrls[] = {
 		.name	= "Gain, Red",
 		.min	= MCHP_IMAGE_ENHANCEMENT_CTL_MIN,
 		.max	= MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_MAX,
-		.def	= MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_DEFAULT,
+		.def	= MCHP_IMAGE_ENHANCEMENT_R_GAIN_CTL_DEFAULT,
 		.step	= MCHP_IMAGE_ENHANCEMENT_CTL_STEP,
 	}, {
 		.ops	= &mchp_image_enhancement_ctrl_ops,
@@ -366,7 +372,7 @@ static struct v4l2_ctrl_config mchp_image_enhancement_ctrls[] = {
 		.name	= "Gain, Green",
 		.min	= MCHP_IMAGE_ENHANCEMENT_CTL_MIN,
 		.max	= MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_MAX,
-		.def	= MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_DEFAULT,
+		.def	= MCHP_IMAGE_ENHANCEMENT_G_GAIN_CTL_DEFAULT,
 		.step	= MCHP_IMAGE_ENHANCEMENT_CTL_STEP,
 	}, {
 		.ops	= &mchp_image_enhancement_ctrl_ops,
@@ -375,7 +381,7 @@ static struct v4l2_ctrl_config mchp_image_enhancement_ctrls[] = {
 		.name	= "Gain, Blue",
 		.min	= MCHP_IMAGE_ENHANCEMENT_CTL_MIN,
 		.max	= MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_MAX,
-		.def	= MCHP_IMAGE_ENHANCEMENT_GAIN_CTL_DEFAULT,
+		.def	= MCHP_IMAGE_ENHANCEMENT_B_GAIN_CTL_DEFAULT,
 		.step	= MCHP_IMAGE_ENHANCEMENT_CTL_STEP,
 	}, {
 		.ops	= &mchp_image_enhancement_ctrl_ops,
@@ -401,12 +407,12 @@ static int mchp_image_enhancement_init_controls(struct mchp_image_enhancement *i
 	v4l2_ctrl_new_std(ctrl_hdlr, &mchp_image_enhancement_ctrl_ops,
 			  V4L2_CID_BRIGHTNESS, MCHP_IMAGE_ENHANCEMENT_CTL_MIN,
 			  MCHP_IMAGE_ENHANCEMENT_CTL_MAX, MCHP_IMAGE_ENHANCEMENT_CTL_STEP,
-			  MCHP_IMAGE_ENHANCEMENT_CTL_MAX / 2);
+			  MCHP_IMAGE_ENHANCEMENT_BRIGHTNESS_CTL_DEFAULT);
 
 	v4l2_ctrl_new_std(ctrl_hdlr, &mchp_image_enhancement_ctrl_ops,
 			  V4L2_CID_CONTRAST, MCHP_IMAGE_ENHANCEMENT_CTL_MIN,
 			  MCHP_IMAGE_ENHANCEMENT_CTL_MAX, MCHP_IMAGE_ENHANCEMENT_CTL_STEP,
-			  MCHP_IMAGE_ENHANCEMENT_CTL_MAX / 2);
+			  MCHP_IMAGE_ENHANCEMENT_CONTRAST_CTL_DEFAULT);
 
 	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_image_enhancement_ctrls[0], NULL);
 	v4l2_ctrl_new_custom(ctrl_hdlr, &mchp_image_enhancement_ctrls[1], NULL);
@@ -467,6 +473,12 @@ static int mchp_image_enhancement_probe(struct platform_device *pdev)
 	image_enhancement = devm_kzalloc(&pdev->dev, sizeof(*image_enhancement), GFP_KERNEL);
 	if (!image_enhancement)
 		return -ENOMEM;
+
+	image_enhancement->contrast = MCHP_IMAGE_ENHANCEMENT_CONTRAST_CTL_DEFAULT;
+	image_enhancement->brightness = MCHP_IMAGE_ENHANCEMENT_BRIGHTNESS_CTL_DEFAULT;
+	image_enhancement->r_gain = MCHP_IMAGE_ENHANCEMENT_R_GAIN_CTL_DEFAULT;
+	image_enhancement->g_gain = MCHP_IMAGE_ENHANCEMENT_G_GAIN_CTL_DEFAULT;
+	image_enhancement->b_gain = MCHP_IMAGE_ENHANCEMENT_B_GAIN_CTL_DEFAULT;
 
 	image_enhancement->dev = &pdev->dev;
 
