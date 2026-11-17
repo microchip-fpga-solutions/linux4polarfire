@@ -261,7 +261,11 @@ struct mchp_dscmi_format {
  * @s_buff_size:	current streaming buf size
  * @irq:		external IRQ for new frame
  * @contrast:		contrast value
+ * @contrast_scale:	contrast_scale value
  * @brightness:		brightness value
+ * @r_gain:		red gain value
+ * @g_gain:		green gain value
+ * @b_gain:		blue gain value
  * @sequence:		frame sequence counter
  * @drop_count:		total frame drop counter
  * @horizontal_pos:	overlay horizontal position
@@ -300,7 +304,11 @@ struct mchp_dscmi_fpga {
 	int s_buff_size;
 	int irq;
 	int contrast;
+	int contrast_scale;
 	int brightness;
+	int r_gain;
+	int g_gain;
+	int b_gain;
 	int sequence;
 	int drop_count;
 	int horizontal_pos;
@@ -1188,7 +1196,8 @@ static void mchp_dscmi_update_q_factor_table(struct mchp_dscmi_fpga *mchp_dscmi,
 static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct mchp_dscmi_fpga *mchp_dscmi;
-	int contrast_scale, second_constraint, r_gain, g_gain, b_gain;
+	int r_gain_constraint, g_gain_constraint, b_gain_constraint;
+	int contrast_scale, second_constraint;
 
 	mchp_dscmi = container_of(ctrl->handler,
 				  struct mchp_dscmi_fpga, ctrl_handler);
@@ -1196,35 +1205,42 @@ static int mchp_dscmi_s_ctrl(struct v4l2_ctrl *ctrl)
 	switch (ctrl->id) {
 	case V4L2_CID_BRIGHTNESS:
 		mchp_dscmi->brightness = ctrl->val;
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		second_constraint = second_constraint_cal(ctrl->val,
-							  contrast_scale);
+		second_constraint = second_constraint_cal(mchp_dscmi->brightness,
+							  mchp_dscmi->contrast_scale);
+
 		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
 				     second_constraint);
 		break;
 	case V4L2_CID_CONTRAST:
 		mchp_dscmi->contrast = ctrl->val;
-		contrast_scale = contrast_scale_cal(ctrl->val);
+		mchp_dscmi->contrast_scale = contrast_scale_cal(ctrl->val);
+
+		r_gain_constraint = (mchp_dscmi->r_gain * contrast_scale) / 10;
+		g_gain_constraint = (mchp_dscmi->g_gain * contrast_scale) / 10;
+		b_gain_constraint = (mchp_dscmi->b_gain * contrast_scale) / 10;
 		second_constraint = second_constraint_cal(mchp_dscmi->brightness,
-							  contrast_scale);
+							  mchp_dscmi->contrast_scale);
 
 		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_SECOND_CONSTRAINT,
 				     second_constraint);
+		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain_constraint);
+		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain_constraint);
+		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain_constraint);
 		break;
 	case MCHP_DSCMI_CID_RED_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		r_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain);
+		mchp_dscmi->r_gain = ctrl->val;
+		r_gain_constraint = ((ctrl->val * mchp_dscmi->contrast_scale) / 10);
+		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_R_CONSTRAINT, r_gain_constraint);
 		break;
 	case MCHP_DSCMI_CID_GREEN_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		g_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain);
+		mchp_dscmi->g_gain = ctrl->val;
+		g_gain_constraint = ((ctrl->val * mchp_dscmi->contrast_scale) / 10);
+		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_G_CONSTRAINT, g_gain_constraint);
 		break;
 	case MCHP_DSCMI_CID_BLUE_GAIN:
-		contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
-		b_gain = ((ctrl->val * contrast_scale) / 10);
-		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain);
+		mchp_dscmi->b_gain = ctrl->val;
+		b_gain_constraint = ((ctrl->val * mchp_dscmi->contrast_scale) / 10);
+		mchp_dscmi_reg_write(mchp_dscmi, MCHP_DSCMI_B_CONSTRAINT, b_gain_constraint);
 		break;
 	case MCHP_DSCMI_CID_Q_FACTOR:
 		if (mchp_dscmi->capabilities == H264)
@@ -1767,6 +1783,13 @@ static int mchp_dscmi_probe(struct platform_device *pdev)
 				  sizeof(struct mchp_dscmi_fpga), GFP_KERNEL);
 	if (!mchp_dscmi)
 		return dev_err_probe(&pdev->dev, -ENOMEM, "kzalloc failed\n");
+
+	mchp_dscmi->contrast = MCHP_DSCMI_CONTRAST_CTL_DEFAULT;
+	mchp_dscmi->brightness = MCHP_DSCMI_BRIGHTNESS_CTL_DEFAULT;
+	mchp_dscmi->contrast_scale = contrast_scale_cal(mchp_dscmi->contrast);
+	mchp_dscmi->r_gain = MCHP_DSCMI_R_GAIN_CTL_DEFAULT;
+	mchp_dscmi->g_gain = MCHP_DSCMI_G_GAIN_CTL_DEFAULT;
+	mchp_dscmi->b_gain = MCHP_DSCMI_B_GAIN_CTL_DEFAULT;
 
 	mchp_dscmi->base = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
 	if (IS_ERR(mchp_dscmi->base))
